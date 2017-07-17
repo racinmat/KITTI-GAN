@@ -24,7 +24,7 @@ def readVariable(data=None, name=None, M=None, N=None):
         return []
 
     if M != 1 or N != 1:
-        values = np.array(data[name].split())
+        values = np.array(data[name].split(), dtype=float)
         values = values.reshape(M, N)
         return values
     else:
