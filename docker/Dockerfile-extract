@@ -1,0 +1,5 @@
+FROM jamesanglin/numpy-scipy
+
+RUN pip install --upgrade pip && \
+    easy_install smop && \
+    pip list --outdated --format=freeze

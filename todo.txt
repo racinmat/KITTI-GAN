@@ -1,0 +1,5 @@
+KITTY dataset - stahnout
+udelat statistiku viewpointu z nej
+vybrat nejcastejší viewpoint
+udelat GAN na generování lidar obrázku z daného viewpointu - jen GAN s niosem na vstupu
+potom udelat GAN, který bude mít na vstpu noise a viewpoit, a použít jako trénovací data všechny viewpointy
