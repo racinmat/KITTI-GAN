@@ -2,4 +2,5 @@ FROM jamesanglin/numpy-scipy
 
 RUN pip install --upgrade pip && \
     easy_install smop && \
+    pip install ruamel.yaml && \
     pip list --outdated --format=freeze
