@@ -1,5 +1,7 @@
 import matplotlib
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+from devkit.python.utils import loadFromFile
+
 matplotlib.use('Agg')
 from scipy.misc import imread
 from smop.core import *
@@ -10,7 +12,6 @@ from loadCalibrationCamToCam import *
 import matplotlib.pyplot as plt
 from matplotlib import figure
 import array
-
 
 @function
 def run_demoVelodyne(base_dir=None, calib_dir=None):
@@ -50,32 +51,26 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     plt.axis([0, 0, 1, 1])
 
     # load velodyne points
-    f = open('{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame), 'rb')
-    # /opt/project/devkit/matlab/run_demoVelodyne.m:39
-    velo = array.array('d')  # d is type of double (same size as float64)
-    velo.fromfile(f, 3)
-    velo = fread(f, cat(4, inf), 'single').T
-    # /opt/project/devkit/matlab/run_demoVelodyne.m:40
-    velo = velo[1:5:end(), :]
-    # /opt/project/devkit/matlab/run_demoVelodyne.m:41
+    fname = '{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame)
+    velo = loadFromFile(fname, 4, np.float32)
+    # keep only every 5-th point for visualization
+    velo = velo[0::5, :]
 
-    fclose(f)
-    # remove all points behind image plane (approximation
-    idx = velo[:, 1] < 5
-    # /opt/project/devkit/matlab/run_demoVelodyne.m:45
-    velo[idx, :] = []
-    # /opt/project/devkit/matlab/run_demoVelodyne.m:46
+    # remove all points behind image plane (approximation)
+    idx = velo[:, 0] < 5
+    velo = velo[np.invert(idx), :]
+
     # project to image plane (exclude luminance)
-    velo_img = project(velo[:, 1:3], P_velo_to_img)
-    # /opt/project/devkit/matlab/run_demoVelodyne.m:49
+    velo_img = project(velo[:, 0:3], P_velo_to_img)
     # plot points
-    cols = copy(jet)
-    # /opt/project/devkit/matlab/run_demoVelodyne.m:52
-    for i in arange(1, size(velo_img, 1)).reshape(-1):
-        col_idx = round(dot(64, 5) / velo[i, 1])
+    cols = matplotlib.cm.jet(np.arange(64)) # jet is colormap, represented by lookup table
+
+    for i in arange(0, size(velo_img, 1)).reshape(-1):
+        col_idx = int(round(64*5 / velo[i, 0])) - 1
         # /opt/project/devkit/matlab/run_demoVelodyne.m:54
-        plot(velo_img[i, 1], velo_img[i, 2], 'o', 'LineWidth', 4, 'MarkerSize', 1, 'Color', cols[col_idx, :])
+        plt.plot(velo_img[i, 0], velo_img[i, 1], 'o', linewidth=4, markersize=1, color=cols[col_idx, :])
 
     plt.imshow(img)
+    plt.savefig('foo.png')
 
 run_demoVelodyne()

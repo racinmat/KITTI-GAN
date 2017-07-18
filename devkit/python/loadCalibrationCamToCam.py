@@ -1,5 +1,7 @@
 from smop.core import *
 import ruamel.yaml as yaml
+from devkit.python.utils import readVariable
+
 
 @function
 def loadCalibrationCamToCam(filename=None):
@@ -52,16 +54,3 @@ def loadCalibrationCamToCam(filename=None):
             calib['P_rect'][cam] = P_rect_
 
     return calib
-
-@function
-def readVariable(data=None, name=None, M=None, N=None):
-
-    if name not in data:
-        return []
-
-    if M != 1 or N != 1:
-        values = np.array(data[name].split(), dtype=float)
-        values = values.reshape(M, N)
-        return values
-    else:
-        return data[name]

@@ -1,5 +1,6 @@
 from smop.core import *
 import ruamel.yaml as yaml
+from devkit.python.utils import readVariable
 
 
 @function
@@ -17,15 +18,3 @@ def loadCalibrationRigid(filename=None):
     Tr = np.concatenate((np.concatenate((R, T), axis=1), np.array([0, 0, 0, 1]).reshape(1, 4)), axis=0)
     return Tr
 
-
-@function
-def readVariable(data=None, name=None, M=None, N=None):
-    if name not in data:
-        return []
-
-    if M != 1 or N != 1:
-        values = np.array(data[name].split(), dtype=float)
-        values = values.reshape(M, N)
-        return values
-    else:
-        return data[name]
