@@ -1,8 +1,8 @@
 import matplotlib
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
-from devkit.python.utils import loadFromFile
-
 matplotlib.use('Agg')
+
+from devkit.python.utils import loadFromFile
 from scipy.misc import imread
 from smop.core import *
 from visualization import *
@@ -10,13 +10,10 @@ from project import *
 from loadCalibrationRigid import *
 from loadCalibrationCamToCam import *
 import matplotlib.pyplot as plt
-from matplotlib import figure
-import array
+import matplotlib.image as mpimg
 
 @function
 def run_demoVelodyne(base_dir=None, calib_dir=None):
-    varargin = run_demoVelodyne.varargin
-    nargin = run_demoVelodyne.nargin
 
     # KITTI RAW DATA DEVELOPMENT KIT
     #
@@ -29,10 +26,10 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     # clear and close everything
     disp('======= KITTI DevKit Demo =======')
     # options (modify this to select your sequence)
-    if nargin < 1:
+    if base_dir is None:
         base_dir = './../../data/2011_09_26/2011_09_26_drive_0009_sync'
 
-    if nargin < 2:
+    if calib_dir is None:
         calib_dir = './../../data/2011_09_26'
 
     cam = 2
@@ -46,9 +43,9 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     R_cam_to_rect[0:3, 0:3] = calib['R_rect'][0]
     P_velo_to_img = dot(dot(calib['P_rect'][cam], R_cam_to_rect), Tr_velo_to_cam)
     # load and display image
-    img = imread('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
-    fig = plt.figure()
-    plt.axis([0, 0, 1, 1])
+    img = mpimg.imread('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
+    plt.figure()
+    plt.axes([0, 0, 1, 1])
 
     # load velodyne points
     fname = '{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame)
@@ -63,12 +60,11 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     # project to image plane (exclude luminance)
     velo_img = project(velo[:, 0:3], P_velo_to_img)
     # plot points
-    cols = matplotlib.cm.jet(np.arange(64)) # jet is colormap, represented by lookup table
+    cols = matplotlib.cm.jet(np.arange(256)) # jet is colormap, represented by lookup table
 
-    for i in arange(0, size(velo_img, 1)).reshape(-1):
-        col_idx = int(round(64*5 / velo[i, 0])) - 1
-        # /opt/project/devkit/matlab/run_demoVelodyne.m:54
-        plt.plot(velo_img[i, 0], velo_img[i, 1], 'o', linewidth=4, markersize=1, color=cols[col_idx, :])
+    for i in range(size(velo_img, 1)):
+        col_idx = int(round(256*5 / velo[i, 0])) - 1
+        plt.plot(velo_img[i, 0], velo_img[i, 1], 'o', linewidth=4, markersize=1, color=cols[col_idx, 0:3])
 
     plt.imshow(img)
     plt.savefig('foo.png')
