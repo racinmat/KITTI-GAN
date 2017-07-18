@@ -26,8 +26,12 @@ switch mode
     
     % clear axes, draw image
     cla(h(1).axes); cla(h(2).axes);
-    imshow(img,'parent',h(1).axes); axis(h(1).axes,'image','off'); hold(h(1).axes, 'on');
-    imshow(img,'parent',h(2).axes); axis(h(2).axes,'image','off'); hold(h(2).axes, 'on');
+    imshow(img,'parent',h(1).axes); 
+%     axis(h(1).axes,'image','off'); 
+    hold(h(1).axes, 'on');
+    imshow(img,'parent',h(2).axes); 
+%     axis(h(2).axes,'image','off'); 
+    hold(h(2).axes, 'on');
     
     % title
     text(size(img,2)/2,3,sprintf('2D Bounding Boxes'),'parent',h(1).axes,'color','g','HorizontalAlignment','center','VerticalAlignment','top','FontSize',14,'FontWeight','bold','BackgroundColor','black');

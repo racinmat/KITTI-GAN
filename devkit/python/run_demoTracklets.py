@@ -87,8 +87,7 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         corners[it]['x'] = [l / 2, l / 2, - l / 2, - l / 2, l / 2, l / 2, - l / 2, - l / 2]
         corners[it]['y'] = [w / 2, - w / 2, - w / 2, w / 2, w / 2, - w / 2, - w / 2, w / 2]
         corners[it]['z'] = [0, 0, 0, 0, h, h, h, h]
-        t[it] = [[tracklet['poses'][0, :]], [tracklet['poses'][1, :]],
-                    [tracklet['poses'][2, :]]]
+        t[it] = [tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]]
         rz[it] = wrapToPi(tracklet['poses'][5, :])
         occlusion[it] = tracklet['poses'][7, :]
 
@@ -104,49 +103,37 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         for it in range(len(tracklets)):
             # get relative tracklet frame index (starting at 0 with first appearance; 
             # xml data stores poses relative to the first frame where the tracklet appeared)
-            pose_idx = img_idx - tracklets[it].first_frame + 1
+            pose_idx = img_idx - tracklets[it]['first_frame']
             # only draw tracklets that are visible in current frame
-            if pose_idx < 1 or pose_idx > (size(tracklets[it].poses, 2)):
+            if pose_idx < 0 or pose_idx > (size(tracklets[it]['poses'], 2) - 1):
                 continue
                 # compute 3d object rotation in velodyne coordinates
                 # VELODYNE COORDINATE SYSTEM:
                 #   x -> facing forward
                 #   y -> facing left
                 #   z -> facing up
-            R = matlabarray(cat([cos(rz[it](pose_idx)), - sin(rz[it](pose_idx)), 0],
-                                [sin(rz[it](pose_idx)), cos(rz[it](pose_idx)), 0], [0, 0, 1]))
-            corners_3D = dot(R, cat([corners[it].x], [corners[it].y], [corners[it].z]))
-            corners_3D[1, :] = corners_3D[1, :] + t[it](1, pose_idx)
-            corners_3D[2, :] = corners_3D[2, :] + t[it](2, pose_idx)
-            corners_3D[3, :] = corners_3D[3, :] + t[it](3, pose_idx)
+            R = [[cos(rz[it][pose_idx]), - sin(rz[it][pose_idx]), 0], [sin(rz[it][pose_idx]), cos(rz[it][pose_idx]), 0], [0, 0, 1]]
+            corners_3D = dot(R, [corners[it]['x'], corners[it]['y'], corners[it]['z']])
+            corners_3D[0, :] = corners_3D[0, :] + t[it][0, pose_idx]
+            corners_3D[1, :] = corners_3D[1, :] + t[it][1, pose_idx]
+            corners_3D[2, :] = corners_3D[2, :] + t[it][2, pose_idx]
             corners_3D = (dot(veloToCam[cam + 1], cat([corners_3D], [ones(1, size(corners_3D, 2))])))
             orientation_3D = dot(R, cat([0.0, dot(0.7, l)], [0.0, 0.0], [0.0, 0.0]))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:134
             orientation_3D[1, :] = orientation_3D[1, :] + t[it](1, pose_idx)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:135
             orientation_3D[2, :] = orientation_3D[2, :] + t[it](2, pose_idx)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:136
             orientation_3D[3, :] = orientation_3D[3, :] + t[it](3, pose_idx)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:137
             orientation_3D = (dot(veloToCam[cam + 1], cat([orientation_3D], [ones(1, size(orientation_3D, 2))])))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:138
             if any(corners_3D[3, :] < 0.5) or any(orientation_3D[3, :] < 0.5):
                 continue
             # project the 3D bounding box into the image plane
             corners_2D = projectToImage(corners_3D, K)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:146
             orientation_2D = projectToImage(orientation_3D, K)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:147
             drawBox3D(gh, occlusion[it](pose_idx), corners_2D, face_idx, orientation_2D)
             # compute and draw the 2D bounding box from the 3D box projection
             box.x1 = copy(min(corners_2D[1, :]))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:151
             box.x2 = copy(max(corners_2D[1, :]))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:152
             box.y1 = copy(min(corners_2D[2, :]))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:153
             box.y2 = copy(max(corners_2D[2, :]))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:154
             drawBox2D(gh, box, occlusion[it](pose_idx), tracklets[it].objectType)
         # force drawing and tiny user interface
         waitforbuttonpress
