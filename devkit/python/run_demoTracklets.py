@@ -2,6 +2,7 @@ import matplotlib
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
 from math import cos, sin
 
+from devkit.python.projectToImage import projectToImage
 from devkit.python.wrapToPi import wrapToPi
 
 matplotlib.use('Agg')
@@ -87,7 +88,7 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         corners[it]['x'] = [l / 2, l / 2, - l / 2, - l / 2, l / 2, l / 2, - l / 2, - l / 2]
         corners[it]['y'] = [w / 2, - w / 2, - w / 2, w / 2, w / 2, - w / 2, - w / 2, w / 2]
         corners[it]['z'] = [0, 0, 0, 0, h, h, h, h]
-        t[it] = [tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]]
+        t[it] = np.vstack((tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]))
         rz[it] = wrapToPi(tracklet['poses'][5, :])
         occlusion[it] = tracklet['poses'][7, :]
 
@@ -112,29 +113,30 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
                 #   x -> facing forward
                 #   y -> facing left
                 #   z -> facing up
+            l = tracklets[it]['l']
             R = [[cos(rz[it][pose_idx]), - sin(rz[it][pose_idx]), 0], [sin(rz[it][pose_idx]), cos(rz[it][pose_idx]), 0], [0, 0, 1]]
             corners_3D = dot(R, [corners[it]['x'], corners[it]['y'], corners[it]['z']])
             corners_3D[0, :] = corners_3D[0, :] + t[it][0, pose_idx]
             corners_3D[1, :] = corners_3D[1, :] + t[it][1, pose_idx]
             corners_3D[2, :] = corners_3D[2, :] + t[it][2, pose_idx]
-            corners_3D = (dot(veloToCam[cam + 1], cat([corners_3D], [ones(1, size(corners_3D, 2))])))
-            orientation_3D = dot(R, cat([0.0, dot(0.7, l)], [0.0, 0.0], [0.0, 0.0]))
-            orientation_3D[1, :] = orientation_3D[1, :] + t[it](1, pose_idx)
-            orientation_3D[2, :] = orientation_3D[2, :] + t[it](2, pose_idx)
-            orientation_3D[3, :] = orientation_3D[3, :] + t[it](3, pose_idx)
-            orientation_3D = (dot(veloToCam[cam + 1], cat([orientation_3D], [ones(1, size(orientation_3D, 2))])))
-            if any(corners_3D[3, :] < 0.5) or any(orientation_3D[3, :] < 0.5):
+            corners_3D = dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, size(corners_3D, 2))))))
+            orientation_3D = dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
+            orientation_3D[0, :] = orientation_3D[0, :] + t[it][0, pose_idx]
+            orientation_3D[1, :] = orientation_3D[1, :] + t[it][1, pose_idx]
+            orientation_3D[2, :] = orientation_3D[2, :] + t[it][2, pose_idx]
+            orientation_3D = dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, size(orientation_3D, 2))))))
+            if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
                 continue
             # project the 3D bounding box into the image plane
             corners_2D = projectToImage(corners_3D, K)
             orientation_2D = projectToImage(orientation_3D, K)
-            drawBox3D(gh, occlusion[it](pose_idx), corners_2D, face_idx, orientation_2D)
+            drawBox3D(gh, occlusion[it][pose_idx], corners_2D, face_idx, orientation_2D)
             # compute and draw the 2D bounding box from the 3D box projection
             box.x1 = copy(min(corners_2D[1, :]))
             box.x2 = copy(max(corners_2D[1, :]))
             box.y1 = copy(min(corners_2D[2, :]))
             box.y2 = copy(max(corners_2D[2, :]))
-            drawBox2D(gh, box, occlusion[it](pose_idx), tracklets[it].objectType)
+            drawBox2D(gh, box, occlusion[it][pose_idx], tracklets[it].objectType)
         # force drawing and tiny user interface
         waitforbuttonpress
         key = get(gcf, 'CurrentCharacter')
