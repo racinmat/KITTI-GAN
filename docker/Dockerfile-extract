@@ -10,7 +10,8 @@ RUN apt-get update && \
         tk \
         tcl-dev \
         tcl \
-        python-tk
+        python-tk \
+        python-bs4
 
 RUN pip install --upgrade pip
 RUN pip install \
@@ -18,6 +19,8 @@ RUN pip install \
         scipy \
         pillow \
         ruamel.yaml \
-        matplotlib
+        matplotlib \
+        lxml \
+        beautifulsoup4
 
 RUN easy_install smop
