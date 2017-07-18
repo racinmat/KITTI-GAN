@@ -1,5 +1,7 @@
 import matplotlib
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+from math import cos, sin
+
 from devkit.python.wrapToPi import wrapToPi
 
 matplotlib.use('Agg')
@@ -7,7 +9,7 @@ matplotlib.use('Agg')
 from smop.core import *
 from devkit.python.loadCalibration import loadCalibration
 from devkit.python.readTracklets import readTracklets
-from devkit.python.visualization import visualization
+from devkit.python.visualization import visualizationUpdate, visualizationInit
 import glob
 
 @function
@@ -61,7 +63,7 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
     # get number of images for this dataset
     nimages = len(glob.glob(image_dir + '/*.png'))
     # set up figure
-    gh = visualization('init', image_dir)
+    gh = visualizationInit(image_dir)
     # read calibration for the day
     veloToCam, K = loadCalibration(calib_dir)
     # read tracklets for the selected sequence
@@ -91,21 +93,18 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         occlusion[it] = tracklet['poses'][7, :]
 
     # 3D bounding box faces (indices for corners)
-    face_idx = matlabarray(cat(1, 2, 6, 5, 2, 3, 7, 6, 3, 4, 8, 7, 4, 1, 5, 8))
-    # /opt/project/devkit/matlab/run_demoTracklets.m:93
+    face_idx = [1, 2, 6, 5, 2, 3, 7, 6, 3, 4, 8, 7, 4, 1, 5, 8]
 
     # main loop (start at first image of sequence)
     img_idx = 0
-    # /opt/project/devkit/matlab/run_demoTracklets.m:99
     while 1:
 
         # visualization update for next frame
-        visualization('update', image_dir, gh, img_idx, nimages)
-        for it in arange(1, numel(tracklets)).reshape(-1):
+        visualizationUpdate(image_dir, gh, img_idx, nimages)
+        for it in range(len(tracklets)):
             # get relative tracklet frame index (starting at 0 with first appearance; 
             # xml data stores poses relative to the first frame where the tracklet appeared)
             pose_idx = img_idx - tracklets[it].first_frame + 1
-            # /opt/project/devkit/matlab/run_demoTracklets.m:110
             # only draw tracklets that are visible in current frame
             if pose_idx < 1 or pose_idx > (size(tracklets[it].poses, 2)):
                 continue
@@ -116,17 +115,11 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
                 #   z -> facing up
             R = matlabarray(cat([cos(rz[it](pose_idx)), - sin(rz[it](pose_idx)), 0],
                                 [sin(rz[it](pose_idx)), cos(rz[it](pose_idx)), 0], [0, 0, 1]))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:122
             corners_3D = dot(R, cat([corners[it].x], [corners[it].y], [corners[it].z]))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:127
             corners_3D[1, :] = corners_3D[1, :] + t[it](1, pose_idx)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:128
             corners_3D[2, :] = corners_3D[2, :] + t[it](2, pose_idx)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:129
             corners_3D[3, :] = corners_3D[3, :] + t[it](3, pose_idx)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:130
             corners_3D = (dot(veloToCam[cam + 1], cat([corners_3D], [ones(1, size(corners_3D, 2))])))
-            # /opt/project/devkit/matlab/run_demoTracklets.m:131
             orientation_3D = dot(R, cat([0.0, dot(0.7, l)], [0.0, 0.0], [0.0, 0.0]))
             # /opt/project/devkit/matlab/run_demoTracklets.m:134
             orientation_3D[1, :] = orientation_3D[1, :] + t[it](1, pose_idx)
