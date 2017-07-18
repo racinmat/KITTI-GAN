@@ -1,5 +1,12 @@
-from smop.core import *
+import matplotlib
+# http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+matplotlib.use('Agg')
 
+from smop.core import *
+from devkit.python.loadCalibration import loadCalibration
+from devkit.python.readTracklets import readTracklets
+from devkit.python.visualization import visualization
+import glob
 
 @function
 def run_demoTracklets(base_dir=None, calib_dir=None):
@@ -48,15 +55,15 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
     cam = 2
 
     # get image sub-directory
-    image_dir = fullfile(base_dir, sprintf('/image_%02d/data', cam))
+    image_dir = base_dir + '/image_{:02d}/data'.format(cam)
     # get number of images for this dataset
-    nimages = length(dir(fullfile(image_dir, '*.png')))
+    nimages = len(glob.glob(image_dir + '/*.png'))
     # set up figure
     gh = visualization('init', image_dir)
     # read calibration for the day
-    veloToCam, K = loadCalibration(calib_dir, nargout=2)
+    veloToCam, K = loadCalibration(calib_dir)
     # read tracklets for the selected sequence
-    tracklets = readTracklets(cat(base_dir, '/tracklet_labels.xml'))
+    tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
 
     # tracklets = readTrackletsMex([base_dir '/tracklet_labels.xml']); # fast version
 
@@ -174,5 +181,5 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
                         img_idx = min(img_idx + 1, nimages - 1)
                     # /opt/project/devkit/matlab/run_demoTracklets.m:166
 
-    # clean up
-    close_('all')
+
+run_demoTracklets()
