@@ -1,5 +1,7 @@
 import matplotlib
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+from devkit.python.wrapToPi import wrapToPi
+
 matplotlib.use('Agg')
 
 from smop.core import *
@@ -65,34 +67,28 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
     # read tracklets for the selected sequence
     tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
 
-    # tracklets = readTrackletsMex([base_dir '/tracklet_labels.xml']); # fast version
-
     # extract tracklets
     # LOCAL OBJECT COORDINATE SYSTEM:
     #   x -> facing right
     #   y -> facing forward
     #   z -> facing up
-    for it in arange(1, numel(tracklets)).reshape(-1):
+    corners = np.empty_like(tracklets, dtype=dict)
+    t = np.empty_like(tracklets, dtype=list)
+    rz = np.empty_like(tracklets, dtype=list)
+    occlusion = np.empty_like(tracklets, dtype=list)
+    for it, tracklet in enumerate(tracklets):
         # shortcut for tracklet dimensions
-        w = tracklets[it].w
-        # /opt/project/devkit/matlab/run_demoTracklets.m:77
-        h = tracklets[it].h
-        # /opt/project/devkit/matlab/run_demoTracklets.m:78
-        l = tracklets[it].l
-        # /opt/project/devkit/matlab/run_demoTracklets.m:79
-        corners[it].x = copy(cat(l / 2, l / 2, - l / 2, - l / 2, l / 2, l / 2, - l / 2, - l / 2))
-        # /opt/project/devkit/matlab/run_demoTracklets.m:82
-        corners[it].y = copy(cat(w / 2, - w / 2, - w / 2, w / 2, w / 2, - w / 2, - w / 2, w / 2))
-        # /opt/project/devkit/matlab/run_demoTracklets.m:83
-        corners[it].z = copy(cat(0, 0, 0, 0, h, h, h, h))
-        # /opt/project/devkit/matlab/run_demoTracklets.m:84
-        t[it] = cat([tracklets[it].poses(1, arange())], [tracklets[it].poses(2, arange())],
-                    [tracklets[it].poses(3, arange())])
-        # /opt/project/devkit/matlab/run_demoTracklets.m:87
-        rz[it] = wrapToPi(tracklets[it].poses(6, arange()))
-        # /opt/project/devkit/matlab/run_demoTracklets.m:88
-        occlusion[it] = tracklets[it].poses(8, arange())
-    # /opt/project/devkit/matlab/run_demoTracklets.m:89
+        w = tracklet['w']
+        h = tracklet['h']
+        l = tracklet['l']
+        corners[it] = {}
+        corners[it]['x'] = [l / 2, l / 2, - l / 2, - l / 2, l / 2, l / 2, - l / 2, - l / 2]
+        corners[it]['y'] = [w / 2, - w / 2, - w / 2, w / 2, w / 2, - w / 2, - w / 2, w / 2]
+        corners[it]['z'] = [0, 0, 0, 0, h, h, h, h]
+        t[it] = [[tracklet['poses'][0, :]], [tracklet['poses'][1, :]],
+                    [tracklet['poses'][2, :]]]
+        rz[it] = wrapToPi(tracklet['poses'][5, :])
+        occlusion[it] = tracklet['poses'][7, :]
 
     # 3D bounding box faces (indices for corners)
     face_idx = matlabarray(cat(1, 2, 6, 5, 2, 3, 7, 6, 3, 4, 8, 7, 4, 1, 5, 8))
