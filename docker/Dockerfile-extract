@@ -1,6 +1,23 @@
-FROM jamesanglin/numpy-scipy
+FROM python:2.7
 
-RUN pip install --upgrade pip && \
-    easy_install smop && \
-    pip install ruamel.yaml && \
-    pip list --outdated --format=freeze
+RUN apt-get update && \
+    apt-get install -y \
+        libblas-dev \
+        liblapack-dev \
+        liblapacke-dev \
+        gfortran \
+        tk-dev \
+        tk \
+        tcl-dev \
+        tcl \
+        python-tk
+
+RUN pip install --upgrade pip
+RUN pip install \
+        numpy \
+        scipy \
+        pillow \
+        ruamel.yaml \
+        matplotlib
+
+RUN easy_install smop

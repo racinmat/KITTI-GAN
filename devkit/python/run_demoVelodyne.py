@@ -1,12 +1,15 @@
+import matplotlib
+# http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+matplotlib.use('Agg')
 from scipy.misc import imread
 from smop.core import *
 from visualization import *
 from project import *
 from loadCalibrationRigid import *
 from loadCalibrationCamToCam import *
-
-
-# /opt/project/devkit/matlab/run_demoVelodyne.m
+import matplotlib.pyplot as plt
+from matplotlib import figure
+import array
 
 
 @function
@@ -43,19 +46,20 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     P_velo_to_img = dot(dot(calib['P_rect'][cam], R_cam_to_rect), Tr_velo_to_cam)
     # load and display image
     img = imread('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
-    fig = figure('Position', cat(20, 100, size(img, 2), size(img, 1)))
-    axes('Position', cat(0, 0, 1, 1))
-    imshow(img)
-    hold('on')
+    fig = plt.figure()
+    plt.axis([0, 0, 1, 1])
+
     # load velodyne points
-    fid = fopen('{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame), 'rb')
+    f = open('{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame), 'rb')
     # /opt/project/devkit/matlab/run_demoVelodyne.m:39
-    velo = fread(fid, cat(4, inf), 'single').T
+    velo = array.array('d')  # d is type of double (same size as float64)
+    velo.fromfile(f, 3)
+    velo = fread(f, cat(4, inf), 'single').T
     # /opt/project/devkit/matlab/run_demoVelodyne.m:40
     velo = velo[1:5:end(), :]
     # /opt/project/devkit/matlab/run_demoVelodyne.m:41
 
-    fclose(fid)
+    fclose(f)
     # remove all points behind image plane (approximation
     idx = velo[:, 1] < 5
     # /opt/project/devkit/matlab/run_demoVelodyne.m:45
@@ -72,5 +76,6 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
         # /opt/project/devkit/matlab/run_demoVelodyne.m:54
         plot(velo_img[i, 1], velo_img[i, 2], 'o', 'LineWidth', 4, 'MarkerSize', 1, 'Color', cols[col_idx, :])
 
+    plt.imshow(img)
 
 run_demoVelodyne()
