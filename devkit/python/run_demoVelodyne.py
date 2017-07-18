@@ -12,7 +12,7 @@ from loadCalibrationCamToCam import *
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-@function
+
 def run_demoVelodyne(base_dir=None, calib_dir=None):
 
     # KITTI RAW DATA DEVELOPMENT KIT
