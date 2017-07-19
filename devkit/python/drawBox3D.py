@@ -8,11 +8,11 @@ def drawBox3D(h=None, occlusion=None, corners=None, face_idx=None, orientation=N
     occ_col = ['w', 'g', 'y', 'r']
     # draw projected 3D bounding boxes
     if corners is not None:
-        for f in arange(1, 4).reshape(-1):
-            h[1]['axes'].add_line(mlines.Line2D([corners[0, face_idx[f, :]], corners[0, face_idx[f, 0]]] + 1, [corners[1, face_idx[f, :]], corners[1, face_idx[f, 0]]] + 1, color=occ_col[int(occlusion) + 1], linewidth=6))
-            h[1]['axes'].add_line(mlines.Line2D([corners[0, face_idx[f, :]], corners[0, face_idx[f, 0]]] + 1, [corners[1, face_idx[f, :]], corners[1, face_idx[f, 0]]] + 1, color='k', linewidth=2))
+        for f in range(4):
+            h[1]['axes'].add_line(mlines.Line2D(np.append(corners[0, face_idx[f, :]], corners[0, face_idx[f, 0]]) + 1, np.append(corners[1, face_idx[f, :]], corners[1, face_idx[f, 0]]) + 1, color=occ_col[int(occlusion) + 1], linewidth=6))
+            h[1]['axes'].add_line(mlines.Line2D(np.append(corners[0, face_idx[f, :]], corners[0, face_idx[f, 0]]) + 1, np.append(corners[1, face_idx[f, :]], corners[1, face_idx[f, 0]]) + 1, color='k', linewidth=2))
 
     # draw orientation vector
     if orientation is not None:
-        h[1]['axes'].add_line(mlines.Line2D(cat(orientation[0, :], orientation[0, :]) + 1, cat(orientation[1, :], orientation[1, :]) + 1, color='w', linewidth=6))
-        h[1]['axes'].add_line(mlines.Line2D(cat(orientation[0, :], orientation[0, :]) + 1, cat(orientation[1, :], orientation[1, :]) + 1, color='k', linewidth=2))
+        h[1]['axes'].add_line(mlines.Line2D(np.append(orientation[0, :], orientation[0, :]) + 1, np.append(orientation[1, :], orientation[1, :]) + 1, color='w', linewidth=6))
+        h[1]['axes'].add_line(mlines.Line2D(np.append(orientation[0, :], orientation[0, :]) + 1, np.append(orientation[1, :], orientation[1, :]) + 1, color='k', linewidth=2))

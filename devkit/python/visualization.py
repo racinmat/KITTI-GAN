@@ -7,7 +7,8 @@ import matplotlib.image as mpimg
 def visualizationInit(image_dir=None):
     # create figure using size of first image in repository
     img = mpimg.imread('{:s}/{:010d}.png'.format(image_dir, 0))
-    plt.figure(1, figsize=(dot(0.8, size(img, 2)), dot(0.8 * 2, size(img, 1))))
+    # plt.figure(1, figsize=(dot(0.8, size(img, 2)), dot(0.8 * 2, size(img, 1))))
+    plt.figure()
     h = {0: {}, 1: {}}
     h[0]['axes'] = plt.axes([0, 0.5, 1, 0.5])
     h[1]['axes'] = plt.axes([0, 0, 1, 0.5])

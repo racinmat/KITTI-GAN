@@ -13,7 +13,7 @@ from devkit.python.loadCalibration import loadCalibration
 from devkit.python.readTracklets import readTracklets
 from devkit.python.visualization import visualizationUpdate, visualizationInit
 import glob
-
+import matplotlib.pyplot as plt
 
 def run_demoTracklets(base_dir=None, calib_dir=None):
 
@@ -65,6 +65,7 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
     nimages = len(glob.glob(image_dir + '/*.png'))
     # set up figure
     gh = visualizationInit(image_dir)
+    plt.savefig('bar.png')
     # read calibration for the day
     veloToCam, K = loadCalibration(calib_dir)
     # read tracklets for the selected sequence
@@ -101,68 +102,53 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
 
     # main loop (start at first image of sequence)
     img_idx = 0
-    while 1:
 
-        # visualization update for next frame
-        visualizationUpdate(image_dir, gh, img_idx, nimages)
-        for it in range(len(tracklets)):
-            # get relative tracklet frame index (starting at 0 with first appearance; 
-            # xml data stores poses relative to the first frame where the tracklet appeared)
-            pose_idx = img_idx - tracklets[it]['first_frame']
-            # only draw tracklets that are visible in current frame
-            if pose_idx < 0 or pose_idx > (size(tracklets[it]['poses'], 2) - 1):
-                continue
-                # compute 3d object rotation in velodyne coordinates
-                # VELODYNE COORDINATE SYSTEM:
-                #   x -> facing forward
-                #   y -> facing left
-                #   z -> facing up
-            l = tracklets[it]['l']
-            R = [[cos(rz[it][pose_idx]), - sin(rz[it][pose_idx]), 0], [sin(rz[it][pose_idx]), cos(rz[it][pose_idx]), 0],
-                 [0, 0, 1]]
-            corners_3D = dot(R, [corners[it]['x'], corners[it]['y'], corners[it]['z']])
-            corners_3D[0, :] = corners_3D[0, :] + t[it][0, pose_idx]
-            corners_3D[1, :] = corners_3D[1, :] + t[it][1, pose_idx]
-            corners_3D[2, :] = corners_3D[2, :] + t[it][2, pose_idx]
-            corners_3D = dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, size(corners_3D, 2))))))
-            orientation_3D = dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
-            orientation_3D[0, :] = orientation_3D[0, :] + t[it][0, pose_idx]
-            orientation_3D[1, :] = orientation_3D[1, :] + t[it][1, pose_idx]
-            orientation_3D[2, :] = orientation_3D[2, :] + t[it][2, pose_idx]
-            orientation_3D = dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, size(orientation_3D, 2))))))
-            if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
-                continue
-            # project the 3D bounding box into the image plane
-            corners_2D = projectToImage(corners_3D, K)
-            orientation_2D = projectToImage(orientation_3D, K)
-            drawBox3D(gh, occlusion[it][pose_idx], corners_2D, face_idx, orientation_2D)
-            # compute and draw the 2D bounding box from the 3D box projection
-            box = {'x1': min(corners_2D[1, :]),
-                   'x2': max(corners_2D[1, :]),
-                   'y1': min(corners_2D[2, :]),
-                   'y2': max(corners_2D[2, :])}
-            drawBox2D(gh, box, occlusion[it][pose_idx], tracklets[it]['objectType'])
-        # force drawing and tiny user interface
-        waitforbuttonpress
-        key = get(gcf, 'CurrentCharacter')
-        # /opt/project/devkit/matlab/run_demoTracklets.m:160
-        if 'q' == lower(key):
-            break
-        else:
-            if '-' == lower(key):
-                img_idx = max(img_idx - 1, 0)
-            # /opt/project/devkit/matlab/run_demoTracklets.m:163
-            else:
-                if 'x' == lower(key):
-                    img_idx = min(img_idx + 100, nimages - 1)
-                # /opt/project/devkit/matlab/run_demoTracklets.m:164
-                else:
-                    if 'y' == lower(key):
-                        img_idx = max(img_idx - 100, 0)
-                    # /opt/project/devkit/matlab/run_demoTracklets.m:165
-                    else:
-                        img_idx = min(img_idx + 1, nimages - 1)
-                        # /opt/project/devkit/matlab/run_demoTracklets.m:166
+    plt.savefig('bar0.png')
+
+    # visualization update for next frame
+    visualizationUpdate(image_dir, gh, img_idx, nimages)
+
+    plt.savefig('bar1.png')
+
+    for it in range(len(tracklets)):
+        # get relative tracklet frame index (starting at 0 with first appearance;
+        # xml data stores poses relative to the first frame where the tracklet appeared)
+        pose_idx = img_idx - tracklets[it]['first_frame']
+        # only draw tracklets that are visible in current frame
+        if pose_idx < 0 or pose_idx > (size(tracklets[it]['poses'], 2) - 1):
+            continue
+            # compute 3d object rotation in velodyne coordinates
+            # VELODYNE COORDINATE SYSTEM:
+            #   x -> facing forward
+            #   y -> facing left
+            #   z -> facing up
+        l = tracklets[it]['l']
+        R = [[cos(rz[it][pose_idx]), - sin(rz[it][pose_idx]), 0], [sin(rz[it][pose_idx]), cos(rz[it][pose_idx]), 0],
+             [0, 0, 1]]
+        corners_3D = dot(R, [corners[it]['x'], corners[it]['y'], corners[it]['z']])
+        corners_3D[0, :] = corners_3D[0, :] + t[it][0, pose_idx]
+        corners_3D[1, :] = corners_3D[1, :] + t[it][1, pose_idx]
+        corners_3D[2, :] = corners_3D[2, :] + t[it][2, pose_idx]
+        corners_3D = dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, size(corners_3D, 2))))))
+        orientation_3D = dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
+        orientation_3D[0, :] = orientation_3D[0, :] + t[it][0, pose_idx]
+        orientation_3D[1, :] = orientation_3D[1, :] + t[it][1, pose_idx]
+        orientation_3D[2, :] = orientation_3D[2, :] + t[it][2, pose_idx]
+        orientation_3D = dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, size(orientation_3D, 2))))))
+        if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
+            continue
+        # project the 3D bounding box into the image plane
+        corners_2D = projectToImage(corners_3D, K)
+        orientation_2D = projectToImage(orientation_3D, K)
+        drawBox3D(gh, occlusion[it][pose_idx], corners_2D, face_idx, orientation_2D)
+        # compute and draw the 2D bounding box from the 3D box projection
+        box = {'x1': min(corners_2D[0, :]),
+               'x2': max(corners_2D[0, :]),
+               'y1': min(corners_2D[1, :]),
+               'y2': max(corners_2D[1, :])}
+        drawBox2D(gh, box, occlusion[it][pose_idx], tracklets[it]['objectType'])
+
+    plt.savefig('bar2.png')
 
 
 run_demoTracklets()
