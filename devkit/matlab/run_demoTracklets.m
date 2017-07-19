@@ -131,7 +131,7 @@ while 1
     corners_3D      = (veloToCam{cam+1}*[corners_3D; ones(1,size(corners_3D,2))]);
     
     
-    % l = tracklets{it}.l; %  added by me
+    l = tracklets{it}.l; %  added by me
     % generate an orientation vector and compute coordinates in velodyneCS
     orientation_3D      = R*[0.0, 0.7*l; 0.0, 0.0; 0.0, 0.0];
     orientation_3D(1,:) = orientation_3D(1,:) + t{it}(1, pose_idx);

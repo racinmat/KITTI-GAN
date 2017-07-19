@@ -1,21 +1,21 @@
 import matplotlib
+
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
-from math import cos, sin
-
-from devkit.python.projectToImage import projectToImage
-from devkit.python.wrapToPi import wrapToPi
-
 matplotlib.use('Agg')
 
+from math import cos, sin
+from devkit.python.drawBox2D import drawBox2D
+from devkit.python.drawBox3D import drawBox3D
+from devkit.python.projectToImage import projectToImage
+from devkit.python.wrapToPi import wrapToPi
 from smop.core import *
 from devkit.python.loadCalibration import loadCalibration
 from devkit.python.readTracklets import readTracklets
 from devkit.python.visualization import visualizationUpdate, visualizationInit
 import glob
 
-@function
+
 def run_demoTracklets(base_dir=None, calib_dir=None):
-    nargin = run_demoTracklets.nargin
 
     # KITTI RAW DATA DEVELOPMENT KIT
     #
@@ -93,7 +93,11 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         occlusion[it] = tracklet['poses'][7, :]
 
     # 3D bounding box faces (indices for corners)
-    face_idx = [1, 2, 6, 5, 2, 3, 7, 6, 3, 4, 8, 7, 4, 1, 5, 8]
+    face_idx = np.array([[1, 2, 6, 5],  # front face
+                         [2, 3, 7, 6],  # left face
+                         [3, 4, 8, 7],  # back face
+                         [4, 1, 5, 8]]) # right face
+    face_idx -= 1
 
     # main loop (start at first image of sequence)
     img_idx = 0
@@ -114,7 +118,8 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
                 #   y -> facing left
                 #   z -> facing up
             l = tracklets[it]['l']
-            R = [[cos(rz[it][pose_idx]), - sin(rz[it][pose_idx]), 0], [sin(rz[it][pose_idx]), cos(rz[it][pose_idx]), 0], [0, 0, 1]]
+            R = [[cos(rz[it][pose_idx]), - sin(rz[it][pose_idx]), 0], [sin(rz[it][pose_idx]), cos(rz[it][pose_idx]), 0],
+                 [0, 0, 1]]
             corners_3D = dot(R, [corners[it]['x'], corners[it]['y'], corners[it]['z']])
             corners_3D[0, :] = corners_3D[0, :] + t[it][0, pose_idx]
             corners_3D[1, :] = corners_3D[1, :] + t[it][1, pose_idx]
@@ -132,11 +137,11 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
             orientation_2D = projectToImage(orientation_3D, K)
             drawBox3D(gh, occlusion[it][pose_idx], corners_2D, face_idx, orientation_2D)
             # compute and draw the 2D bounding box from the 3D box projection
-            box.x1 = copy(min(corners_2D[1, :]))
-            box.x2 = copy(max(corners_2D[1, :]))
-            box.y1 = copy(min(corners_2D[2, :]))
-            box.y2 = copy(max(corners_2D[2, :]))
-            drawBox2D(gh, box, occlusion[it][pose_idx], tracklets[it].objectType)
+            box = {'x1': min(corners_2D[1, :]),
+                   'x2': max(corners_2D[1, :]),
+                   'y1': min(corners_2D[2, :]),
+                   'y2': max(corners_2D[2, :])}
+            drawBox2D(gh, box, occlusion[it][pose_idx], tracklets[it]['objectType'])
         # force drawing and tiny user interface
         waitforbuttonpress
         key = get(gcf, 'CurrentCharacter')
@@ -157,7 +162,7 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
                     # /opt/project/devkit/matlab/run_demoTracklets.m:165
                     else:
                         img_idx = min(img_idx + 1, nimages - 1)
-                    # /opt/project/devkit/matlab/run_demoTracklets.m:166
+                        # /opt/project/devkit/matlab/run_demoTracklets.m:166
 
 
 run_demoTracklets()
