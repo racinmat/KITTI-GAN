@@ -19,7 +19,7 @@ if nargin<2
   calib_dir = './../../data/2011_09_26';
 end
 cam       = 2; % 0-based index
-frame     = 20; % 0-based index
+frame     = 1; % 0-based index
 
 % load calibration
 calib = loadCalibrationCamToCam(fullfile(calib_dir,'calib_cam_to_cam.txt'));

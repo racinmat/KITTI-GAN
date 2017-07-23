@@ -69,4 +69,6 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     plt.imshow(img)
     plt.savefig('foo.png')
 
-run_demoVelodyne()
+
+if __name__ == '__main__':
+    run_demoVelodyne()

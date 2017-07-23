@@ -37,7 +37,7 @@ def visualizationUpdate(image_dir=None, h=None, img_idx=None, nimages=None):
     h[0]['axes'].text(size(img, 2), 0, s='frame {:d}/{:d}'.format(img_idx, nimages - 1), color='g',
                       horizontalalignment='right', verticalalignment='top', fontsize=14, fontweight='bold',
                       backgroundcolor='black')
-    h[1]['axes'].text(size(img, 2) / 2, size(img, 1),
-                      s='\'SPACE\': Next Image  |  \'-\': Previous Image  |  \'x\': +100  |  \'y\': -100 | \'q\': quit',
-                      color='g', horizontalalignment='center', verticalalignment='bottom',
-                      fontsize=14, fontweight='bold', backgroundcolor='black')
+    # h[1]['axes'].text(size(img, 2) / 2, size(img, 1),
+    #                   s='\'SPACE\': Next Image  |  \'-\': Previous Image  |  \'x\': +100  |  \'y\': -100 | \'q\': quit',
+    #                   color='g', horizontalalignment='center', verticalalignment='bottom',
+    #                   fontsize=14, fontweight='bold', backgroundcolor='black')

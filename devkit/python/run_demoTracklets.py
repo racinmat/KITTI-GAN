@@ -65,7 +65,6 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
     nimages = len(glob.glob(image_dir + '/*.png'))
     # set up figure
     gh = visualizationInit(image_dir)
-    plt.savefig('bar.png')
     # read calibration for the day
     veloToCam, K = loadCalibration(calib_dir)
     # read tracklets for the selected sequence
@@ -103,12 +102,8 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
     # main loop (start at first image of sequence)
     img_idx = 0
 
-    plt.savefig('bar0.png')
-
     # visualization update for next frame
     visualizationUpdate(image_dir, gh, img_idx, nimages)
-
-    plt.savefig('bar1.png')
 
     for it in range(len(tracklets)):
         # get relative tracklet frame index (starting at 0 with first appearance;
@@ -148,7 +143,7 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
                'y2': max(corners_2D[1, :])}
         drawBox2D(gh, box, occlusion[it][pose_idx], tracklets[it]['objectType'])
 
-    plt.savefig('bar2.png')
+    plt.savefig('bar3.png')
 
-
-run_demoTracklets()
+if __name__ == '__main__':
+    run_demoTracklets()

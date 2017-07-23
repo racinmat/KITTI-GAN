@@ -14,5 +14,5 @@ def drawBox3D(h=None, occlusion=None, corners=None, face_idx=None, orientation=N
 
     # draw orientation vector
     if orientation is not None:
-        h[1]['axes'].add_line(mlines.Line2D(np.append(orientation[0, :], orientation[0, :]) + 1, np.append(orientation[1, :], orientation[1, :]) + 1, color='w', linewidth=6))
-        h[1]['axes'].add_line(mlines.Line2D(np.append(orientation[0, :], orientation[0, :]) + 1, np.append(orientation[1, :], orientation[1, :]) + 1, color='k', linewidth=2))
+        h[1]['axes'].add_line(mlines.Line2D(orientation[0, :] + 1, orientation[1, :] + 1, color='w', linewidth=6))
+        h[1]['axes'].add_line(mlines.Line2D(orientation[0, :] + 1, orientation[1, :] + 1, color='k', linewidth=2))
