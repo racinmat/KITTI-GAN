@@ -58,13 +58,14 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         calib_dir = './../../data/2011_09_26'
 
     cam = 2
+    frame = 20
 
     # get image sub-directory
     image_dir = base_dir + '/image_{:02d}/data'.format(cam)
     # get number of images for this dataset
     nimages = len(glob.glob(image_dir + '/*.png'))
     # set up figure
-    gh = visualizationInit(image_dir)
+    gh = visualizationInit(image_dir, frame)
     # read calibration for the day
     veloToCam, K = loadCalibration(calib_dir)
     # read tracklets for the selected sequence
@@ -99,16 +100,13 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
                          [4, 1, 5, 8]]) # right face
     face_idx -= 1
 
-    # main loop (start at first image of sequence)
-    img_idx = 0
-
     # visualization update for next frame
-    visualizationUpdate(image_dir, gh, img_idx, nimages)
+    visualizationUpdate(image_dir, gh, frame, nimages)
 
     for it in range(len(tracklets)):
         # get relative tracklet frame index (starting at 0 with first appearance;
         # xml data stores poses relative to the first frame where the tracklet appeared)
-        pose_idx = img_idx - tracklets[it]['first_frame']
+        pose_idx = frame - tracklets[it]['first_frame']
         # only draw tracklets that are visible in current frame
         if pose_idx < 0 or pose_idx > (size(tracklets[it]['poses'], 2) - 1):
             continue
