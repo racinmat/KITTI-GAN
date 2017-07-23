@@ -1,8 +1,7 @@
-from smop.core import *
+import numpy as np
 
 
-@function
-def extractPoses(poses=None):
+def extractPoses(poses):
     # EXTRACTPOSES extracts poses from subtree of labels.xml
 
     nPoses = int(poses.count.text)
@@ -29,6 +28,6 @@ def extractPoses(poses=None):
 
         ## plausibility check
     if nPoses != poseIdx:
-        fprintf(2, 'number of poses (%d) does not match count (%d)!', nPoses, poseIdx)
+        print('number of poses {:d} does not match count {:d}!'.format(nPoses, poseIdx))
 
     return posesVec
