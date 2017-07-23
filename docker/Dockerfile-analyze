@@ -1,0 +1,24 @@
+FROM python:3.5
+
+RUN apt-get update && \
+    apt-get install -y \
+        libblas-dev \
+        liblapack-dev \
+        liblapacke-dev \
+        gfortran \
+        tk-dev \
+        tk \
+        tcl-dev \
+        tcl \
+        python-tk \
+        python-bs4
+
+RUN pip install --upgrade pip
+RUN pip install \
+        numpy \
+        scipy \
+        pillow \
+        ruamel.yaml \
+        matplotlib \
+        lxml \
+        beautifulsoup4

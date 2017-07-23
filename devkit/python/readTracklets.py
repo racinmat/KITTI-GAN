@@ -3,12 +3,17 @@ from bs4 import BeautifulSoup
 import pickle
 from devkit.python.extractPoses import extractPoses
 import os
+import sys
 
 def readTracklets(filename=None):
-    if os.path.isfile(filename + '.cache'):
-        file = open(filename + '.cache', 'rb')
-        tracklets = pickle.load(file)
-        return tracklets
+    version = '.'.join([str(i) for i in sys.version_info[0:3]])
+    if os.path.isfile(filename + '.' + version + '.cache'):
+        file = open(filename + '.' + version + '.cache', 'rb')
+        try:
+            tracklets = pickle.load(file)
+            return tracklets
+        except UnicodeDecodeError:
+            pass
 
     # READTRACKLETS reads annotations from xml-files
 
@@ -41,7 +46,7 @@ def readTracklets(filename=None):
     if count != objIdx:
         print('number of tracklets {:d} does not match count {:d}!'.format(objIdx, count))
 
-    file = open(filename + '.cache', 'wb')
+    file = open(filename + '.' + version + '.cache', 'wb')
     pickle.dump(tracklets, file)
     file.close()
 
