@@ -12,7 +12,7 @@ from devkit.python.loadCalibrationRigid import loadCalibrationRigid
 from devkit.python.project import project
 from devkit.python.utils import loadFromFile
 from scipy.misc import imread
-from smop.core import *
+from utils import size
 
 
 def run_demoVelodyne(base_dir=None, calib_dir=None):
@@ -24,8 +24,7 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     # base_dir .... absolute path to sequence base directory (ends with _sync)
     # calib_dir ... absolute path to directory that contains calibration files
 
-    # clear and close everything
-    disp('======= KITTI DevKit Demo =======')
+    print('======= KITTI DevKit Demo =======')
     # options (modify this to select your sequence)
     if base_dir is None:
         base_dir = './../../data/2011_09_26/2011_09_26_drive_0009_sync'
@@ -36,10 +35,10 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     cam = 2
     frame = 20
 
-    image_resolution = [1242, 375]
+    image_resolution = np.array([1242, 375])
     # load calibration
-    calib = loadCalibrationCamToCam(fullfile(calib_dir, 'calib_cam_to_cam.txt'))
-    Tr_velo_to_cam = loadCalibrationRigid(fullfile(calib_dir, 'calib_velo_to_cam.txt'))
+    calib = loadCalibrationCamToCam(calib_dir + '/calib_cam_to_cam.txt')
+    Tr_velo_to_cam = loadCalibrationRigid(calib_dir + '/calib_velo_to_cam.txt')
     # compute projection matrix velodyne->image plane
     R_cam_to_rect = np.eye(4)
     R_cam_to_rect[0:3, 0:3] = calib['R_rect'][0]
@@ -71,7 +70,7 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     plt.savefig('velo-only-pointcloud.png')
 
     dpi = fig.dpi
-    fig.set_size_inches(image_resolution * dpi)
+    fig.set_size_inches(image_resolution / dpi)
 
     plt.savefig('velo-set.png')
     plt.imshow(img)

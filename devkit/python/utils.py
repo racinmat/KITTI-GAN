@@ -32,3 +32,17 @@ def loadFromFile(fname, columns, dtype):
     with open(fname, 'rb') as f:
         result = np.fromfile(f, dtype).reshape((-1, columns))
     return result
+
+
+def size(a, b=0):
+    s = np.asarray(a).shape
+    if s is ():
+        return 1 if b else (1,)
+    # a is not a scalar
+    try:
+        if b:
+            return s[b-1]
+        else:
+            return s
+    except IndexError:
+        return 1
