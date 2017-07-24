@@ -5,6 +5,7 @@ from devkit.python.extractPoses import extractPoses
 import os
 import sys
 
+
 def readTracklets(filename=None):
     version = '.'.join([str(i) for i in sys.version_info[0:3]])
     if os.path.isfile(filename + '.' + version + '.cache'):

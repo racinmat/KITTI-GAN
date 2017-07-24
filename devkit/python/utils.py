@@ -46,3 +46,10 @@ def size(a, b=0):
             return s
     except IndexError:
         return 1
+
+
+def isempty(a):
+    try:
+        return 0 in np.asarray(a).shape
+    except AttributeError:
+        return False

@@ -1,4 +1,3 @@
-from smop.core import *
 import numpy as np
 
 

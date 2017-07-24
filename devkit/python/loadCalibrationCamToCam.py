@@ -1,9 +1,9 @@
-from smop.core import *
 import ruamel.yaml as yaml
 from devkit.python.utils import readVariable
+import numpy as np
+from utils import isempty
 
 
-@function
 def loadCalibrationCamToCam(filename=None):
 
     # open file
@@ -48,7 +48,7 @@ def loadCalibrationCamToCam(filename=None):
         calib['R'][cam] = R_
         calib['T'][cam] = T_
 
-        if logical_not(isempty(S_rect_)) and logical_not(isempty(R_rect_)) and logical_not(isempty(P_rect_)):
+        if (not isempty(S_rect_)) and (not isempty(R_rect_)) and (not isempty(P_rect_)):
             calib['S_rect'][cam] = S_rect_
             calib['R_rect'][cam] = R_rect_
             calib['P_rect'][cam] = P_rect_

@@ -1,9 +1,8 @@
-from smop.core import *
 import ruamel.yaml as yaml
 from devkit.python.utils import readVariable
+import numpy as np
 
 
-@function
 def loadCalibrationRigid(filename=None):
     # open file
     with open(filename, 'r') as stream:
