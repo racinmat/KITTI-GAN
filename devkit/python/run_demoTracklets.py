@@ -119,16 +119,16 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         l = tracklets[it]['l']
         R = [[cos(rz[it][pose_idx]), - sin(rz[it][pose_idx]), 0], [sin(rz[it][pose_idx]), cos(rz[it][pose_idx]), 0],
              [0, 0, 1]]
-        corners_3D = dot(R, [corners[it]['x'], corners[it]['y'], corners[it]['z']])
+        corners_3D = np.dot(R, [corners[it]['x'], corners[it]['y'], corners[it]['z']])
         corners_3D[0, :] = corners_3D[0, :] + t[it][0, pose_idx]
         corners_3D[1, :] = corners_3D[1, :] + t[it][1, pose_idx]
         corners_3D[2, :] = corners_3D[2, :] + t[it][2, pose_idx]
-        corners_3D = dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, size(corners_3D, 2))))))
-        orientation_3D = dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
+        corners_3D = np.dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, size(corners_3D, 2))))))
+        orientation_3D = np.dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
         orientation_3D[0, :] = orientation_3D[0, :] + t[it][0, pose_idx]
         orientation_3D[1, :] = orientation_3D[1, :] + t[it][1, pose_idx]
         orientation_3D[2, :] = orientation_3D[2, :] + t[it][2, pose_idx]
-        orientation_3D = dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, size(orientation_3D, 2))))))
+        orientation_3D = np.dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, size(orientation_3D, 2))))))
         if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
             continue
         # project the 3D bounding box into the image plane

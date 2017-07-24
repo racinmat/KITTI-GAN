@@ -10,7 +10,7 @@ def project(p_in=None, T=None):
     if size(p2_in, 2) < dim_proj:
         p2_in[:, dim_proj] = 1
 
-    p2_out = (dot(T, p2_in.T)).T
+    p2_out = (np.dot(T, p2_in.T)).T
     # normalize homogeneous coordinates:
     p_out = p2_out[:, 0:dim_norm - 1] / repmat(p2_out[:, dim_norm - 1], 2, 1).T
     return p_out

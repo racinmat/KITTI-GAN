@@ -29,10 +29,10 @@ def loadCalibration(dir=None):
     # transformation: velodyne -> rectified camera coordinates
 
     veloToCam = {}
-    veloToCam[0] = dot(dot(T0, R_rect00), Tr_velo_to_cam)
-    veloToCam[1] = dot(dot(T1, R_rect00), Tr_velo_to_cam)
-    veloToCam[2] = dot(dot(T2, R_rect00), Tr_velo_to_cam)
-    veloToCam[3] = dot(dot(T3, R_rect00), Tr_velo_to_cam)
+    veloToCam[0] = np.dot(np.dot(T0, R_rect00), Tr_velo_to_cam)
+    veloToCam[1] = np.dot(np.dot(T1, R_rect00), Tr_velo_to_cam)
+    veloToCam[2] = np.dot(np.dot(T2, R_rect00), Tr_velo_to_cam)
+    veloToCam[3] = np.dot(np.dot(T3, R_rect00), Tr_velo_to_cam)
     # calibration matrix after rectification (equal for all cameras)
     K = calib['P_rect'][1][:, 0:3]
     return veloToCam, K
