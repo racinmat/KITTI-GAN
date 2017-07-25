@@ -62,7 +62,7 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     # plot points
     cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
 
-    for i in range(size(velo_img, 1)):
+    for i in range(np.size(velo_img, 0)):
         col_idx = int(round(256 * 5 / velo[i, 0])) - 1
         plt.plot(velo_img[i, 0], velo_img[i, 1], 'o', linewidth=4, markersize=1, color=cols[col_idx, 0:3])
 
@@ -72,6 +72,11 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     fig.set_size_inches(image_resolution / dpi)
 
     plt.savefig('velo-set.png')
+
+    white_img = mpimg.imread('../../white.png')
+    plt.imshow(white_img)
+    plt.savefig('velo-white.png')
+
     plt.imshow(img)
     plt.savefig('velo-with-image.png')
 
