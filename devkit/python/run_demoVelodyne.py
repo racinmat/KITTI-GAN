@@ -70,8 +70,8 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
     dpi = fig.dpi
     fig.set_size_inches(image_resolution / dpi)
     ax = plt.gca()
-    ax.set_xlim((-0.5, 1241.5))
-    ax.set_ylim((374.5, -0.5))
+    ax.set_xlim((-0.5, image_resolution[0] - 0.5))
+    ax.set_ylim((image_resolution[1] - 0.5, -0.5))
 
     plt.savefig('velo-set.png')
 
