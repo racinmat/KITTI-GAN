@@ -2,84 +2,86 @@ from devkit.python.loadCalibration import loadCalibration
 from devkit.python.projectToImage import projectToImage
 from devkit.python.readTracklets import readTracklets
 import numpy as np
-from smop.core import *
 import glob
 from devkit.python.wrapToPi import wrapToPi
 from math import cos, sin
 
 
-def load_tracklets(base_dir=None, calib_dir=None):
-    bounding_box_data = []
-
-    cam = 2
-    frame = 20
-
-    # get image sub-directory
-    image_dir = base_dir + '/image_{:02d}/data'.format(cam)
-    # get number of images for this dataset
-    nimages = len(glob.glob(image_dir + '/*.png'))
-    # read calibration for the day
-    veloToCam, K = loadCalibration(calib_dir)
+def load_tracklets(base_dir):
     # read tracklets for the selected sequence
     tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
-    return
-
-    # extract tracklets
-    # LOCAL OBJECT COORDINATE SYSTEM:
-    #   x -> facing right
-    #   y -> facing forward
-    #   z -> facing up
-    corners = np.empty_like(tracklets, dtype=dict)
-    t = np.empty_like(tracklets, dtype=list)
-    rz = np.empty_like(tracklets, dtype=list)
-    occlusion = np.empty_like(tracklets, dtype=list)
-    for it, tracklet in enumerate(tracklets):
-        # shortcut for tracklet dimensions
-        w = tracklet['w']
-        h = tracklet['h']
-        l = tracklet['l']
-        corners[it] = {}
-        corners[it]['x'] = [l / 2, l / 2, - l / 2, - l / 2, l / 2, l / 2, - l / 2, - l / 2]
-        corners[it]['y'] = [w / 2, - w / 2, - w / 2, w / 2, w / 2, - w / 2, - w / 2, w / 2]
-        corners[it]['z'] = [0, 0, 0, 0, h, h, h, h]
-        t[it] = np.vstack((tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]))
-        rz[it] = wrapToPi(tracklet['poses'][5, :])
-        occlusion[it] = tracklet['poses'][7, :]
-
-    for it in range(len(tracklets)):
-        # get relative tracklet frame index (starting at 0 with first appearance;
-        # xml data stores poses relative to the first frame where the tracklet appeared)
-        pose_idx = frame - tracklets[it]['first_frame']
-        # only draw tracklets that are visible in current frame
-        if pose_idx < 0 or pose_idx > (size(tracklets[it]['poses'], 2) - 1):
-            continue
-            # compute 3d object rotation in velodyne coordinates
-            # VELODYNE COORDINATE SYSTEM:
-            #   x -> facing forward
-            #   y -> facing left
-            #   z -> facing up
-        l = tracklets[it]['l']
-        R = [[cos(rz[it][pose_idx]), - sin(rz[it][pose_idx]), 0],
-             [sin(rz[it][pose_idx]), cos(rz[it][pose_idx]), 0],
-             [0, 0, 1]]
-        corners_3D = np.dot(R, [corners[it]['x'], corners[it]['y'], corners[it]['z']])
-        corners_3D[0, :] = corners_3D[0, :] + t[it][0, pose_idx]
-        corners_3D[1, :] = corners_3D[1, :] + t[it][1, pose_idx]
-        corners_3D[2, :] = corners_3D[2, :] + t[it][2, pose_idx]
-        corners_3D = np.dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, size(corners_3D, 2))))))
-        orientation_3D = np.dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
-        orientation_3D[0, :] = orientation_3D[0, :] + t[it][0, pose_idx]
-        orientation_3D[1, :] = orientation_3D[1, :] + t[it][1, pose_idx]
-        orientation_3D[2, :] = orientation_3D[2, :] + t[it][2, pose_idx]
-        orientation_3D = np.dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, size(orientation_3D, 2))))))
-        if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
-            continue
-        # project the 3D bounding box into the image plane
-        corners_2D = projectToImage(corners_3D, K)
-        orientation_2D = projectToImage(orientation_3D, K)
+    return tracklets
 
 
-if __name__ == '__main__':
+def is_tracklet_seen(tracklet, frame, veloToCam, cam):
+    pose_idx = frame - tracklet['first_frame']
+    corners = get_corners(tracklet)
+    # only draw tracklets that are visible in current frame
+    if pose_idx < 0 or pose_idx > (np.size(tracklet['poses'], 1) - 1):
+        return False
+
+    rz = wrapToPi(tracklet['poses'][5, :])
+    t = np.vstack((tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]))
+    l = tracklet['l']
+    corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, pose_idx=pose_idx, l=l, t=t,
+                                                             veloToCam=veloToCam, cam=cam)
+    if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
+        return False
+
+    return True
+
+
+def tracklet_to_bounding_box(tracklet, cam, frame, veloToCam, K):
+    corners = get_corners(tracklet)
+    t = np.vstack((tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]))
+    rz = wrapToPi(tracklet['poses'][5, :])
+    occlusion = tracklet['poses'][7, :]
+
+    pose_idx = frame - tracklet['first_frame']
+    l = tracklet['l']
+    corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, pose_idx=pose_idx, l=l, t=t,
+                                                             veloToCam=veloToCam, cam=cam)
+    corners_2D = projectToImage(corners_3D, K)
+    orientation_2D = projectToImage(orientation_3D, K)
+
+    return corners, t, rz, occlusion, corners_3D, orientation_3D, corners_2D, orientation_2D
+
+
+def rz_to_R(rz):
+    R = [[cos(rz), - sin(rz), 0],
+         [sin(rz), cos(rz), 0],
+         [0, 0, 1]]
+    return R
+
+
+def get_corners(tracklet):
+    w = tracklet['w']
+    h = tracklet['h']
+    l = tracklet['l']
+    corners = {
+        'x': [l / 2, l / 2, - l / 2, - l / 2, l / 2, l / 2, - l / 2, - l / 2],
+        'y': [w / 2, - w / 2, - w / 2, w / 2, w / 2, - w / 2, - w / 2, w / 2],
+        'z': [0, 0, 0, 0, h, h, h, h]
+    }
+    return corners
+
+
+def get_corners_and_orientation(corners, rz, pose_idx, l, t, veloToCam, cam):
+    R = rz_to_R(rz[pose_idx])
+    corners_3D = np.dot(R, [corners['x'], corners['y'], corners['z']])
+    corners_3D[0, :] = corners_3D[0, :] + t[0, pose_idx]
+    corners_3D[1, :] = corners_3D[1, :] + t[1, pose_idx]
+    corners_3D[2, :] = corners_3D[2, :] + t[2, pose_idx]
+    corners_3D = np.dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, np.size(corners_3D, 1))))))
+    orientation_3D = np.dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
+    orientation_3D[0, :] = orientation_3D[0, :] + t[0, pose_idx]
+    orientation_3D[1, :] = orientation_3D[1, :] + t[1, pose_idx]
+    orientation_3D[2, :] = orientation_3D[2, :] + t[2, pose_idx]
+    orientation_3D = np.dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, np.size(orientation_3D, 1))))))
+    return corners_3D, orientation_3D
+
+
+def main():
     dirs = [
         './data/2011_09_26/2011_09_26_drive_0009_sync',
         './data/2011_09_26/2011_09_26_drive_0015_sync',
@@ -88,5 +90,18 @@ if __name__ == '__main__':
     ]
     calib_dir = './data/2011_09_26'
 
+    cam = 2
+    frame = 20
+
+    veloToCam, K = loadCalibration(calib_dir)
+
     for dir in dirs:
-        load_tracklets(base_dir=dir, calib_dir=calib_dir)
+        tracklets = load_tracklets(base_dir=dir)
+        for tracklet in tracklets:
+            if is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
+                corners, t, rz, occlusion, corners_3D, orientation_3D, corners_2D, orientation_2D = tracklet_to_bounding_box(tracklet, cam=cam, frame=frame, veloToCam=veloToCam, K=K)
+
+
+if __name__ == '__main__':
+    main()
+
