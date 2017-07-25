@@ -8,13 +8,12 @@ from devkit.python.drawBox2D import drawBox2D
 from devkit.python.drawBox3D import drawBox3D
 from devkit.python.projectToImage import projectToImage
 from devkit.python.wrapToPi import wrapToPi
-from smop.core import *
 from devkit.python.loadCalibration import loadCalibration
 from devkit.python.readTracklets import readTracklets
 from devkit.python.visualization import visualizationUpdate, visualizationInit
 import glob
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def run_demoTracklets(base_dir=None, calib_dir=None):
 
@@ -38,7 +37,7 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
     #   white:  unknown
 
     # clear and close everything
-    disp('======= KITTI DevKit Demo =======')
+    print('======= KITTI DevKit Demo =======')
     # options (modify this to select your sequence)
     # the base_dir must contain:
     #   - the data directories (image_00, image_01, ..)
@@ -109,7 +108,8 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         # xml data stores poses relative to the first frame where the tracklet appeared)
         pose_idx = frame - tracklets[it]['first_frame']
         # only draw tracklets that are visible in current frame
-        if pose_idx < 0 or pose_idx > (size(tracklets[it]['poses'], 2) - 1):
+        if pose_idx < 0 or pose_idx > (np.size(tracklets[it]['poses'], 1) - 1):
+            # todo: check it if -1 is correct
             continue
             # compute 3d object rotation in velodyne coordinates
             # VELODYNE COORDINATE SYSTEM:
@@ -123,12 +123,12 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         corners_3D[0, :] = corners_3D[0, :] + t[it][0, pose_idx]
         corners_3D[1, :] = corners_3D[1, :] + t[it][1, pose_idx]
         corners_3D[2, :] = corners_3D[2, :] + t[it][2, pose_idx]
-        corners_3D = np.dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, size(corners_3D, 2))))))
+        corners_3D = np.dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, np.size(corners_3D, 1))))))
         orientation_3D = np.dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
         orientation_3D[0, :] = orientation_3D[0, :] + t[it][0, pose_idx]
         orientation_3D[1, :] = orientation_3D[1, :] + t[it][1, pose_idx]
         orientation_3D[2, :] = orientation_3D[2, :] + t[it][2, pose_idx]
-        orientation_3D = np.dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, size(orientation_3D, 2))))))
+        orientation_3D = np.dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, np.size(orientation_3D, 1))))))
         if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
             continue
         # project the 3D bounding box into the image plane

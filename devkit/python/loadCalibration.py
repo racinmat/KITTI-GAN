@@ -1,18 +1,16 @@
-from smop.core import *
-
+import numpy as np
 from devkit.python.loadCalibrationCamToCam import loadCalibrationCamToCam
 from devkit.python.loadCalibrationRigid import loadCalibrationRigid
 
 
-@function
 def loadCalibration(dir=None):
     # LOADCALIBRATION provides all needed coordinate system transformations
     # returns the pre-computed velodyne to cam (gray and color) projection
 
     # get the velodyne to camera calibration
-    Tr_velo_to_cam = loadCalibrationRigid(fullfile(dir, 'calib_velo_to_cam.txt'))
+    Tr_velo_to_cam = loadCalibrationRigid(dir + '/calib_velo_to_cam.txt')
     # get the camera intrinsic and extrinsic calibration
-    calib = loadCalibrationCamToCam(fullfile(dir, 'calib_cam_to_cam.txt'))
+    calib = loadCalibrationCamToCam(dir + '/calib_cam_to_cam.txt')
     # create 4x4 matrix from rectifying rotation matrix
     R_rect00 = np.zeros((4, 4))
     R_rect00[0:3, 0:3] = calib['R_rect'][0]

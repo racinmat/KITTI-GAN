@@ -11,7 +11,6 @@ from devkit.python.loadCalibrationCamToCam import loadCalibrationCamToCam
 from devkit.python.loadCalibrationRigid import loadCalibrationRigid
 from devkit.python.project import project
 from devkit.python.utils import loadFromFile
-from scipy.misc import imread
 from utils import size
 
 
