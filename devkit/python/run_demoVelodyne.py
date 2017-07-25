@@ -64,14 +64,14 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
 
     col_indices = np.round(256 * 5 / velo[:, 0]).astype(int) - 1
     plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
-    # for i in range(np.size(velo_img, 0)):
-    #     col_idx = int(round(256 * 5 / velo[i, 0])) - 1
-    #     plt.plot(velo_img[i, 0], velo_img[i, 1], 'o', linewidth=4, markersize=1, color=cols[col_idx, 0:3])
 
     plt.savefig('velo-only-pointcloud.png')
 
     dpi = fig.dpi
     fig.set_size_inches(image_resolution / dpi)
+    ax = plt.gca()
+    ax.set_xlim((-0.5, 1241.5))
+    ax.set_ylim((374.5, -0.5))
 
     plt.savefig('velo-set.png')
 
