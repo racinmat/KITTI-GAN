@@ -37,10 +37,10 @@ def is_tracklet_seen(tracklet, frame, veloToCam, cam):
         return False
 
     corners = get_corners(w=tracklet['w'], h=tracklet['h'], l=tracklet['l'])
-    rz = wrapToPi(tracklet['poses'][5, :])
-    t = np.vstack((tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]))
     l = tracklet['l']
-    corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, pose_idx=pose_idx, l=l, t=t,
+    t = [tracklet['poses_dict'][pose_idx]['tx'], tracklet['poses_dict'][pose_idx]['ty'], tracklet['poses_dict'][pose_idx]['tz']]
+    rz = wrapToPi(tracklet['poses_dict'][pose_idx]['rz'])
+    corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, l=l, t=t,
                                                              veloToCam=veloToCam, cam=cam)
     if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
         return False
@@ -50,13 +50,13 @@ def is_tracklet_seen(tracklet, frame, veloToCam, cam):
 
 def tracklet_to_bounding_box(tracklet, cam, frame, veloToCam, K):
     corners = get_corners(w=tracklet['w'], h=tracklet['h'], l=tracklet['l'])
-    t = np.vstack((tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]))
-    rz = wrapToPi(tracklet['poses'][5, :])
     occlusion = tracklet['poses'][7, :]
 
     pose_idx = frame - tracklet['first_frame']
     l = tracklet['l']
-    corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, pose_idx=pose_idx, l=l, t=t,
+    t = [tracklet['poses_dict'][pose_idx]['tx'], tracklet['poses_dict'][pose_idx]['ty'], tracklet['poses_dict'][pose_idx]['tz']]
+    rz = wrapToPi(tracklet['poses_dict'][pose_idx]['rz'])
+    corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, l=l, t=t,
                                                              veloToCam=veloToCam, cam=cam)
     corners_2D = projectToImage(corners_3D, K)
     box = {'x1': min(corners_2D[0, :]),
@@ -85,17 +85,17 @@ def get_corners(w, h, l):
     return corners
 
 
-def get_corners_and_orientation(corners, rz, pose_idx, l, t, veloToCam, cam):
-    R = rz_to_R(rz[pose_idx])
+def get_corners_and_orientation(corners, rz, l, t, veloToCam, cam):
+    R = rz_to_R(rz)
     corners_3D = np.dot(R, [corners['x'], corners['y'], corners['z']])
-    corners_3D[0, :] = corners_3D[0, :] + t[0, pose_idx]
-    corners_3D[1, :] = corners_3D[1, :] + t[1, pose_idx]
-    corners_3D[2, :] = corners_3D[2, :] + t[2, pose_idx]
+    corners_3D[0, :] = corners_3D[0, :] + t[0]
+    corners_3D[1, :] = corners_3D[1, :] + t[1]
+    corners_3D[2, :] = corners_3D[2, :] + t[2]
     corners_3D = np.dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, np.size(corners_3D, 1))))))
     orientation_3D = np.dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
-    orientation_3D[0, :] = orientation_3D[0, :] + t[0, pose_idx]
-    orientation_3D[1, :] = orientation_3D[1, :] + t[1, pose_idx]
-    orientation_3D[2, :] = orientation_3D[2, :] + t[2, pose_idx]
+    orientation_3D[0, :] = orientation_3D[0, :] + t[0]
+    orientation_3D[1, :] = orientation_3D[1, :] + t[1]
+    orientation_3D[2, :] = orientation_3D[2, :] + t[2]
     orientation_3D = np.dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, np.size(orientation_3D, 1))))))
     return corners_3D, orientation_3D
 
@@ -197,18 +197,18 @@ def main():
         image_dir = dir + '/image_{:02d}/data'.format(cam)
         # get number of images for this dataset
         frames = len(glob.glob(image_dir + '/*.png'))
-        frames = 10
+        # frames = 10
 
         print('processing drive no. {:d}/{:d} with {:d} frames'.format(i + 1, len(drives), frames))
 
         tracklets = load_tracklets(base_dir=dir)
         for frame in range(frames):
             # percentage printing
-            percent = 5
-            part = int(((100 * frame) / frames) / percent)
-            previous = int(((100 * (frame - 1)) / frames) / percent)
-            if part - previous > 0:
-                print(str(percent * part) + '% extracted.')
+            # percent = 5
+            # part = int(((100 * frame) / frames) / percent)
+            # previous = int(((100 * (frame - 1)) / frames) / percent)
+            # if part - previous > 0:
+            #     print(str(percent * part) + '% extracted.')
 
             for j, tracklet in enumerate(tracklets):
                 if not is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
@@ -252,3 +252,4 @@ if __name__ == '__main__':
     print(readTracklets.cache_info())
     print(loadFromFile.cache_info())
     print(get_corners.cache_info())
+    print(get_P_velo_to_img.cache_info())
