@@ -1,7 +1,6 @@
 import ruamel.yaml as yaml
-from devkit.python.utils import readVariable
+from devkit.python.utils import readVariable, isempty
 import numpy as np
-from utils import isempty
 
 
 def loadCalibrationCamToCam(filename=None):

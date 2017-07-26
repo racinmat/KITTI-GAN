@@ -34,13 +34,13 @@ def extractPoses(poses):
             'rz': float(pose.rz.text),
             'state': float(pose.state.text),
             'occlusion': int(pose.occlusion.text),
-            'occlusion_kf': float(pose.occlusion_kf.text),
-            'truncation': float(pose.truncation.text),
-            'amt_occlusion': float(pose.amt_occlusion.text),
-            'amt_occlusion_kf': float(pose.amt_occlusion_kf.text),
-            'amt_border_l': float(pose.amt_border_l.text),
-            'amt_border_r': float(pose.amt_border_r.text),
-            'amt_border_kf': float(pose.amt_border_kf.text)
+            'occlusion_kf': int(pose.occlusion_kf.text),
+            'truncation': int(pose.truncation.text),
+            'amt_occlusion': int(pose.amt_occlusion.text),
+            'amt_occlusion_kf': int(pose.amt_occlusion_kf.text),
+            'amt_border_l': int(pose.amt_border_l.text),
+            'amt_border_r': int(pose.amt_border_r.text),
+            'amt_border_kf': int(pose.amt_border_kf.text)
         }
         poseIdx += 1
 

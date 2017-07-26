@@ -156,7 +156,24 @@ def main():
 
     veloToCam, K = loadCalibration(calib_dir)
 
-    data = []
+    posesData = np.empty((15, 0), dtype=float)
+    for i, dir in enumerate(dirs):
+        tracklets = load_tracklets(base_dir=dir)
+        for j, tracklet in enumerate(tracklets):
+            posesData = np.concatenate((posesData, tracklet['poses']), axis=1)
+
+
+    # nbins = 50
+    # fig = plt.figure()
+    # for i in range(1, 15):
+    #     fig.add_subplot(14, 1, i)
+    #     plt.hist(x=posesData[i, :], bins=nbins)
+    #     plt.title('hist of ' + str(i))
+    #
+    # fig.set_figheight(20)
+    # fig.subplots_adjust(hspace=2)
+    # plt.savefig('hists.png')
+    # return
 
     for i, dir in enumerate(dirs):
         tracklets = load_tracklets(base_dir=dir)
