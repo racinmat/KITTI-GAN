@@ -1,10 +1,23 @@
+import matplotlib
+
+# http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+matplotlib.use('Agg')
+
+import io
+from PIL import Image
 from devkit.python.loadCalibration import loadCalibration
+from devkit.python.loadCalibrationCamToCam import loadCalibrationCamToCam
+from devkit.python.loadCalibrationRigid import loadCalibrationRigid
+from devkit.python.project import project
 from devkit.python.projectToImage import projectToImage
 from devkit.python.readTracklets import readTracklets
 import numpy as np
-import glob
+from devkit.python.utils import loadFromFile
 from devkit.python.wrapToPi import wrapToPi
 from math import cos, sin
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import pickle
 
 
 def load_tracklets(base_dir):
@@ -42,9 +55,12 @@ def tracklet_to_bounding_box(tracklet, cam, frame, veloToCam, K):
     corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, pose_idx=pose_idx, l=l, t=t,
                                                              veloToCam=veloToCam, cam=cam)
     corners_2D = projectToImage(corners_3D, K)
-    orientation_2D = projectToImage(orientation_3D, K)
+    box = {'x1': min(corners_2D[0, :]),
+           'x2': max(corners_2D[0, :]),
+           'y1': min(corners_2D[1, :]),
+           'y2': max(corners_2D[1, :])}
 
-    return corners, t, rz, occlusion, corners_3D, orientation_3D, corners_2D, orientation_2D
+    return corners, t, rz, occlusion, corners_3D, orientation_3D, box
 
 
 def rz_to_R(rz):
@@ -81,6 +97,51 @@ def get_corners_and_orientation(corners, rz, pose_idx, l, t, veloToCam, cam):
     return corners_3D, orientation_3D
 
 
+def get_image_with_pointcloud(base_dir, calib_dir, frame, cam):
+    image_resolution = np.array([1242, 375])
+    # load calibration
+    calib = loadCalibrationCamToCam(calib_dir + '/calib_cam_to_cam.txt')
+    Tr_velo_to_cam = loadCalibrationRigid(calib_dir + '/calib_velo_to_cam.txt')
+    # compute projection matrix velodyne->image plane
+    R_cam_to_rect = np.eye(4)
+    R_cam_to_rect[0:3, 0:3] = calib['R_rect'][0]
+    P_velo_to_img = np.dot(np.dot(calib['P_rect'][cam], R_cam_to_rect), Tr_velo_to_cam)
+    # load and display image
+    img = mpimg.imread('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
+    fig = plt.figure()
+    plt.axes([0, 0, 1, 1])
+
+    # load velodyne points
+    fname = '{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame)
+    velo = loadFromFile(fname, 4, np.float32)
+    # keep only every 5-th point for visualization
+    velo = velo[0::5, :]
+
+    # remove all points behind image plane (approximation)
+    idx = velo[:, 0] < 5
+    velo = velo[np.invert(idx), :]
+
+    # project to image plane (exclude luminance)
+    velo_img = project(velo[:, 0:3], P_velo_to_img)
+    # plot points
+    cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
+
+    col_indices = np.round(256 * 5 / velo[:, 0]).astype(int) - 1
+    plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
+
+    dpi = fig.dpi
+    fig.set_size_inches(image_resolution / dpi)
+    ax = plt.gca()
+    ax.set_xlim((-0.5, image_resolution[0] - 0.5))
+    ax.set_ylim((image_resolution[1] - 0.5, -0.5))
+    plt.imshow(img)
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    im = Image.open(buf)
+    return buf, im
+
+
 def main():
     dirs = [
         './data/2011_09_26/2011_09_26_drive_0009_sync',
@@ -95,13 +156,36 @@ def main():
 
     veloToCam, K = loadCalibration(calib_dir)
 
-    for dir in dirs:
+    data = []
+
+    for i, dir in enumerate(dirs):
         tracklets = load_tracklets(base_dir=dir)
-        for tracklet in tracklets:
+        for j, tracklet in enumerate(tracklets):
             if is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
-                corners, t, rz, occlusion, corners_3D, orientation_3D, corners_2D, orientation_2D = tracklet_to_bounding_box(tracklet, cam=cam, frame=frame, veloToCam=veloToCam, K=K)
+                corners, t, rz, occlusion, corners_3D, orientation_3D, box = tracklet_to_bounding_box(tracklet, cam=cam,
+                                                                                                      frame=frame,
+                                                                                                      veloToCam=veloToCam,
+                                                                                                      K=K)
+                buf, im = get_image_with_pointcloud(base_dir=dir, calib_dir=calib_dir, frame=frame, cam=cam)
+                area = (box['x1'], box['y1'], box['x2'], box['y2'])
+                cropped_im = im.crop(area)
+                cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
+                buf.close()
+                pix = np.array(cropped_im)
+                data.append({
+                    'x': [
+                        rz,
+                        tracklet['w'],
+                        tracklet['h'],
+                        tracklet['l'],
+                    ],
+                    'y': pix
+                })
+
+    file = open('tracklets_points_white_bg.data', 'wb')
+    pickle.dump(data, file)
+    file.close()
 
 
 if __name__ == '__main__':
     main()
-

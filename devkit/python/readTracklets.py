@@ -31,13 +31,15 @@ def readTracklets(filename=None):
     tracklets = []
 
     for element in trackletsElement.find_all('item', recursive=False):
+        posesVec, posesDict = extractPoses(element.poses)
         tracklet = {
             'objectType': str(element.objecttype.text),
             'h': float(element.h.text),
             'w': float(element.w.text),
             'l': float(element.l.text),
             'first_frame': int(element.first_frame.text),
-            'poses': extractPoses(element.poses),
+            'poses': posesVec,
+            'poses_dict': posesDict,
             'finished': bool(element.finished.text)
         }
         tracklets.append(tracklet)

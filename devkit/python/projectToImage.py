@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def projectToImage(pts_3D=None, K=None):
+def projectToImage(pts_3D, K):
     # PROJECTTOIMAGE projects 3D points in given coordinate system in the image
     # plane using the given calibration matrix K.
     # project in image

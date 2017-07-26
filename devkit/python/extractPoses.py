@@ -5,8 +5,8 @@ def extractPoses(poses):
     # EXTRACTPOSES extracts poses from subtree of labels.xml
 
     nPoses = int(poses.count.text)
-    item_version = int(poses.item_version.text)
     posesVec = np.zeros((15, nPoses), dtype=float)
+    posesDict = np.empty(nPoses, dtype=dict)
     poseIdx = 0
     for pose in poses.find_all('item', recursive=False):
         posesVec[0, poseIdx] = float(pose.tx.text)
@@ -24,10 +24,28 @@ def extractPoses(poses):
         posesVec[12, poseIdx] = float(pose.amt_border_l.text)
         posesVec[13, poseIdx] = float(pose.amt_border_r.text)
         posesVec[14, poseIdx] = float(pose.amt_border_kf.text)
+
+        posesDict[poseIdx] = {
+            'tx': float(pose.tx.text),
+            'ty': float(pose.ty.text),
+            'tz': float(pose.tz.text),
+            'rx': float(pose.rx.text),
+            'ry': float(pose.ry.text),
+            'rz': float(pose.rz.text),
+            'state': float(pose.state.text),
+            'occlusion': int(pose.occlusion.text),
+            'occlusion_kf': float(pose.occlusion_kf.text),
+            'truncation': float(pose.truncation.text),
+            'amt_occlusion': float(pose.amt_occlusion.text),
+            'amt_occlusion_kf': float(pose.amt_occlusion_kf.text),
+            'amt_border_l': float(pose.amt_border_l.text),
+            'amt_border_r': float(pose.amt_border_r.text),
+            'amt_border_kf': float(pose.amt_border_kf.text)
+        }
         poseIdx += 1
 
-        ## plausibility check
+        # plausibility check
     if nPoses != poseIdx:
         print('number of poses {:d} does not match count {:d}!'.format(nPoses, poseIdx))
 
-    return posesVec
+    return posesVec, posesDict
