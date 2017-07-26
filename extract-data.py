@@ -1,3 +1,5 @@
+import glob
+
 import matplotlib
 
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
@@ -60,7 +62,8 @@ def tracklet_to_bounding_box(tracklet, cam, frame, veloToCam, K):
            'y1': min(corners_2D[1, :]),
            'y2': max(corners_2D[1, :])}
 
-    return corners, t, rz, occlusion, corners_3D, orientation_3D, box
+    # return corners, t, rz, occlusion, corners_3D, orientation_3D, box
+    return corners, t, rz, occlusion, box
 
 
 def rz_to_R(rz):
@@ -97,7 +100,7 @@ def get_corners_and_orientation(corners, rz, pose_idx, l, t, veloToCam, cam):
     return corners_3D, orientation_3D
 
 
-def get_image_with_pointcloud(base_dir, calib_dir, frame, cam):
+def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False):
     image_resolution = np.array([1242, 375])
     # load calibration
     calib = loadCalibrationCamToCam(calib_dir + '/calib_cam_to_cam.txt')
@@ -106,8 +109,6 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam):
     R_cam_to_rect = np.eye(4)
     R_cam_to_rect[0:3, 0:3] = calib['R_rect'][0]
     P_velo_to_img = np.dot(np.dot(calib['P_rect'][cam], R_cam_to_rect), Tr_velo_to_cam)
-    # load and display image
-    img = mpimg.imread('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
     fig = plt.figure()
     plt.axes([0, 0, 1, 1])
 
@@ -134,39 +135,45 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam):
     ax = plt.gca()
     ax.set_xlim((-0.5, image_resolution[0] - 0.5))
     ax.set_ylim((image_resolution[1] - 0.5, -0.5))
-    plt.imshow(img)
+
+    if with_image:
+        # load and display image
+        img = mpimg.imread('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
+        plt.imshow(img)
+
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
+    plt.close()
     buf.seek(0)
     im = Image.open(buf)
     return buf, im
 
 
 def main():
-    dirs = [
-        './data/2011_09_26/2011_09_26_drive_0009_sync',
-        './data/2011_09_26/2011_09_26_drive_0015_sync',
-        './data/2011_09_26/2011_09_26_drive_0023_sync',
-        './data/2011_09_26/2011_09_26_drive_0032_sync',
+    drives = [
+        'drive_0009_sync',
+        'drive_0015_sync',
+        'drive_0023_sync',
+        'drive_0032_sync',
     ]
+    drive_dir = './data/2011_09_26/2011_09_26_'
     calib_dir = './data/2011_09_26'
 
     cam = 2
-    frame = 20
 
     veloToCam, K = loadCalibration(calib_dir)
 
-    posesData = np.empty((15, 0), dtype=float)
-    for i, dir in enumerate(dirs):
-        tracklets = load_tracklets(base_dir=dir)
-        for j, tracklet in enumerate(tracklets):
-            posesData = np.concatenate((posesData, tracklet['poses']), axis=1)
-
-
+    # posesData = np.empty((15, 0), dtype=float)
+    # for i, drive in enumerate(drives):
+    #     dir = drive_dir + drive
+    #     tracklets = load_tracklets(base_dir=dir)
+    #     for j, tracklet in enumerate(tracklets):
+    #         posesData = np.concatenate((posesData, tracklet['poses']), axis=1)
+    #
     # nbins = 50
     # fig = plt.figure()
-    # for i in range(1, 15):
-    #     fig.add_subplot(14, 1, i)
+    # for i in range(0, 15):
+    #     fig.add_subplot(15, 1, i+1)
     #     plt.hist(x=posesData[i, :], bins=nbins)
     #     plt.title('hist of ' + str(i))
     #
@@ -175,33 +182,41 @@ def main():
     # plt.savefig('hists.png')
     # return
 
-    for i, dir in enumerate(dirs):
-        tracklets = load_tracklets(base_dir=dir)
-        for j, tracklet in enumerate(tracklets):
-            if is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
-                corners, t, rz, occlusion, corners_3D, orientation_3D, box = tracklet_to_bounding_box(tracklet, cam=cam,
-                                                                                                      frame=frame,
-                                                                                                      veloToCam=veloToCam,
-                                                                                                      K=K)
-                buf, im = get_image_with_pointcloud(base_dir=dir, calib_dir=calib_dir, frame=frame, cam=cam)
-                area = (box['x1'], box['y1'], box['x2'], box['y2'])
-                cropped_im = im.crop(area)
-                cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
-                buf.close()
-                pix = np.array(cropped_im)
-                data.append({
-                    'x': [
-                        rz,
-                        tracklet['w'],
-                        tracklet['h'],
-                        tracklet['l'],
-                    ],
-                    'y': pix
-                })
+    data = []
 
-    file = open('tracklets_points_white_bg.data', 'wb')
-    pickle.dump(data, file)
-    file.close()
+    for i, drive in enumerate(drives):
+        dir = drive_dir + drive
+        image_dir = dir + '/image_{:02d}/data'.format(cam)
+        # get number of images for this dataset
+        frames = len(glob.glob(image_dir + '/*.png'))
+        for frame in range(frames):
+            tracklets = load_tracklets(base_dir=dir)
+            for j, tracklet in enumerate(tracklets):
+                if is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
+                    corners, t, rz, occlusion, box = tracklet_to_bounding_box(tracklet,
+                                                                              cam=cam,
+                                                                              frame=frame,
+                                                                              veloToCam=veloToCam,
+                                                                              K=K)
+                    buf, im = get_image_with_pointcloud(base_dir=dir, calib_dir=calib_dir, frame=frame, cam=cam, with_image=True)
+                    area = (box['x1'], box['y1'], box['x2'], box['y2'])
+                    cropped_im = im.crop(area)
+                    cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
+                    buf.close()
+                    pix = np.array(cropped_im)
+                    data.append({
+                        'x': [
+                            rz,
+                            tracklet['w'],
+                            tracklet['h'],
+                            tracklet['l'],
+                        ],
+                        'y': pix
+                    })
+
+        file = open('data/extracted/tracklets_points_image_bg_' + drive + '.data', 'wb')
+        pickle.dump(data, file)
+        file.close()
 
 
 if __name__ == '__main__':
