@@ -1,0 +1,1 @@
+docker run -v /d/projekty/skola-brigada-GANy:/opt/project -it azathoth/analyze bash

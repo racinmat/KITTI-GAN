@@ -13,7 +13,7 @@ RUN apt-get update && \
         python-tk \
         python-bs4
 
-RUN pip install --upgrade pip
+RUN pip install --upgrade setuptools pip
 RUN pip install \
         numpy \
         scipy \

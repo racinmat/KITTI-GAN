@@ -1,8 +1,10 @@
 import ruamel.yaml as yaml
+from functools import lru_cache
 from devkit.python.utils import readVariable
 import numpy as np
 
 
+@lru_cache(maxsize=32)
 def loadCalibrationRigid(filename=None):
     # open file
     with open(filename, 'r') as stream:

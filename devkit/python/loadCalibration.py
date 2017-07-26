@@ -1,8 +1,10 @@
 import numpy as np
 from devkit.python.loadCalibrationCamToCam import loadCalibrationCamToCam
 from devkit.python.loadCalibrationRigid import loadCalibrationRigid
+from functools import lru_cache
 
 
+@lru_cache(maxsize=32)
 def loadCalibration(dir=None):
     # LOADCALIBRATION provides all needed coordinate system transformations
     # returns the pre-computed velodyne to cam (gray and color) projection

@@ -1,10 +1,12 @@
 import ruamel.yaml as yaml
+from functools import lru_cache
+
 from devkit.python.utils import readVariable, isempty
 import numpy as np
 
 
-def loadCalibrationCamToCam(filename=None):
-
+@lru_cache(maxsize=32)
+def loadCalibrationCamToCam(filename):
     # open file
     with open(filename, 'r') as stream:
         try:

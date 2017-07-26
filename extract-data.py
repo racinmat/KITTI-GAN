@@ -1,10 +1,10 @@
-import glob
-
 import matplotlib
 
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
 matplotlib.use('Agg')
 
+import glob
+import datetime
 import io
 from PIL import Image
 from devkit.python.loadCalibration import loadCalibration
@@ -14,14 +14,16 @@ from devkit.python.project import project
 from devkit.python.projectToImage import projectToImage
 from devkit.python.readTracklets import readTracklets
 import numpy as np
-from devkit.python.utils import loadFromFile
+from devkit.python.utils import loadFromFile, load_image
 from devkit.python.wrapToPi import wrapToPi
 from math import cos, sin
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import pickle
+from functools import lru_cache
 
 
+@lru_cache(maxsize=32)
 def load_tracklets(base_dir):
     # read tracklets for the selected sequence
     tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
@@ -30,11 +32,11 @@ def load_tracklets(base_dir):
 
 def is_tracklet_seen(tracklet, frame, veloToCam, cam):
     pose_idx = frame - tracklet['first_frame']
-    corners = get_corners(tracklet)
     # only draw tracklets that are visible in current frame
     if pose_idx < 0 or pose_idx > (np.size(tracklet['poses'], 1) - 1):
         return False
 
+    corners = get_corners(w=tracklet['w'], h=tracklet['h'], l=tracklet['l'])
     rz = wrapToPi(tracklet['poses'][5, :])
     t = np.vstack((tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]))
     l = tracklet['l']
@@ -47,7 +49,7 @@ def is_tracklet_seen(tracklet, frame, veloToCam, cam):
 
 
 def tracklet_to_bounding_box(tracklet, cam, frame, veloToCam, K):
-    corners = get_corners(tracklet)
+    corners = get_corners(w=tracklet['w'], h=tracklet['h'], l=tracklet['l'])
     t = np.vstack((tracklet['poses'][0, :], tracklet['poses'][1, :], tracklet['poses'][2, :]))
     rz = wrapToPi(tracklet['poses'][5, :])
     occlusion = tracklet['poses'][7, :]
@@ -73,10 +75,8 @@ def rz_to_R(rz):
     return R
 
 
-def get_corners(tracklet):
-    w = tracklet['w']
-    h = tracklet['h']
-    l = tracklet['l']
+@lru_cache(maxsize=64)
+def get_corners(w, h, l):
     corners = {
         'x': [l / 2, l / 2, - l / 2, - l / 2, l / 2, l / 2, - l / 2, - l / 2],
         'y': [w / 2, - w / 2, - w / 2, w / 2, w / 2, - w / 2, - w / 2, w / 2],
@@ -100,8 +100,8 @@ def get_corners_and_orientation(corners, rz, pose_idx, l, t, veloToCam, cam):
     return corners_3D, orientation_3D
 
 
-def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False):
-    image_resolution = np.array([1242, 375])
+@lru_cache(maxsize=32)
+def get_P_velo_to_img(calib_dir, cam):
     # load calibration
     calib = loadCalibrationCamToCam(calib_dir + '/calib_cam_to_cam.txt')
     Tr_velo_to_cam = loadCalibrationRigid(calib_dir + '/calib_velo_to_cam.txt')
@@ -109,6 +109,12 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False)
     R_cam_to_rect = np.eye(4)
     R_cam_to_rect[0:3, 0:3] = calib['R_rect'][0]
     P_velo_to_img = np.dot(np.dot(calib['P_rect'][cam], R_cam_to_rect), Tr_velo_to_cam)
+    return P_velo_to_img
+
+
+def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False):
+    image_resolution = np.array([1242, 375])
+    P_velo_to_img = get_P_velo_to_img(calib_dir=calib_dir, cam=cam)
     fig = plt.figure()
     plt.axes([0, 0, 1, 1])
 
@@ -138,7 +144,7 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False)
 
     if with_image:
         # load and display image
-        img = mpimg.imread('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
+        img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
         plt.imshow(img)
 
     buf = io.BytesIO()
@@ -152,9 +158,9 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False)
 def main():
     drives = [
         'drive_0009_sync',
-        'drive_0015_sync',
-        'drive_0023_sync',
-        'drive_0032_sync',
+        # 'drive_0015_sync',
+        # 'drive_0023_sync',
+        # 'drive_0032_sync',
     ]
     drive_dir = './data/2011_09_26/2011_09_26_'
     calib_dir = './data/2011_09_26'
@@ -184,40 +190,65 @@ def main():
 
     data = []
 
+    start = datetime.datetime.now()
+
     for i, drive in enumerate(drives):
         dir = drive_dir + drive
         image_dir = dir + '/image_{:02d}/data'.format(cam)
         # get number of images for this dataset
         frames = len(glob.glob(image_dir + '/*.png'))
+        frames = 10
+
+        print('processing drive no. {:d}/{:d} with {:d} frames'.format(i + 1, len(drives), frames))
+
+        tracklets = load_tracklets(base_dir=dir)
         for frame in range(frames):
-            tracklets = load_tracklets(base_dir=dir)
+            # percentage printing
+            percent = 5
+            part = int(((100 * frame) / frames) / percent)
+            previous = int(((100 * (frame - 1)) / frames) / percent)
+            if part - previous > 0:
+                print(str(percent * part) + '% extracted.')
+
             for j, tracklet in enumerate(tracklets):
-                if is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
-                    corners, t, rz, occlusion, box = tracklet_to_bounding_box(tracklet,
-                                                                              cam=cam,
-                                                                              frame=frame,
-                                                                              veloToCam=veloToCam,
-                                                                              K=K)
-                    buf, im = get_image_with_pointcloud(base_dir=dir, calib_dir=calib_dir, frame=frame, cam=cam, with_image=True)
-                    area = (box['x1'], box['y1'], box['x2'], box['y2'])
-                    cropped_im = im.crop(area)
-                    cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
-                    buf.close()
-                    pix = np.array(cropped_im)
-                    data.append({
-                        'x': [
-                            rz,
-                            tracklet['w'],
-                            tracklet['h'],
-                            tracklet['l'],
-                        ],
-                        'y': pix
-                    })
+                if not is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
+                    continue
+                corners, t, rz, occlusion, box = tracklet_to_bounding_box(tracklet,
+                                                                          cam=cam,
+                                                                          frame=frame,
+                                                                          veloToCam=veloToCam,
+                                                                          K=K)
+                buf, im = get_image_with_pointcloud(base_dir=dir, calib_dir=calib_dir, frame=frame, cam=cam, with_image=True)
+                area = (box['x1'], box['y1'], box['x2'], box['y2'])
+                cropped_im = im.crop(area)
+                cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
+                buf.close()
+                pix = np.array(cropped_im)
+                data.append({
+                    'x': [
+                        rz,
+                        tracklet['w'],
+                        tracklet['h'],
+                        tracklet['l'],
+                    ],
+                    'y': pix
+                })
 
         file = open('data/extracted/tracklets_points_image_bg_' + drive + '.data', 'wb')
         pickle.dump(data, file)
         file.close()
 
+    end = datetime.datetime.now()
+    diff = end - start
+    print(diff)
 
 if __name__ == '__main__':
     main()
+    print(load_tracklets.cache_info())
+    print(loadCalibrationRigid.cache_info())
+    print(loadCalibration.cache_info())
+    print(loadCalibrationCamToCam.cache_info())
+    print(load_image.cache_info())
+    print(readTracklets.cache_info())
+    print(loadFromFile.cache_info())
+    print(get_corners.cache_info())

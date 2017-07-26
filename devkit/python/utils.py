@@ -1,9 +1,10 @@
 import numpy as np
 import os
+import matplotlib.image as mpimg
+from functools import lru_cache
 
 
 def readVariable(data=None, name=None, M=None, N=None):
-
     if name not in data:
         return []
 
@@ -15,20 +16,8 @@ def readVariable(data=None, name=None, M=None, N=None):
         return data[name]
 
 
+@lru_cache(maxsize=32)
 def loadFromFile(fname, columns, dtype):
-    # result = np.empty(shape=(0, columns), dtype=dtype)
-    #
-    # with open(fname, 'rb') as f:
-    #     fsize = os.fstat(f.fileno()).st_size
-    #
-    #     # while we haven't yet reached the end of the file...
-    #     while f.tell() < fsize:
-    #         # get the array contents
-    #         row = np.fromfile(f, dtype, columns)
-    #         result = np.vstack((result, row))
-    #
-    # return result
-
     with open(fname, 'rb') as f:
         result = np.fromfile(f, dtype).reshape((-1, columns))
     return result
@@ -53,3 +42,8 @@ def isempty(a):
         return 0 in np.asarray(a).shape
     except AttributeError:
         return False
+
+
+@lru_cache(maxsize=32)
+def load_image(filename):
+    return mpimg.imread(filename)
