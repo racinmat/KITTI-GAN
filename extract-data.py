@@ -208,6 +208,8 @@ def pointcloud_to_image(velo, velo_img, img=None):
 
     # plot points
     cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
+    cols_grey = matplotlib.cm.gray(np.arange(256))  # jet is colormap, represented by lookup table
+    cols_bn = matplotlib.cm.binary(np.arange(256))  # jet is colormap, represented by lookup table
     col_indices = np.round(256 * 5 / velo[:, 0]).astype(int) - 1
     plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
 
@@ -287,25 +289,6 @@ def main():
     calib_dir = './data/2011_09_26'
 
     cam = 2
-
-    # posesData = np.empty((15, 0), dtype=float)
-    # for i, drive in enumerate(drives):
-    #     dir = drive_dir + drive
-    #     tracklets = load_tracklets(base_dir=dir)
-    #     for j, tracklet in enumerate(tracklets):
-    #         posesData = np.concatenate((posesData, tracklet['poses']), axis=1)
-    #
-    # nbins = 50
-    # fig = plt.figure()
-    # for i in range(0, 15):
-    #     fig.add_subplot(15, 1, i+1)
-    #     plt.hist(x=posesData[i, :], bins=nbins)
-    #     plt.title('hist of ' + str(i))
-    #
-    # fig.set_figheight(20)
-    # fig.subplots_adjust(hspace=2)
-    # plt.savefig('hists.png')
-    # return
 
     data = []
 
@@ -390,8 +373,8 @@ def extract_one_tracklet():
 
 
 if __name__ == '__main__':
-    # extract_one_tracklet()
-    main()
+    extract_one_tracklet()
+    # main()
     # print(load_tracklets.cache_info())
     # print(loadCalibrationRigid.cache_info())
     # print(loadCalibration.cache_info())
