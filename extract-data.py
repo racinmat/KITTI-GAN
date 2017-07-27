@@ -23,6 +23,7 @@ import pickle
 from functools import lru_cache
 import os
 
+
 @lru_cache(maxsize=32)
 def load_tracklets(base_dir):
     # read tracklets for the selected sequence
@@ -40,8 +41,15 @@ def is_tracklet_seen(tracklet, frame, calib_dir, cam):
 
     corners = get_corners(w=tracklet['w'], h=tracklet['h'], l=tracklet['l'])
     l = tracklet['l']
-    t = [tracklet['poses_dict'][pose_idx]['tx'], tracklet['poses_dict'][pose_idx]['ty'], tracklet['poses_dict'][pose_idx]['tz']]
-    rz = wrapToPi(tracklet['poses_dict'][pose_idx]['rz'])
+    pose = tracklet['poses_dict'][pose_idx]
+
+    # filter out occluded tracklets
+    if pose['occlusion'] != 0:
+        return False
+
+
+    t = [pose['tx'], pose['ty'], pose['tz']]
+    rz = wrapToPi(pose['rz'])
     corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, l=l, t=t,
                                                              veloToCam=veloToCam, cam=cam)
     if any(corners_3D[2, :] < 0.5) or any(orientation_3D[2, :] < 0.5):
@@ -176,6 +184,13 @@ def get_x_y_data_for_(tracklet, frame, cam, calib_dir, current_dir, with_image):
                                         cam=cam,
                                         with_image=with_image)
     area = (box['x1'], box['y1'], box['x2'], box['y2'])
+    original_area = (0, 0, im.size[0], im.size[1])
+    # because some parts of areas are out of the image
+    area = (max(area[0], original_area[0]),
+            max(area[1], original_area[1]),
+            min(area[2], original_area[2]),
+            min(area[3], original_area[3]),
+            )
     cropped_im = im.crop(area)
     # cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
     pix = np.array(cropped_im)
@@ -289,12 +304,21 @@ def extract_one_tracklet():
                              current_dir=current_dir,
                              with_image=False)
     im = Image.fromarray(pair['y'])
-    im.save('image-white')
+    im.save('image-white.png')
+
+    pair = get_x_y_data_for_(tracklet=tracklet,
+                             frame=frame,
+                             cam=cam,
+                             calib_dir=calib_dir,
+                             current_dir=current_dir,
+                             with_image=True)
+    im = Image.fromarray(pair['y'])
+    im.save('image-bg.png')
 
 
 if __name__ == '__main__':
-    extract_one_tracklet()
-    # main()
+    # extract_one_tracklet()
+    main()
     # print(load_tracklets.cache_info())
     # print(loadCalibrationRigid.cache_info())
     # print(loadCalibration.cache_info())
