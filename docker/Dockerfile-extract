@@ -21,4 +21,6 @@ RUN pip install \
         ruamel.yaml \
         matplotlib \
         lxml \
-        beautifulsoup4
+        beautifulsoup4 \
+        diskcache
+

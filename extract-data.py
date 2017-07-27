@@ -30,7 +30,9 @@ def load_tracklets(base_dir):
     return tracklets
 
 
-def is_tracklet_seen(tracklet, frame, veloToCam, cam):
+def is_tracklet_seen(tracklet, frame, calib_dir, cam):
+    veloToCam, K = loadCalibration(calib_dir)
+
     pose_idx = frame - tracklet['first_frame']
     # only draw tracklets that are visible in current frame
     if pose_idx < 0 or pose_idx > (np.size(tracklet['poses'], 1) - 1):
@@ -160,19 +162,42 @@ def velodyne_data_exist(base_dir, frame):
     return os.path.isfile(filename)
 
 
+def get_x_y_data_for_(tracklet, frame, cam, calib_dir, current_dir):
+    veloToCam, K = loadCalibration(calib_dir)
+
+    corners, t, rz, occlusion, box = tracklet_to_bounding_box(tracklet,
+                                                              cam=cam,
+                                                              frame=frame,
+                                                              veloToCam=veloToCam,
+                                                              K=K)
+    buf, im = get_image_with_pointcloud(base_dir=current_dir, calib_dir=calib_dir, frame=frame, cam=cam, with_image=True)
+    area = (box['x1'], box['y1'], box['x2'], box['y2'])
+    cropped_im = im.crop(area)
+    # cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
+    pix = np.array(cropped_im)
+    buf.close()
+    return {
+        'x': [
+            rz,
+            tracklet['w'],
+            tracklet['h'],
+            tracklet['l'],
+        ],
+        'y': pix
+    }
+
+
 def main():
     drives = [
         'drive_0009_sync',
-        # 'drive_0015_sync',
-        # 'drive_0023_sync',
-        # 'drive_0032_sync',
+        'drive_0015_sync',
+        'drive_0023_sync',
+        'drive_0032_sync',
     ]
     drive_dir = './data/2011_09_26/2011_09_26_'
     calib_dir = './data/2011_09_26'
 
     cam = 2
-
-    veloToCam, K = loadCalibration(calib_dir)
 
     # posesData = np.empty((15, 0), dtype=float)
     # for i, drive in enumerate(drives):
@@ -198,15 +223,15 @@ def main():
     start = datetime.datetime.now()
 
     for i, drive in enumerate(drives):
-        dir = drive_dir + drive
-        image_dir = dir + '/image_{:02d}/data'.format(cam)
+        current_dir = drive_dir + drive
+        image_dir = current_dir + '/image_{:02d}/data'.format(cam)
         # get number of images for this dataset
         frames = len(glob.glob(image_dir + '/*.png'))
         # frames = 10
 
         print('processing drive no. {:d}/{:d} with {:d} frames'.format(i + 1, len(drives), frames))
 
-        tracklets = load_tracklets(base_dir=dir)
+        tracklets = load_tracklets(base_dir=current_dir)
         for frame in range(frames):
             # percentage printing
             # percent = 5
@@ -214,32 +239,14 @@ def main():
             # previous = int(((100 * (frame - 1)) / frames) / percent)
             # if part - previous > 0:
             #     print(str(percent * part) + '% extracted.')
-            if not velodyne_data_exist(dir, frame):
+            if not velodyne_data_exist(current_dir, frame):
                 continue
 
             for j, tracklet in enumerate(tracklets):
-                if not is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
+                if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
                     continue
-                corners, t, rz, occlusion, box = tracklet_to_bounding_box(tracklet,
-                                                                          cam=cam,
-                                                                          frame=frame,
-                                                                          veloToCam=veloToCam,
-                                                                          K=K)
-                buf, im = get_image_with_pointcloud(base_dir=dir, calib_dir=calib_dir, frame=frame, cam=cam, with_image=True)
-                area = (box['x1'], box['y1'], box['x2'], box['y2'])
-                cropped_im = im.crop(area)
-                cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
-                buf.close()
-                pix = np.array(cropped_im)
-                data.append({
-                    'x': [
-                        rz,
-                        tracklet['w'],
-                        tracklet['h'],
-                        tracklet['l'],
-                    ],
-                    'y': pix
-                })
+                pair = get_x_y_data_for_(tracklet=tracklet, frame=frame, cam=cam, calib_dir=calib_dir, current_dir=current_dir)
+                data.append(pair)
 
         file = open('data/extracted/tracklets_points_image_bg_' + drive + '.data', 'wb')
         pickle.dump(data, file)
@@ -251,12 +258,12 @@ def main():
 
 if __name__ == '__main__':
     main()
-    print(load_tracklets.cache_info())
-    print(loadCalibrationRigid.cache_info())
-    print(loadCalibration.cache_info())
-    print(loadCalibrationCamToCam.cache_info())
-    print(load_image.cache_info())
-    print(readTracklets.cache_info())
-    print(loadFromFile.cache_info())
-    print(get_corners.cache_info())
-    print(get_P_velo_to_img.cache_info())
+    # print(load_tracklets.cache_info())
+    # print(loadCalibrationRigid.cache_info())
+    # print(loadCalibration.cache_info())
+    # print(loadCalibrationCamToCam.cache_info())
+    # print(load_image.cache_info())
+    # print(readTracklets.cache_info())
+    # print(loadFromFile.cache_info())
+    # print(get_corners.cache_info())
+    # print(get_P_velo_to_img.cache_info())
