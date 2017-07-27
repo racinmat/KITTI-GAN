@@ -1,8 +1,9 @@
+import datetime
 import numpy as np
 import os
 import matplotlib.image as mpimg
 from functools import lru_cache
-
+import time
 
 def readVariable(data=None, name=None, M=None, N=None):
     if name not in data:
@@ -47,3 +48,16 @@ def isempty(a):
 @lru_cache(maxsize=32)
 def load_image(filename):
     return mpimg.imread(filename)
+
+
+def timeit(method):
+    def timed(*args, **kw):
+        a = time.time()
+        result = method(*args, **kw)
+        b = time.time()
+        milis = int(round((b - a) * 1000))
+
+        print('{:s}: {:s} milis'.format(method.__name__, str(milis)))
+        return result
+
+    return timed
