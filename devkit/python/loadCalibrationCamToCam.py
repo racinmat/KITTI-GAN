@@ -14,21 +14,19 @@ def loadCalibrationCamToCam(filename):
         except yaml.YAMLError as exc:
             return {}
 
-    calib = {}
+    calib = {'cornerdist': readVariable(data, 'corner_dist', 1, 1), 'S': np.zeros((100, 1, 2)),
+             'K': np.zeros((100, 3, 3)),
+             'D': np.zeros((100, 1, 5)),
+             'R': np.zeros((100, 3, 3)),
+             'T': np.zeros((100, 3, 1)),
+             'S_rect': np.zeros((100, 1, 2)),
+             'R_rect': np.zeros((100, 3, 3)),
+             'P_rect': np.zeros((100, 3, 4))
+             }
 
     # read corner distance
-    calib['cornerdist'] = readVariable(data, 'corner_dist', 1, 1)
     # /opt/project/devkit/matlab/loadCalibrationCamToCam.m:12
     # read all cameras (maximum: 100)
-
-    calib['S'] = np.zeros((100, 1, 2))
-    calib['K'] = np.zeros((100, 3, 3))
-    calib['D'] = np.zeros((100, 1, 5))
-    calib['R'] = np.zeros((100, 3, 3))
-    calib['T'] = np.zeros((100, 3, 1))
-    calib['S_rect'] = np.zeros((100, 1, 2))
-    calib['R_rect'] = np.zeros((100, 3, 3))
-    calib['P_rect'] = np.zeros((100, 3, 4))
 
     for cam in np.array(range(100)).reshape(-1):
         # read variables

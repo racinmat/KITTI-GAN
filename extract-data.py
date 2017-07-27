@@ -162,15 +162,19 @@ def velodyne_data_exist(base_dir, frame):
     return os.path.isfile(filename)
 
 
-def get_x_y_data_for_(tracklet, frame, cam, calib_dir, current_dir):
+def get_x_y_data_for_(tracklet, frame, cam, calib_dir, current_dir, with_image):
     veloToCam, K = loadCalibration(calib_dir)
 
-    corners, t, rz, occlusion, box = tracklet_to_bounding_box(tracklet,
+    corners, t, rz, occlusion, box = tracklet_to_bounding_box(tracklet=tracklet,
                                                               cam=cam,
                                                               frame=frame,
                                                               veloToCam=veloToCam,
                                                               K=K)
-    buf, im = get_image_with_pointcloud(base_dir=current_dir, calib_dir=calib_dir, frame=frame, cam=cam, with_image=True)
+    buf, im = get_image_with_pointcloud(base_dir=current_dir,
+                                        calib_dir=calib_dir,
+                                        frame=frame,
+                                        cam=cam,
+                                        with_image=with_image)
     area = (box['x1'], box['y1'], box['x2'], box['y2'])
     cropped_im = im.crop(area)
     # cropped_im.save('images/{:d}.{:d}.png'.format(i, j), format='png')
@@ -245,7 +249,12 @@ def main():
             for j, tracklet in enumerate(tracklets):
                 if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
                     continue
-                pair = get_x_y_data_for_(tracklet=tracklet, frame=frame, cam=cam, calib_dir=calib_dir, current_dir=current_dir)
+                pair = get_x_y_data_for_(tracklet=tracklet,
+                                         frame=frame,
+                                         cam=cam,
+                                         calib_dir=calib_dir,
+                                         current_dir=current_dir,
+                                         with_image=False)
                 data.append(pair)
 
         file = open('data/extracted/tracklets_points_image_bg_' + drive + '.data', 'wb')
@@ -256,8 +265,36 @@ def main():
     diff = end - start
     print(diff)
 
+
+def extract_one_tracklet():
+    drives = [
+        'drive_0009_sync',
+        'drive_0015_sync',
+        'drive_0023_sync',
+        'drive_0032_sync',
+    ]
+    drive_dir = './data/2011_09_26/2011_09_26_'
+    calib_dir = './data/2011_09_26'
+    cam = 2
+    drive = drives[0]
+    current_dir = drive_dir + drive
+    frame = 0
+
+    tracklets = load_tracklets(base_dir=current_dir)
+    tracklet = tracklets[0]
+    pair = get_x_y_data_for_(tracklet=tracklet,
+                             frame=frame,
+                             cam=cam,
+                             calib_dir=calib_dir,
+                             current_dir=current_dir,
+                             with_image=False)
+    im = Image.fromarray(pair['y'])
+    im.save('image-white')
+
+
 if __name__ == '__main__':
-    main()
+    extract_one_tracklet()
+    # main()
     # print(load_tracklets.cache_info())
     # print(loadCalibrationRigid.cache_info())
     # print(loadCalibration.cache_info())
@@ -267,3 +304,4 @@ if __name__ == '__main__':
     # print(loadFromFile.cache_info())
     # print(get_corners.cache_info())
     # print(get_P_velo_to_img.cache_info())
+
