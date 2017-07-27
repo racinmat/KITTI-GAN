@@ -15,7 +15,7 @@ from devkit.python.project import project
 from devkit.python.projectToImage import projectToImage
 from devkit.python.readTracklets import readTracklets
 import numpy as np
-from devkit.python.utils import loadFromFile, load_image, timeit
+from devkit.python.utils import loadFromFile, load_image, timeit, transform_to_range
 from devkit.python.wrapToPi import wrapToPi
 from math import cos, sin
 import matplotlib.pyplot as plt
@@ -208,9 +208,10 @@ def pointcloud_to_image(velo, velo_img, img=None):
 
     # plot points
     cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
-    cols_grey = matplotlib.cm.gray(np.arange(256))  # jet is colormap, represented by lookup table
-    cols_bn = matplotlib.cm.binary(np.arange(256))  # jet is colormap, represented by lookup table
-    col_indices = np.round(256 * 5 / velo[:, 0]).astype(int) - 1
+    # cols_grey = matplotlib.cm.gray(np.arange(256))  # jet is colormap, represented by lookup table
+    # cols_bn = matplotlib.cm.binary(np.arange(256))  # jet is colormap, represented by lookup table
+    # because I want the most distant value to have more cold color (lower value)
+    col_indices = np.round(transform_to_range(1/80, 1/5, 0, 255, 1 / velo[:, 0])).astype(int)
     plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
 
     dpi = fig.dpi
