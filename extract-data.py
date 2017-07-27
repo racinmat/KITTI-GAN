@@ -1,3 +1,4 @@
+import atexit
 import diskcache as diskcache
 import matplotlib
 
@@ -28,6 +29,7 @@ import diskcache
 
 class Cache(diskcache.Cache):
     def memoize(self, func):
+
         def wrapper(*args, **kw):
             key = (args, frozenset(kw.items()))
             try:
@@ -42,6 +44,9 @@ class Cache(diskcache.Cache):
 
 cache_velo = Cache('./cache/velo')
 cache_bb = Cache('./cache/bb')
+
+atexit.register(lambda: cache_velo.close())
+atexit.register(lambda: cache_bb.close())
 
 
 @lru_cache(maxsize=32)
@@ -334,7 +339,8 @@ def main():
                                         cam=cam,
                                         calib_dir=calib_dir,
                                         current_dir=current_dir,
-                                        with_image=False)
+                                        with_image=False,
+                                        grayscale=True)
                 data.append(pair)
 
         file = open('data/extracted/tracklets_points_image_bg_' + drive + '.data', 'wb')
@@ -389,8 +395,8 @@ def extract_one_tracklet():
 
 
 if __name__ == '__main__':
-    extract_one_tracklet()
-    # main()
+    # extract_one_tracklet()
+    main()
     # print(load_tracklets.cache_info())
     # print(loadCalibrationRigid.cache_info())
     # print(loadCalibration.cache_info())
