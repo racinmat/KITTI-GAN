@@ -47,7 +47,6 @@ def is_tracklet_seen(tracklet, frame, calib_dir, cam):
     if pose['occlusion'] != 0:
         return False
 
-
     t = [pose['tx'], pose['ty'], pose['tz']]
     rz = wrapToPi(pose['rz'])
     corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, l=l, t=t,
@@ -64,7 +63,8 @@ def tracklet_to_bounding_box(tracklet, cam, frame, veloToCam, K):
 
     pose_idx = frame - tracklet['first_frame']
     l = tracklet['l']
-    t = [tracklet['poses_dict'][pose_idx]['tx'], tracklet['poses_dict'][pose_idx]['ty'], tracklet['poses_dict'][pose_idx]['tz']]
+    t = [tracklet['poses_dict'][pose_idx]['tx'], tracklet['poses_dict'][pose_idx]['ty'],
+         tracklet['poses_dict'][pose_idx]['tz']]
     rz = wrapToPi(tracklet['poses_dict'][pose_idx]['rz'])
     corners_3D, orientation_3D = get_corners_and_orientation(corners=corners, rz=rz, l=l, t=t,
                                                              veloToCam=veloToCam, cam=cam)
@@ -122,12 +122,7 @@ def get_P_velo_to_img(calib_dir, cam):
     return P_velo_to_img
 
 
-def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False):
-    image_resolution = np.array([1242, 375])
-    P_velo_to_img = get_P_velo_to_img(calib_dir=calib_dir, cam=cam)
-    fig = plt.figure()
-    plt.axes([0, 0, 1, 1])
-
+def get_pointcloud(base_dir, frame, P_velo_to_img, area=None):
     # load velodyne points
     fname = '{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame)
     velo = loadFromFile(fname, 4, np.float32)
@@ -140,9 +135,26 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False)
 
     # project to image plane (exclude luminance)
     velo_img = project(velo[:, 0:3], P_velo_to_img)
+
+    if area is not None:
+        x1, y1, x2, y2 = area
+        ll = np.array([x1, y1])  # lower-left
+        ur = np.array([x2, y2])  # upper-right
+
+        indices = np.all(np.logical_and(ll <= velo_img, velo_img <= ur), axis=1)
+        velo_img = velo_img[indices]
+        velo = velo[indices]
+
+    return velo, velo_img
+
+
+def pointcloud_to_image(velo, velo_img, img=None):
+    image_resolution = np.array([1242, 375])
+    fig = plt.figure()
+    plt.axes([0, 0, 1, 1])
+
     # plot points
     cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
-
     col_indices = np.round(256 * 5 / velo[:, 0]).astype(int) - 1
     plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
 
@@ -152,9 +164,7 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False)
     ax.set_xlim((-0.5, image_resolution[0] - 0.5))
     ax.set_ylim((image_resolution[1] - 0.5, -0.5))
 
-    if with_image:
-        # load and display image
-        img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(base_dir, cam, frame))
+    if img is not None:
         plt.imshow(img)
 
     buf = io.BytesIO()
@@ -178,11 +188,16 @@ def get_x_y_data_for_(tracklet, frame, cam, calib_dir, current_dir, with_image):
                                                               frame=frame,
                                                               veloToCam=veloToCam,
                                                               K=K)
-    buf, im = get_image_with_pointcloud(base_dir=current_dir,
-                                        calib_dir=calib_dir,
-                                        frame=frame,
-                                        cam=cam,
-                                        with_image=with_image)
+
+    P_velo_to_img = get_P_velo_to_img(calib_dir=calib_dir, cam=cam)
+    velo, velo_img = get_pointcloud(current_dir, frame, P_velo_to_img)
+
+    if with_image:
+        img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(current_dir, cam, frame))
+    else:
+        img = None
+
+    buf, im = pointcloud_to_image(velo, velo_img, img)
     area = (box['x1'], box['y1'], box['x2'], box['y2'])
     original_area = (0, 0, im.size[0], im.size[1])
     # because some parts of areas are out of the image
@@ -317,8 +332,8 @@ def extract_one_tracklet():
 
 
 if __name__ == '__main__':
-    # extract_one_tracklet()
-    main()
+    extract_one_tracklet()
+    # main()
     # print(load_tracklets.cache_info())
     # print(loadCalibrationRigid.cache_info())
     # print(loadCalibration.cache_info())
@@ -328,4 +343,3 @@ if __name__ == '__main__':
     # print(loadFromFile.cache_info())
     # print(get_corners.cache_info())
     # print(get_P_velo_to_img.cache_info())
-
