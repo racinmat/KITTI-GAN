@@ -336,7 +336,6 @@ def main():
         file.close()
 
 
-
 def extract_one_tracklet():
     drives = [
         'drive_0009_sync',

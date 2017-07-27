@@ -1,0 +1,8 @@
+velodyne, first dimension (velo[:, 0]):
+min: -80
+max: 80
+
+distance 5 is taken as minimum in front of car and camera image
+so for displayed velo distance:
+min: 5
+max: 80

@@ -1,6 +1,10 @@
+import glob
+
 import matplotlib
 
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+from devkit.python.utils import loadFromFile, transform_to_range
+
 matplotlib.use('Agg')
 
 from devkit.python.readTracklets import readTracklets
@@ -10,6 +14,8 @@ from math import cos, sin, pi, ceil
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import operator
+import os
+
 
 def load_tracklets(base_dir=None):
     cam = 2
@@ -66,6 +72,7 @@ if __name__ == '__main__':
     # print("most frequent angle: " + str(round(bins[arg_max])) + " with frequency: " + str(max_frequency))
     # print(str(len(rz)) + " number of samples in total")
 
+
     drives = [
         'drive_0009_sync',
         'drive_0015_sync',
@@ -77,38 +84,80 @@ if __name__ == '__main__':
 
     cam = 2
 
-    names = {
-        0: 'tx',
-        1: 'ty',
-        2: 'tz',
-        3: 'rx',
-        4: 'ry',
-        5: 'rz',
-        6: 'state',
-        7: 'occlusion',
-        8: 'occlusion_kf',
-        9: 'truncation',
-        10: 'amt_occlusion',
-        11: 'amt_occlusion_kf',
-        12: 'amt_border_l',
-        13: 'amt_border_r',
-        14: 'amt_border_kf'
-    }
+    # names = {
+    #     0: 'tx',
+    #     1: 'ty',
+    #     2: 'tz',
+    #     3: 'rx',
+    #     4: 'ry',
+    #     5: 'rz',
+    #     6: 'state',
+    #     7: 'occlusion',
+    #     8: 'occlusion_kf',
+    #     9: 'truncation',
+    #     10: 'amt_occlusion',
+    #     11: 'amt_occlusion_kf',
+    #     12: 'amt_border_l',
+    #     13: 'amt_border_r',
+    #     14: 'amt_border_kf'
+    # }
+    #
+    # posesData = np.empty((15, 0), dtype=float)
+    # for i, drive in enumerate(drives):
+    #     dir = drive_dir + drive
+    #     tracklets = load_tracklets(base_dir=dir)
+    #     for j, tracklet in enumerate(tracklets):
+    #         posesData = np.concatenate((posesData, tracklet['poses']), axis=1)
+    #
+    # nbins = 100
+    # fig = plt.figure()
+    # for i in range(0, 15):
+    #     fig.add_subplot(15, 1, i+1)
+    #     plt.hist(x=posesData[i, :], bins=nbins)
+    #     plt.title('hist of ' + names[i])
+    #
+    # fig.set_figheight(20)
+    # fig.subplots_adjust(hspace=2)
+    # plt.savefig('hists.png')
 
-    posesData = np.empty((15, 0), dtype=float)
-    for i, drive in enumerate(drives):
-        dir = drive_dir + drive
-        tracklets = load_tracklets(base_dir=dir)
-        for j, tracklet in enumerate(tracklets):
-            posesData = np.concatenate((posesData, tracklet['poses']), axis=1)
+    # velo = np.empty((0, 4))
+    # maximum = 0
+    # minimum = 0
+    #
+    # for i, drive in enumerate(drives):
+    #     current_dir = drive_dir + drive
+    #     image_dir = current_dir + '/image_{:02d}/data'.format(cam)
+    #     # get number of images for this dataset
+    #     frames = len(glob.glob(image_dir + '/*.png'))
+    #     start = 0
+    #     end = frames
+    #
+    #     tracklets = load_tracklets(base_dir=current_dir)
+    #     for frame in range(start, end):
+    #         # percentage printing
+    #         percent = 20
+    #         part = int(((100 * frame) / frames) / percent)
+    #         previous = int(((100 * (frame - 1)) / frames) / percent)
+    #         if part - previous > 0:
+    #             print(str(percent * part) + '% extracted.')
+    #
+    #         fname = '{:s}/velodyne_points/data/{:010d}.bin'.format(current_dir, frame)
+    #         if not os.path.isfile(fname):
+    #             continue
+    #
+    #         velo = loadFromFile(fname, 4, np.float32)
+    #         local_max = max(velo[:, 0])
+    #         local_min = min(velo[:, 0])
+    #         if local_max > maximum:
+    #             maximum = local_max
+    #             print(maximum)
+    #         if local_min < minimum:
+    #             minimum = local_min
+    #             print(minimum)
+    #
+    # print('maximum:' + str(maximum))
+    # print('minimum:' + str(minimum))
 
-    nbins = 100
-    fig = plt.figure()
-    for i in range(0, 15):
-        fig.add_subplot(15, 1, i+1)
-        plt.hist(x=posesData[i, :], bins=nbins)
-        plt.title('hist of ' + names[i])
-
-    fig.set_figheight(20)
-    fig.subplots_adjust(hspace=2)
-    plt.savefig('hists.png')
+    print(transform_to_range(5, 80, 0, 1, 5))
+    print(transform_to_range(5, 80, 0, 1, 80))
+    print(transform_to_range(5, 80, 0, 1, 50))

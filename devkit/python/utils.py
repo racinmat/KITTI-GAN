@@ -62,3 +62,14 @@ def timeit(method):
         return result
 
     return timed
+
+
+def transform_to_range(from_min, from_max, to_min, to_max, value):
+    from_int = from_max - from_min
+    to_int = to_max - to_min
+
+    temp = value - from_min
+    temp = temp / from_int
+    temp = temp * to_int
+    temp = temp + to_min
+    return temp
