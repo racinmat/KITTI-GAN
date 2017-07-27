@@ -201,18 +201,23 @@ def get_pointcloud(base_dir, frame, calib_dir, cam, area=None):
 
 
 # @timeit
-def pointcloud_to_image(velo, velo_img, img=None):
+def pointcloud_to_image(velo, velo_img, img=None, grayscale=False):
     image_resolution = np.array([1242, 375])
     fig = plt.figure()
     plt.axes([0, 0, 1, 1])
 
     # plot points
-    cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
-    # cols_grey = matplotlib.cm.gray(np.arange(256))  # jet is colormap, represented by lookup table
-    # cols_bn = matplotlib.cm.binary(np.arange(256))  # jet is colormap, represented by lookup table
-    # because I want the most distant value to have more cold color (lower value)
-    col_indices = np.round(transform_to_range(1/80, 1/5, 0, 255, 1 / velo[:, 0])).astype(int)
-    plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
+
+    if grayscale:
+        # transform to grayscale color, black is nearest (lowest distance -> lowest value)
+        colors = transform_to_range(5, 80, 0, 1, velo[:, 0])
+        plt.style.use('grayscale')
+        plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=colors, marker='o', s=1)
+    else:
+        cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
+        # because I want the most distant value to have more cold color (lower value)
+        col_indices = np.round(transform_to_range(1/80, 1/5, 0, 255, 1 / velo[:, 0])).astype(int)
+        plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
 
     dpi = fig.dpi
     fig.set_size_inches(image_resolution / dpi)
@@ -237,7 +242,7 @@ def velodyne_data_exist(base_dir, frame):
 
 
 # @timeit
-def get_x_y_data_for_(tracklet, frame, cam, calib_dir, current_dir, with_image):
+def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=False, grayscale=False):
     image_resolution = np.array([1242, 375])
 
     corners, t, rz, box = tracklet_to_bounding_box(tracklet=tracklet,
@@ -262,7 +267,7 @@ def get_x_y_data_for_(tracklet, frame, cam, calib_dir, current_dir, with_image):
     else:
         img = None
 
-    buf, im = pointcloud_to_image(velo, velo_img, img)
+    buf, im = pointcloud_to_image(velo, velo_img, img, grayscale)
     cropped_im = im.crop(area)
     # cropped_im.save('images/{:d}.{:s}.png'.format(frame, str(area)), format='png')
     pix = np.array(cropped_im)
@@ -324,12 +329,12 @@ def main():
                 if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
                     continue
 
-                pair = get_x_y_data_for_(tracklet=tracklet,
-                                         frame=frame,
-                                         cam=cam,
-                                         calib_dir=calib_dir,
-                                         current_dir=current_dir,
-                                         with_image=False)
+                pair = get_x_y_data_for(tracklet=tracklet,
+                                        frame=frame,
+                                        cam=cam,
+                                        calib_dir=calib_dir,
+                                        current_dir=current_dir,
+                                        with_image=False)
                 data.append(pair)
 
         file = open('data/extracted/tracklets_points_image_bg_' + drive + '.data', 'wb')
@@ -362,14 +367,25 @@ def extract_one_tracklet():
     # im = Image.fromarray(pair['y'])
     # im.save('image-white.png')
 
-    pair = get_x_y_data_for_(tracklet=tracklet,
-                             frame=frame,
-                             cam=cam,
-                             calib_dir=calib_dir,
-                             current_dir=current_dir,
-                             with_image=True)
+    pair = get_x_y_data_for(tracklet=tracklet,
+                            frame=frame,
+                            cam=cam,
+                            calib_dir=calib_dir,
+                            current_dir=current_dir,
+                            with_image=False,
+                            grayscale=False)
     im = Image.fromarray(pair['y'])
-    im.save('image-bg-subset.png')
+    im.save('image-bg-jet.png')
+
+    pair = get_x_y_data_for(tracklet=tracklet,
+                            frame=frame,
+                            cam=cam,
+                            calib_dir=calib_dir,
+                            current_dir=current_dir,
+                            with_image=False,
+                            grayscale=True)
+    im = Image.fromarray(pair['y'])
+    im.save('image-bg-grayscale.png')
 
 
 if __name__ == '__main__':
