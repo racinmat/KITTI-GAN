@@ -1,1 +1,1 @@
-docker run -v /d/projekty/skola-brigada-GANy:/opt/project -it azathoth/extract-kitti
+docker run -v /d/projekty/skola-brigada-GANy:/opt/project -it azathoth/extract bash

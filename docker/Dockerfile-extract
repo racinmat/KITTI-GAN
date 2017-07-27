@@ -1,4 +1,4 @@
-FROM python:2.7
+FROM python:3.5
 
 RUN apt-get update && \
     apt-get install -y \
@@ -13,7 +13,7 @@ RUN apt-get update && \
         python-tk \
         python-bs4
 
-RUN pip install --upgrade pip
+RUN pip install --upgrade setuptools pip
 RUN pip install \
         numpy \
         scipy \
@@ -22,5 +22,3 @@ RUN pip install \
         matplotlib \
         lxml \
         beautifulsoup4
-
-RUN easy_install smop

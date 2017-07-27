@@ -1,2 +1,2 @@
-docker build -f ./docker/Dockerfile-extract -t azathoth/extract-kitti ./docker
-docker build -f ./docker/Dockerfile-analyze -t azathoth/analyze ./docker
+docker build -f ./docker/Dockerfile-extract-smop -t azathoth/extract-smop ./docker
+docker build -f ./docker/Dockerfile-extract -t azathoth/extract ./docker
