@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import pickle
 from functools import lru_cache
-
+import os
 
 @lru_cache(maxsize=32)
 def load_tracklets(base_dir):
@@ -122,7 +122,7 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False)
     fname = '{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame)
     velo = loadFromFile(fname, 4, np.float32)
     # keep only every 5-th point for visualization
-    velo = velo[0::5, :]
+    # velo = velo[0::5, :]
 
     # remove all points behind image plane (approximation)
     idx = velo[:, 0] < 5
@@ -153,6 +153,11 @@ def get_image_with_pointcloud(base_dir, calib_dir, frame, cam, with_image=False)
     buf.seek(0)
     im = Image.open(buf)
     return buf, im
+
+
+def velodyne_data_exist(base_dir, frame):
+    filename = '{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame)
+    return os.path.isfile(filename)
 
 
 def main():
@@ -209,6 +214,8 @@ def main():
             # previous = int(((100 * (frame - 1)) / frames) / percent)
             # if part - previous > 0:
             #     print(str(percent * part) + '% extracted.')
+            if not velodyne_data_exist(dir, frame):
+                continue
 
             for j, tracklet in enumerate(tracklets):
                 if not is_tracklet_seen(tracklet=tracklet, frame=frame, veloToCam=veloToCam, cam=cam):
