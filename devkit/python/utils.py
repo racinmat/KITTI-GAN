@@ -3,6 +3,7 @@ import numpy as np
 import os
 import matplotlib.image as mpimg
 from functools import lru_cache
+import diskcache
 import time
 
 def readVariable(data=None, name=None, M=None, N=None):
