@@ -15,6 +15,7 @@ import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import operator
 import os
+import pickle
 
 
 def load_tracklets(base_dir=None):
@@ -158,6 +159,35 @@ if __name__ == '__main__':
     # print('maximum:' + str(maximum))
     # print('minimum:' + str(minimum))
 
-    print(transform_to_range(5, 80, 0, 1, 5))
-    print(transform_to_range(5, 80, 0, 1, 80))
-    print(transform_to_range(5, 80, 0, 1, 50))
+    # print(transform_to_range(5, 80, 0, 1, 5))
+    # print(transform_to_range(5, 80, 0, 1, 80))
+    # print(transform_to_range(5, 80, 0, 1, 50))
+
+    data_dir = 'data/extracted'
+    sizes_x = np.empty((1, 0))
+    sizes_y = np.empty((1, 0))
+    for filename in glob.glob(data_dir + '/temp*.data'):
+        file = open(filename, 'rb')
+        data = pickle.load(file)
+        file.close()
+        for pair in data:
+            size = pair['y'].shape
+            sizes_x = np.append(sizes_x, size[0])
+            sizes_y = np.append(sizes_y, size[1])
+
+    nbins = 500
+    fig = plt.figure()
+    fig.add_subplot(2, 1, 1)
+    plt.hist(x=sizes_x, bins=nbins)
+    plt.title('hist of x')
+
+    fig.add_subplot(2, 1, 2)
+    plt.hist(x=sizes_y, bins=nbins)
+    plt.title('hist of y')
+
+    plt.savefig('image_size_hists.png')
+
+    print('min x: ' + str(sizes_x.min()))
+    print('min y: ' + str(sizes_y.min()))
+    print('max x: ' + str(sizes_x.max()))
+    print('max y: ' + str(sizes_y.max()))

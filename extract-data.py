@@ -273,6 +273,8 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
         img = None
 
     buf, im = pointcloud_to_image(velo, velo_img, img, grayscale)
+    if grayscale:
+        im = im.convert('L')
     cropped_im = im.crop(area)
     # cropped_im.save('images/{:d}.{:s}.png'.format(frame, str(area)), format='png')
     pix = np.array(cropped_im)
@@ -312,6 +314,7 @@ def main():
         # end = 20
         start = 0
         end = frames
+        # end = round(frames / 50)
 
         print('processing drive no. {:d}/{:d} with {:d} frames'.format(i + 1, len(drives), frames))
 
@@ -343,7 +346,7 @@ def main():
                                         grayscale=True)
                 data.append(pair)
 
-        file = open('data/extracted/tracklets_points_image_bg_' + drive + '.data', 'wb')
+        file = open('data/extracted/tracklets_points_image_grayscale_bg_white_' + drive + '.data', 'wb')
         pickle.dump(data, file)
         file.close()
 

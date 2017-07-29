@@ -14,6 +14,7 @@ def readTracklets(filename):
         file = open(filename + '.' + version + '.cache', 'rb')
         try:
             tracklets = pickle.load(file)
+            file.close()
             return tracklets
         except UnicodeDecodeError:
             pass
