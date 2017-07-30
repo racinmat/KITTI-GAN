@@ -6,3 +6,17 @@ distance 5 is taken as minimum in front of car and camera image
 so for displayed velo distance:
 min: 5
 max: 80
+
+features of NOT normalized images are:
+rz,
+tracklet['w'],
+tracklet['h'],
+tracklet['l'],
+
+features of normalized images are:
+rz,
+tracklet['w'],
+tracklet['h'],
+tracklet['l'],
+image size x,
+image size y,
