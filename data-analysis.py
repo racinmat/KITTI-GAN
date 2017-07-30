@@ -166,7 +166,8 @@ if __name__ == '__main__':
     data_dir = 'data/extracted'
     sizes_x = np.empty((1, 0))
     sizes_y = np.empty((1, 0))
-    for filename in glob.glob(data_dir + '/temp*.data'):
+    for filename in glob.glob(data_dir + '/tracklets_points_image_grayscale_bg_white_drive_*.data'):
+        print("processing: " + filename)
         file = open(filename, 'rb')
         data = pickle.load(file)
         file.close()
