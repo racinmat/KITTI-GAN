@@ -11,7 +11,7 @@ matplotlib.use('Agg')
 from devkit.python.readTracklets import readTracklets
 import numpy as np
 from devkit.python.wrapToPi import wrapToPi
-from math import cos, sin, pi, ceil
+from math import cos, sin, pi, ceil, log
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import operator
@@ -225,7 +225,8 @@ if __name__ == '__main__':
 
     cam = 2
 
-    data = np.empty((0, 1))
+    distances = np.empty((0, 1))
+    sizes = np.empty((0, 3))
 
     for i, drive in enumerate(drives):
         current_dir = drive_dir + drive
@@ -244,21 +245,50 @@ if __name__ == '__main__':
                     continue
 
                 corners, t, rz, box, corners_3D = tracklet_to_bounding_box(tracklet=tracklet,
-                                                               cam=cam,
-                                                               frame=frame,
-                                                               calib_dir=calib_dir)
+                                                                           cam=cam,
+                                                                           frame=frame,
+                                                                           calib_dir=calib_dir)
 
                 corner_ldf = corners_3D[:, 7]
                 corner_urb = corners_3D[:, 1]
-                distance = corner_ldf[2]
+                distance = corner_ldf.T[2]
+                box_width = box['x2'] - box['x1']
+                box_height = box['y2'] - box['y1']
+                size = [distance, box_width, box_height]
 
-                sample = corner_ldf[2]
-                data = np.vstack((data, sample))
+                if box_width > 300:
+                    continue
 
-    fig = plt.figure()
+                distances = np.vstack((distances, distance))
+                sizes = np.vstack((sizes, size))
+
+    fig = plt.figure(figsize=(6.4, 10))
     nbins = 500
-    plt.title('frequency of distances of bounding boxes')
-    plt.xlabel('distance of bb left corner')
-    plt.ylabel('frequency')
-    plt.hist(x=data, bins=nbins)
+
+    ax = fig.add_subplot(3, 1, 1)
+    ax.set_xlabel('distance of bb left corner')
+    ax.set_ylabel('frequency x')
+    ax.set_title('frequency of z distance')
+    ax.hist(x=distances, bins=nbins)
+
+    ax = fig.add_subplot(3, 1, 2)
+    ax.set_title('x size')
+    ax.set_yscale('log')
+    ax.set_xlabel('distance of bb left corner')
+    ax.set_ylabel('bb width')
+    ax.scatter(x=sizes[:, 0], y=sizes[:, 1], marker='o', s=1)
+    ax.set_yticks(np.logspace(start=1, stop=log(300, 10), num=15))
+    ax.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+
+    ax = fig.add_subplot(3, 1, 3)
+    ax.set_title('y size')
+    ax.set_yscale('log')
+    ax.set_xlabel('distance of bb left corner')
+    ax.set_ylabel('bb height')
+    ax.scatter(x=sizes[:, 0], y=sizes[:, 2], marker='o', s=1)
+    ax.set_yticks(np.logspace(start=1, stop=log(300, 10), num=15))
+    ax.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+
+    plt.tight_layout()
+
     plt.savefig('hist-distance.png', format='png')
