@@ -17,15 +17,14 @@ from devkit.python.readTracklets import readTracklets
 import numpy as np
 from devkit.python.utils import loadFromFile, load_image, timeit, transform_to_range
 from devkit.python.wrapToPi import wrapToPi
-from math import cos, sin
+from math import cos, sin, pi
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import pickle
 from functools import lru_cache
 import os
 import diskcache
-from utils import get_corners, get_P_velo_to_img, tracklet_to_bounding_box, get_corners_and_orientation, \
-    is_tracklet_seen
+from utils import get_P_velo_to_img, tracklet_to_bounding_box, is_tracklet_seen
 
 
 class Cache(diskcache.Cache):
@@ -57,7 +56,7 @@ def load_tracklets(base_dir):
     return tracklets
 
 
-def is_for_dataset(tracklet, frame):
+def is_for_dataset(tracklet, frame, calib_dir, cam):
     # only cars in dataset
     if tracklet['objectType'] != 'Car':
         return False
@@ -67,6 +66,23 @@ def is_for_dataset(tracklet, frame):
 
     # filter out occluded tracklets
     if pose['occlusion'] != 0:
+        return False
+
+    treshold_degrees = 5
+    treshold = treshold_degrees * pi / 180
+    # filter out cars with high rotation
+    if pose['rz'] > treshold or pose['rz'] < - treshold:
+        return False
+
+    corners, t, rz, box, corners_3D = tracklet_to_bounding_box(tracklet=tracklet,
+                                                               cam=cam,
+                                                               frame=frame,
+                                                               calib_dir=calib_dir)
+    corner_ldf = corners_3D[:, 7]
+    distance = corner_ldf.T[2]
+    min_distance = 5
+    max_distance = 50
+    if distance < min_distance or distance > max_distance:
         return False
 
     return True
@@ -227,10 +243,10 @@ def main():
                 continue
 
             for j, tracklet in enumerate(tracklets):
-                if not is_for_dataset(tracklet=tracklet, frame=frame):
+                if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
                     continue
 
-                if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
+                if not is_for_dataset(tracklet=tracklet, frame=frame, cam=cam, calib_dir=calib_dir):
                     continue
 
                 pair = get_x_y_data_for(tracklet=tracklet,
@@ -242,7 +258,7 @@ def main():
                                         grayscale=True)
                 data.append(pair)
 
-        file = open('data/extracted/tracklets_points_image_grayscale_bg_white_' + drive + '.data', 'wb')
+        file = open('data/extracted/tracklets_points_grayscale_bg_white_' + drive + '.data', 'wb')
         pickle.dump(data, file)
         file.close()
 

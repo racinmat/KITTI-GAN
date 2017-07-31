@@ -29,7 +29,7 @@ drives = [
     'drive_0032_sync',
 ]
 
-input_prefix = 'tracklets_points_image_grayscale_bg_white_'
+input_prefix = 'tracklets_points_grayscale_bg_white_'
 output_prefix = 'tracklets_points_normalized_'
 
 new_size = (32, 32)
