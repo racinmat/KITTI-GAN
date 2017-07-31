@@ -4,6 +4,7 @@ import matplotlib
 
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
 from devkit.python.utils import loadFromFile, transform_to_range
+from utils import tracklet_to_bounding_box, is_tracklet_seen
 
 matplotlib.use('Agg')
 
@@ -25,6 +26,26 @@ def load_tracklets(base_dir=None):
     # read tracklets for the selected sequence
     tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
     return tracklets
+
+
+def is_for_dataset(tracklet, frame):
+    # only cars in dataset
+    if tracklet['objectType'] != 'Car':
+        return False
+
+    pose_idx = frame - tracklet['first_frame']
+    pose = tracklet['poses_dict'][pose_idx]
+
+    # filter out occluded tracklets
+    if pose['occlusion'] != 0:
+        return False
+
+    treshold = 5 * pi / 180
+    # filter out cars with high rotation
+    if pose['rz'] > treshold or pose['rz'] < - treshold:
+        return False
+
+    return True
 
 
 if __name__ == '__main__':
@@ -163,32 +184,81 @@ if __name__ == '__main__':
     # print(transform_to_range(5, 80, 0, 1, 80))
     # print(transform_to_range(5, 80, 0, 1, 50))
 
-    data_dir = 'data/extracted'
-    sizes_x = np.empty((1, 0))
-    sizes_y = np.empty((1, 0))
-    for filename in glob.glob(data_dir + '/tracklets_points_image_grayscale_bg_white_drive_*.data'):
-        print("processing: " + filename)
-        file = open(filename, 'rb')
-        data = pickle.load(file)
-        file.close()
-        for pair in data:
-            size = pair['y'].shape
-            sizes_x = np.append(sizes_x, size[0])
-            sizes_y = np.append(sizes_y, size[1])
+    # data_dir = 'data/extracted'
+    # sizes_x = np.empty((1, 0))
+    # sizes_y = np.empty((1, 0))
+    # for filename in glob.glob(data_dir + '/tracklets_points_image_grayscale_bg_white_drive_*.data'):
+    #     print("processing: " + filename)
+    #     file = open(filename, 'rb')
+    #     data = pickle.load(file)
+    #     file.close()
+    #     for pair in data:
+    #         size = pair['y'].shape
+    #         sizes_x = np.append(sizes_x, size[0])
+    #         sizes_y = np.append(sizes_y, size[1])
+    #
+    # nbins = 500
+    # fig = plt.figure()
+    # fig.add_subplot(2, 1, 1)
+    # plt.hist(x=sizes_x, bins=nbins)
+    # plt.title('hist of x')
+    #
+    # fig.add_subplot(2, 1, 2)
+    # plt.hist(x=sizes_y, bins=nbins)
+    # plt.title('hist of y')
+    #
+    # plt.savefig('image_size_hists.png')
+    #
+    # print('min x: ' + str(sizes_x.min()))
+    # print('min y: ' + str(sizes_y.min()))
+    # print('max x: ' + str(sizes_x.max()))
+    # print('max y: ' + str(sizes_y.max()))
 
-    nbins = 500
+    drives = [
+        'drive_0009_sync',
+        'drive_0015_sync',
+        'drive_0023_sync',
+        'drive_0032_sync',
+    ]
+    drive_dir = './data/2011_09_26/2011_09_26_'
+    calib_dir = './data/2011_09_26'
+
+    cam = 2
+
+    data = np.empty((0, 1))
+
+    for i, drive in enumerate(drives):
+        current_dir = drive_dir + drive
+        image_dir = current_dir + '/image_{:02d}/data'.format(cam)
+        # get number of images for this dataset
+        frames = len(glob.glob(image_dir + '/*.png'))
+        start = 0
+        end = frames
+        tracklets = load_tracklets(base_dir=current_dir)
+        for frame in range(start, end):
+            for j, tracklet in enumerate(tracklets):
+                if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
+                    continue
+
+                if not is_for_dataset(tracklet=tracklet, frame=frame):
+                    continue
+
+                corners, t, rz, box, corners_3D = tracklet_to_bounding_box(tracklet=tracklet,
+                                                               cam=cam,
+                                                               frame=frame,
+                                                               calib_dir=calib_dir)
+
+                corner_ldf = corners_3D[:, 7]
+                corner_urb = corners_3D[:, 1]
+                distance = corner_ldf[2]
+
+                sample = corner_ldf[2]
+                data = np.vstack((data, sample))
+
     fig = plt.figure()
-    fig.add_subplot(2, 1, 1)
-    plt.hist(x=sizes_x, bins=nbins)
-    plt.title('hist of x')
-
-    fig.add_subplot(2, 1, 2)
-    plt.hist(x=sizes_y, bins=nbins)
-    plt.title('hist of y')
-
-    plt.savefig('image_size_hists.png')
-
-    print('min x: ' + str(sizes_x.min()))
-    print('min y: ' + str(sizes_y.min()))
-    print('max x: ' + str(sizes_x.max()))
-    print('max y: ' + str(sizes_y.max()))
+    nbins = 500
+    plt.title('frequency of distances of bounding boxes')
+    plt.xlabel('distance of bb left corner')
+    plt.ylabel('frequency')
+    plt.hist(x=data, bins=nbins)
+    plt.savefig('hist-distance.png', format='png')

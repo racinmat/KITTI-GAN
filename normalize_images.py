@@ -32,7 +32,7 @@ drives = [
 input_prefix = 'tracklets_points_image_grayscale_bg_white_'
 output_prefix = 'tracklets_points_normalized_'
 
-new_size = (150, 150)
+new_size = (32, 32)
 
 for drive in drives:
     filename = data_dir + '/' + input_prefix + drive + '.data'
@@ -62,6 +62,6 @@ for drive in drives:
         pair['x'].append(img.size[0])
         pair['x'].append(img.size[1])
 
-    file = open(data_dir + '/' + output_prefix + drive + '.data', 'wb')
+    file = open(data_dir + '/' + output_prefix + drive + '_' + str(new_size[0]) + '_' + str(new_size[1]) + '.data', 'wb')
     pickle.dump(data, file)
     file.close()

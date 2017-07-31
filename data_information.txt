@@ -20,3 +20,24 @@ tracklet['h'],
 tracklet['l'],
 image size x,
 image size y,
+
+osekat data, mít jenom rz==0, dávat aspetct ratio místo image size
+zkusit normalizované tracklet size
+vyhodit velo data mimo 3D průmět bounding boxu - tedy nebudou tam data, která jsou mimo 3D bb, ale v 2D bb
+nechat v trén. množině jen auta v nějaké menší vzdálenosti
+
+zkusit u učení:
+s interpolací, bez interpolace
+s pozadím, bez pozadí
+
+udělat histogram vzdáleností aut
+
+u trénovacích dat:
+prohodit černou a bílou u obrázků před učením
+
+validační data brát z jiných jízd než trénovací - abych viděl, jak se to dobře učí
+
+u trén. dat lze zjistit, jestli je to foreground nebo background - protože vím, kde je bb v obrázku a z jaké hloubky jsou velo data
+-> 3 druhy: foreground - velo data z auta, background, velo data za bb, nan -> kdy velo selhalo
+
+pak se podívat na data před učením, a kdyžtak obrázky uploadnout
