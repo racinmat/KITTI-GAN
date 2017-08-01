@@ -191,12 +191,14 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
     # cropped_im.save('images/{:d}.{:s}.png'.format(frame, str(area)), format='png')
     pix = np.array(cropped_im)
     buf.close()
+
+    corner_ldf = corners_3D[:, 7]
     return {
         'x': [
             rz,
-            tracklet['w'],
-            tracklet['h'],
-            tracklet['l'],
+            tracklet['h'] / tracklet['w'],      # height/width ratio
+            tracklet['l'] / tracklet['w'],      # depth/width ratio
+            corner_ldf.T[2]                     # distance from image
         ],
         'y': pix
     }

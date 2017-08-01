@@ -9,31 +9,24 @@ max: 80
 
 features of NOT normalized images are:
 rz,
-tracklet['w'],
-tracklet['h'],
-tracklet['l'],
+tracklet['h'] / tracklet['w'],      # height/width ratio
+tracklet['l'] / tracklet['w'],      # depth/width ratio
+corner_ldf.T[2]                     # distance from image
 
 features of normalized images are:
 rz,
-tracklet['w'],
-tracklet['h'],
-tracklet['l'],
+tracklet['h'] / tracklet['w'],      # height/width ratio
+tracklet['l'] / tracklet['w'],      # depth/width ratio
+corner_ldf.T[2]                     # distance from image
 image size x,
 image size y,
 
-osekat data, mít jenom rz==0, dávat aspetct ratio místo image size
-zkusit normalizované tracklet size
 vyhodit velo data mimo 3D průmět bounding boxu - tedy nebudou tam data, která jsou mimo 3D bb, ale v 2D bb
-nechat v trén. množině jen auta v nějaké menší vzdálenosti
 
 zkusit u učení:
 s interpolací, bez interpolace
 s pozadím, bez pozadí
 
-udělat histogram vzdáleností aut
-
-u trénovacích dat:
-prohodit černou a bílou u obrázků před učením
 
 validační data brát z jiných jízd než trénovací - abych viděl, jak se to dobře učí
 

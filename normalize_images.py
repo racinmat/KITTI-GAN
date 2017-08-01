@@ -55,12 +55,11 @@ for drive in drives:
         bg.paste(new_img, (0, 0, new_img.size[0], new_img.size[1]))  # Not centered, top-left corner
         # bg.save('temp_resized_padded.png')
 
-        # oif riginal image is greyscale
-        # if len(pair['y'].shape) == 2:
-        #     bg = bg.convert('L')
         pair['y'] = np.array(bg)
         pair['x'].append(img.size[0])
         pair['x'].append(img.size[1])
+
+        pair['y'] = 255 - pair['y']     # inverting black and white
 
     file = open(data_dir + '/' + output_prefix + drive + '_' + str(new_size[0]) + '_' + str(new_size[1]) + '.data', 'wb')
     pickle.dump(data, file)

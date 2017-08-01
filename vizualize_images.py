@@ -30,10 +30,14 @@ drives = [
 ]
 
 input_prefix = 'tracklets_points_normalized_'
-suffix = '_32_32'
+resolution = '32_32'
+
+directory = 'images/' + resolution
+if not os.path.exists(directory):
+    os.makedirs(directory)
 
 for i, drive in enumerate(drives):
-    filename = data_dir + '/' + input_prefix + drive + suffix + '.data'
+    filename = data_dir + '/' + input_prefix + drive + '_' + resolution + '.data'
     print("processing: " + filename)
     file = open(filename, 'rb')
     data = pickle.load(file)
@@ -42,4 +46,4 @@ for i, drive in enumerate(drives):
         img = Image.fromarray(pair['y'])
 
         # resize image
-        img.save('images/normalized_' + drive + '_' + str(j) + suffix + '.png')
+        img.save(directory + '/normalized_' + drive + '_' + str(j) + '.png')
