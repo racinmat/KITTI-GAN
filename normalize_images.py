@@ -56,8 +56,8 @@ for drive in drives:
         # bg.save('temp_resized_padded.png')
 
         pair['y'] = np.array(bg)
-        pair['x'].append(img.size[0])
-        pair['x'].append(img.size[1])
+        pair['x'].append(new_img.size[0])
+        pair['x'].append(new_img.size[1])
 
         pair['y'] = 255 - pair['y']     # inverting black and white
 

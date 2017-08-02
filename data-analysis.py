@@ -56,7 +56,7 @@ if __name__ == '__main__':
         './data/2011_09_26/2011_09_26_drive_0032_sync',
     ]
 
-    tracklets = []
+    # tracklets = []
     # for dir in dirs:
     #     tracklets += load_tracklets(base_dir=dir)
     #
@@ -214,81 +214,117 @@ if __name__ == '__main__':
     # print('max x: ' + str(sizes_x.max()))
     # print('max y: ' + str(sizes_y.max()))
 
-    drives = [
-        'drive_0009_sync',
-        'drive_0015_sync',
-        'drive_0023_sync',
-        'drive_0032_sync',
-    ]
-    drive_dir = './data/2011_09_26/2011_09_26_'
-    calib_dir = './data/2011_09_26'
 
-    cam = 2
+    # drives = [
+    #     'drive_0009_sync',
+    #     'drive_0015_sync',
+    #     'drive_0023_sync',
+    #     'drive_0032_sync',
+    # ]
+    # drive_dir = './data/2011_09_26/2011_09_26_'
+    # calib_dir = './data/2011_09_26'
+    #
+    # cam = 2
+    #
+    # distances = np.empty((0, 1))
+    # sizes = np.empty((0, 3))
+    #
+    # for i, drive in enumerate(drives):
+    #     current_dir = drive_dir + drive
+    #     image_dir = current_dir + '/image_{:02d}/data'.format(cam)
+    #     # get number of images for this dataset
+    #     frames = len(glob.glob(image_dir + '/*.png'))
+    #     start = 0
+    #     end = frames
+    #     tracklets = load_tracklets(base_dir=current_dir)
+    #     for frame in range(start, end):
+    #         for j, tracklet in enumerate(tracklets):
+    #             if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
+    #                 continue
+    #
+    #             if not is_for_dataset(tracklet=tracklet, frame=frame):
+    #                 continue
+    #
+    #             corners, t, rz, box, corners_3D = tracklet_to_bounding_box(tracklet=tracklet,
+    #                                                                        cam=cam,
+    #                                                                        frame=frame,
+    #                                                                        calib_dir=calib_dir)
+    #
+    #             corner_ldf = corners_3D[:, 7]
+    #             corner_urb = corners_3D[:, 1]
+    #             distance = corner_ldf.T[2]
+    #             box_width = box['x2'] - box['x1']
+    #             box_height = box['y2'] - box['y1']
+    #             size = [distance, box_width, box_height]
+    #
+    #             if box_width > 300:
+    #                 continue
+    #
+    #             distances = np.vstack((distances, distance))
+    #             sizes = np.vstack((sizes, size))
+    #
+    # fig = plt.figure(figsize=(6.4, 10))
+    # nbins = 500
+    #
+    # ax = fig.add_subplot(3, 1, 1)
+    # ax.set_xlabel('distance of bb left corner')
+    # ax.set_ylabel('frequency x')
+    # ax.set_title('frequency of z distance')
+    # ax.hist(x=distances, bins=nbins)
+    #
+    # ax = fig.add_subplot(3, 1, 2)
+    # ax.set_title('x size')
+    # ax.set_yscale('log')
+    # ax.set_xlabel('distance of bb left corner')
+    # ax.set_ylabel('bb width')
+    # ax.scatter(x=sizes[:, 0], y=sizes[:, 1], marker='o', s=1)
+    # ax.set_yticks(np.logspace(start=1, stop=log(300, 10), num=15))
+    # ax.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    #
+    # ax = fig.add_subplot(3, 1, 3)
+    # ax.set_title('y size')
+    # ax.set_yscale('log')
+    # ax.set_xlabel('distance of bb left corner')
+    # ax.set_ylabel('bb height')
+    # ax.scatter(x=sizes[:, 0], y=sizes[:, 2], marker='o', s=1)
+    # ax.set_yticks(np.logspace(start=1, stop=log(300, 10), num=15))
+    # ax.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    #
+    # plt.tight_layout()
+    #
+    # plt.savefig('hist-distance.png', format='png')
 
-    distances = np.empty((0, 1))
-    sizes = np.empty((0, 3))
+    data_dir = 'data/extracted'
+    input_prefix = 'tracklets_points_normalized_'
+    resolution = (32, 32)
+    resolution_string = '{:d}_{:d}'.format(resolution[0], resolution[1])
+
+    data = np.empty(shape=0)
 
     for i, drive in enumerate(drives):
-        current_dir = drive_dir + drive
-        image_dir = current_dir + '/image_{:02d}/data'.format(cam)
-        # get number of images for this dataset
-        frames = len(glob.glob(image_dir + '/*.png'))
-        start = 0
-        end = frames
-        tracklets = load_tracklets(base_dir=current_dir)
-        for frame in range(start, end):
-            for j, tracklet in enumerate(tracklets):
-                if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
-                    continue
-
-                if not is_for_dataset(tracklet=tracklet, frame=frame):
-                    continue
-
-                corners, t, rz, box, corners_3D = tracklet_to_bounding_box(tracklet=tracklet,
-                                                                           cam=cam,
-                                                                           frame=frame,
-                                                                           calib_dir=calib_dir)
-
-                corner_ldf = corners_3D[:, 7]
-                corner_urb = corners_3D[:, 1]
-                distance = corner_ldf.T[2]
-                box_width = box['x2'] - box['x1']
-                box_height = box['y2'] - box['y1']
-                size = [distance, box_width, box_height]
-
-                if box_width > 300:
-                    continue
-
-                distances = np.vstack((distances, distance))
-                sizes = np.vstack((sizes, size))
+        filename = data_dir + '/' + input_prefix + drive + '_' + resolution_string + '.data'
+        file = open(filename, 'rb')
+        drive_data = pickle.load(file)
+        data = np.concatenate((data, drive_data))
+        file.close()
 
     fig = plt.figure(figsize=(6.4, 10))
     nbins = 500
 
-    ax = fig.add_subplot(3, 1, 1)
-    ax.set_xlabel('distance of bb left corner')
-    ax.set_ylabel('frequency x')
-    ax.set_title('frequency of z distance')
-    ax.hist(x=distances, bins=nbins)
+    names = [
+        'rz',
+        'h/w ratio',
+        'l/w ratio',
+        'distance',
+        'x size',
+        'y size'
+    ]
 
-    ax = fig.add_subplot(3, 1, 2)
-    ax.set_title('x size')
-    ax.set_yscale('log')
-    ax.set_xlabel('distance of bb left corner')
-    ax.set_ylabel('bb width')
-    ax.scatter(x=sizes[:, 0], y=sizes[:, 1], marker='o', s=1)
-    ax.set_yticks(np.logspace(start=1, stop=log(300, 10), num=15))
-    ax.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
-
-    ax = fig.add_subplot(3, 1, 3)
-    ax.set_title('y size')
-    ax.set_yscale('log')
-    ax.set_xlabel('distance of bb left corner')
-    ax.set_ylabel('bb height')
-    ax.scatter(x=sizes[:, 0], y=sizes[:, 2], marker='o', s=1)
-    ax.set_yticks(np.logspace(start=1, stop=log(300, 10), num=15))
-    ax.get_yaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    for i, name in enumerate(names):
+        ax = fig.add_subplot(len(names), 1, i + 1)
+        ax.set_title(name)
+        ax.hist(x=[t['x'][i] for t in data], bins=nbins)
 
     plt.tight_layout()
 
-    plt.savefig('hist-distance.png', format='png')
+    plt.savefig('training-data-hist.png', format='png')
