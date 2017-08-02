@@ -43,3 +43,6 @@ class DataSet(object):
             assert batch_size <= self.num_examples
         end = self.index_in_epoch
         return self.images[start:end], self.labels[start:end]
+
+    def num_batches(self, batch_size):
+        return np.floor(self.num_examples / batch_size)

@@ -3,6 +3,7 @@ import matplotlib
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
 matplotlib.use('Agg')
 
+import time
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +12,7 @@ import os
 import pickle
 from math import pi
 from Dataset import DataSet
+import scipy.misc
 
 if "concat_v2" in dir(tf):
     def concat(tensors, axis, *args, **kwargs):
@@ -138,90 +140,139 @@ batch_size = 64
 Z_dim = 100
 image_size = data[0]['y'].shape
 y_dim = len(data[0]['x'])
-h_dim = 128
 
+epochs = 25
+h_dim = 128
 gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
 df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
 gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
 dfc_dim = 1024  # (optional) Dimension of discrim units for fully connected layer.
 c_dim = 1  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
-
+learning_rate = 0.0002  # Learning rate of for adam
+beta1 = 0.5  # Momentum term of adam
+sample_dir = 'samples'  # Directory name to save the image samples
+checkpoint_dir = "checkpoint"  # Directory name to save the checkpoints
 
 # """ Discriminator Net model """
-X = tf.placeholder(tf.float32, shape=[None, image_dim])
+X = tf.placeholder(tf.float32, shape=[None, image_size[0], image_size[1]])
 y = tf.placeholder(tf.float32, shape=[None, y_dim])
-#
-# D_W1 = tf.Variable(xavier_init([image_dim + features_dim, h_dim]))
-# D_b1 = tf.Variable(tf.zeros(shape=[h_dim]))
-#
-# D_W2 = tf.Variable(xavier_init([h_dim, 1]))
-# D_b2 = tf.Variable(tf.zeros(shape=[1]))
-#
-# theta_D = [D_W1, D_W2, D_b1, D_b2]
 
 
-def discriminator(x, y):
-    inputs = tf.concat(axis=1, values=[x, y])
-    D_h1 = tf.nn.relu(tf.matmul(inputs, D_W1) + D_b1)
-    D_logit = tf.matmul(D_h1, D_W2) + D_b2
-    D_prob = tf.nn.sigmoid(D_logit)
+def discriminator(x, y, reuse=False):
+    with tf.variable_scope("discriminator") as scope:
+        if reuse:
+            scope.reuse_variables()
 
-    return D_prob, D_logit
+        d_bn1 = batch_norm(name='d_bn1')
+        d_bn2 = batch_norm(name='d_bn2')
 
+        yb = tf.reshape(y, [batch_size, 1, 1, y_dim])
+        x = conv_cond_concat(x, yb)
 
-# """ Generator Net model """
-Z = tf.placeholder(tf.float32, shape=[None, Z_dim])
-#
-# G_W1 = tf.Variable(xavier_init([Z_dim + features_dim, h_dim]))
-# G_b1 = tf.Variable(tf.zeros(shape=[h_dim]))
-#
-# G_W2 = tf.Variable(xavier_init([h_dim, image_dim]))
-# G_b2 = tf.Variable(tf.zeros(shape=[image_dim]))
-#
-# theta_G = [G_W1, G_W2, G_b1, G_b2]
+        h0 = lrelu(conv2d(x, c_dim + y_dim, name='d_h0_conv'))
+        h0 = conv_cond_concat(h0, yb)
+
+        h1 = lrelu(d_bn1(conv2d(h0, df_dim + y_dim, name='d_h1_conv')))
+        h1 = tf.reshape(h1, [batch_size, -1])
+        h1 = concat([h1, y], 1)
+
+        h2 = lrelu(d_bn2(linear(h1, dfc_dim, 'd_h2_lin')))
+        h2 = concat([h2, y], 1)
+
+        h3 = linear(h2, 1, 'd_h3_lin')
+
+        return tf.nn.sigmoid(h3), h3
 
 
 def generator(z, y):
-    # inputs = tf.concat(axis=1, values=[z, y])
-    # G_h1 = tf.nn.relu(tf.matmul(inputs, G_W1) + G_b1)
-    # G_log_prob = tf.matmul(G_h1, G_W2) + G_b2
-    # G_prob = tf.nn.sigmoid(G_log_prob)
-    #
-    # return G_prob
+    with tf.variable_scope("generator") as scope:
+        g_bn0 = batch_norm(name='g_bn0')
+        g_bn1 = batch_norm(name='g_bn1')
+        g_bn2 = batch_norm(name='g_bn2')
 
-    g_bn0 = batch_norm(name='g_bn0')
-    g_bn1 = batch_norm(name='g_bn1')
-    g_bn2 = batch_norm(name='g_bn2')
+        # taken from https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
+        s_h, s_w = image_size[1], image_size[0]
+        s_h2, s_h4 = int(s_h / 2), int(s_h / 4)
+        s_w2, s_w4 = int(s_w / 2), int(s_w / 4)
 
-    # taken from https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
-    s_h, s_w = image_size[1], image_size[0]
-    s_h2, s_h4 = int(s_h / 2), int(s_h / 4)
-    s_w2, s_w4 = int(s_w / 2), int(s_w / 4)
+        # yb = tf.expand_dims(tf.expand_dims(y, 1),2)
+        yb = tf.reshape(y, [batch_size, 1, 1, y_dim])
+        z = concat([z, y], 1)
 
-    # yb = tf.expand_dims(tf.expand_dims(y, 1),2)
-    yb = tf.reshape(y, [batch_size, 1, 1, y_dim])
-    z = concat([z, y], 1)
+        h0 = tf.nn.relu(
+            g_bn0(linear(z, gfc_dim, 'g_h0_lin')))
+        h0 = concat([h0, y], 1)
 
-    h0 = tf.nn.relu(
-        g_bn0(linear(z, gfc_dim, 'g_h0_lin')))
-    h0 = concat([h0, y], 1)
+        h1 = tf.nn.relu(g_bn1(
+            linear(h0, gf_dim * 2 * s_h4 * s_w4, 'g_h1_lin')))
+        h1 = tf.reshape(h1, [batch_size, s_h4, s_w4, gf_dim * 2])
 
-    h1 = tf.nn.relu(g_bn1(
-        linear(h0, gf_dim * 2 * s_h4 * s_w4, 'g_h1_lin')))
-    h1 = tf.reshape(h1, [batch_size, s_h4, s_w4, gf_dim * 2])
+        h1 = conv_cond_concat(h1, yb)
 
-    h1 = conv_cond_concat(h1, yb)
+        h2 = tf.nn.relu(g_bn2(deconv2d(h1,
+                                       [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
+        h2 = conv_cond_concat(h2, yb)
 
-    h2 = tf.nn.relu(g_bn2(deconv2d(h1,
-                                   [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
-    h2 = conv_cond_concat(h2, yb)
-
-    return tf.nn.sigmoid(
-        deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
+        return tf.nn.sigmoid(
+            deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
 
 
 def sample_Z(m, n):
     return np.random.uniform(-1., 1., size=[m, n])
+
+
+def merge(images, size):
+    h, w = images.shape[1], images.shape[2]
+    if (images.shape[3] in (3, 4)):
+        c = images.shape[3]
+        img = np.zeros((h * size[0], w * size[1], c))
+        for idx, image in enumerate(images):
+            i = idx % size[1]
+            j = idx // size[1]
+            img[j * h:j * h + h, i * w:i * w + w, :] = image
+        return img
+    elif images.shape[3] == 1:
+        img = np.zeros((h * size[0], w * size[1]))
+        for idx, image in enumerate(images):
+            i = idx % size[1]
+            j = idx // size[1]
+            img[j * h:j * h + h, i * w:i * w + w] = image[:, :, 0]
+        return img
+    else:
+        raise ValueError('in merge(images,size) images parameter '
+                         'must have dimensions: HxW or HxWx3 or HxWx4')
+
+
+def save(self, checkpoint_dir, step):
+    model_name = "DCGAN.model"
+    checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
+
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+
+    self.saver.save(self.sess,
+                    os.path.join(checkpoint_dir, model_name),
+                    global_step=step)
+
+
+def imsave(images, size, path):
+    image = np.squeeze(merge(images, size))
+    return scipy.misc.imsave(path, image)
+
+
+def inverse_transform(images):
+    return (images + 1.) / 2.
+
+
+def save_images(images, size, image_path):
+    return imsave(inverse_transform(images), size, image_path)
+
+
+def image_manifold_size(num_images):
+    manifold_h = int(np.floor(np.sqrt(num_images)))
+    manifold_w = int(np.ceil(np.sqrt(num_images)))
+    assert manifold_h * manifold_w == num_images
+    return manifold_h, manifold_w
 
 
 def plot(samples):
@@ -240,57 +291,99 @@ def plot(samples):
     return fig
 
 
-G_sample = generator(Z, y)
-D_real, D_logit_real = discriminator(X, y)
-D_fake, D_logit_fake = discriminator(G_sample, y)
+t_vars = tf.trainable_variables()
+d_vars = [var for var in t_vars if 'd_' in var.name]
+g_vars = [var for var in t_vars if 'g_' in var.name]
 
-D_loss_real = tf.reduce_mean(
-    tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logit_real, labels=tf.ones_like(D_logit_real)))
-D_loss_fake = tf.reduce_mean(
-    tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logit_fake, labels=tf.zeros_like(D_logit_fake)))
-D_loss = D_loss_real + D_loss_fake
-G_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logit_fake, labels=tf.ones_like(D_logit_fake)))
+Z = tf.placeholder(tf.float32, shape=[None, Z_dim])
+z_sum = tf.summary.histogram("z", Z)
 
-D_solver = tf.train.AdamOptimizer().minimize(D_loss, var_list=theta_D)
-G_solver = tf.train.AdamOptimizer().minimize(G_loss, var_list=theta_G)
+G = generator(Z, y)
+D_real, D_logits_real = discriminator(X, y, reuse=False)
+sampler = G
+D_fake, D_logits_fake = discriminator(G, y, reuse=True)
+
+d_sum = tf.summary.histogram("d", D_real)
+d__sum = tf.summary.histogram("d_", D_fake)
+G_sum = tf.image_summary("G", G)
+
+d_loss_real = tf.reduce_mean(
+    tf.nn.sigmoid_cross_entropy_with_logits(D_logits_real, tf.ones_like(D_real)))
+d_loss_fake = tf.reduce_mean(
+    tf.nn.sigmoid_cross_entropy_with_logits(D_logits_fake, tf.zeros_like(D_fake)))
+g_loss = tf.reduce_mean(
+    tf.nn.sigmoid_cross_entropy_with_logits(D_logits_fake, tf.ones_like(D_fake)))
+
+d_loss_real_sum = tf.scalar_summary("d_loss_real", d_loss_real)
+d_loss_fake_sum = tf.scalar_summary("d_loss_fake", d_loss_fake)
+
+d_loss = d_loss_real + d_loss_fake
+
+g_loss_sum = tf.scalar_summary("g_loss", g_loss)
+d_loss_sum = tf.scalar_summary("d_loss", d_loss)
+
+d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1) \
+    .minimize(d_loss, var_list=d_vars)
+g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1) \
+    .minimize(g_loss, var_list=g_vars)
 
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
+g_sum = tf.merge_summary([z_sum, d__sum,
+                          G_sum, d_loss_fake_sum, g_loss_sum])
+d_sum = tf.merge_summary(
+    [z_sum, d_sum, d_loss_real_sum, d_loss_sum])
+writer = tf.train.SummaryWriter("./logs", sess.graph)
+
 if not os.path.exists('out/'):
     os.makedirs('out/')
 
-i = 0
-rz_treshold = 5 * pi / 180
+counter = 1
+start_time = time.time()
 
-for it in range(1000000):
-    if it % 1000 == 0:
-        n_sample = 16
+for epoch in range(epochs):
+    num_batches = dataset.num_batches(batch_size)
+    for i in range(num_batches):
+        X_batch, y_batch = dataset.next_batch(batch_size)
+        Z_sample = sample_Z(batch_size, Z_dim)
 
-        Z_sample = sample_Z(n_sample, Z_dim)
-        y_sample = np.zeros(shape=[n_sample, y_dim])
-        y_sample[:, 0] = 0  # rz
-        y_sample[:, 1] = 1  # h/w ratio
-        y_sample[:, 2] = 1  # l/w ratio
-        y_sample[:, 3] = 30  # distance
-        y_sample[:, 4] = 32  # image size x
-        y_sample[:, 5] = 32  # image size y
+        # Update D network
+        _, summary_str = sess.run([d_optim, d_sum], feed_dict={X: X_batch, Z: Z_sample})
+        writer.add_summary(summary_str, counter)
 
-        samples = sess.run(G_sample, feed_dict={Z: Z_sample, y: y_sample})
+        # Update G network
+        _, summary_str = sess.run([g_optim, g_sum], feed_dict={Z: Z_sample, y: y_batch})
+        writer.add_summary(summary_str, counter)
 
-        fig = plot(samples)
-        plt.savefig('out/{}.png'.format(str(i).zfill(3)), bbox_inches='tight')
-        i += 1
-        plt.close(fig)
+        # # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
+        # _, summary_str = sess.run([g_optim, g_sum], feed_dict={Z: Z_sample, y: y_batch})
+        # writer.add_summary(summary_str, counter)
 
-    X_mb, y_mb = dataset.next_batch(batch_size)
+        errD_fake = d_loss_fake.eval({Z: Z_sample})
+        errD_real = d_loss_real.eval({X: X_batch})
+        errG = g_loss.eval({Z: Z_sample})
 
-    Z_sample = sample_Z(batch_size, Z_dim)
-    _, D_loss_curr = sess.run([D_solver, D_loss], feed_dict={X: X_mb, Z: Z_sample, y: y_mb})
-    _, G_loss_curr = sess.run([G_solver, G_loss], feed_dict={Z: Z_sample, y: y_mb})
+        counter += 1
+        print("Epoch: {:2d} {:4d/:4d} time: :4.4f, d_loss: :.8f, g_loss: :.8f".format(epoch, i, num_batches,
+                                                                                      time.time() - start_time,
+                                                                                      errD_fake + errD_real, errG))
 
-    if it % 1000 == 0:
-        print('Iter: {}'.format(it))
-        print('D loss: {:.4}'.format(D_loss_curr))
-        print('G_loss: {:.4}'.format(G_loss_curr))
-        print()
+        if np.mod(counter, 100) == 1:
+            try:
+                samples, d_loss, g_loss = sess.run(
+                    [sampler, d_loss, g_loss],
+                    feed_dict={
+                        Z: Z_sample,
+                        X: X_batch,
+                        y: y_batch
+                    },
+                )
+                save_images(samples, image_manifold_size(samples.shape[0]),
+                            './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
+                print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss))
+            except:
+                print("one pic error!...")
+
+        if np.mod(counter, 500) == 2:
+            save(checkpoint_dir, counter)
