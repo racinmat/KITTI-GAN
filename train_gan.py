@@ -10,6 +10,7 @@ import matplotlib.gridspec as gridspec
 import os
 import pickle
 from math import pi
+from Dataset import DataSet
 
 data_dir = 'data/extracted'
 sizes_x = np.empty((1, 0))
@@ -33,6 +34,9 @@ for i, drive in enumerate(drives):
     drive_data = pickle.load(file)
     data = np.concatenate((data, drive_data))
     file.close()
+
+
+dataset = DataSet(data=data)
 
 mb_size = 64
 Z_dim = 100
@@ -133,6 +137,7 @@ if not os.path.exists('out/'):
 i = 0
 rz_treshold = 5 * pi / 180
 
+
 for it in range(1000000):
     if it % 1000 == 0:
         n_sample = 16
@@ -153,7 +158,7 @@ for it in range(1000000):
         i += 1
         plt.close(fig)
 
-    X_mb, y_mb = mnist.train.next_batch(mb_size)
+    X_mb, y_mb = dataset.next_batch(mb_size)
 
     Z_sample = sample_Z(mb_size, Z_dim)
     _, D_loss_curr = sess.run([D_solver, D_loss], feed_dict={X: X_mb, Z: Z_sample, y: y_mb})
