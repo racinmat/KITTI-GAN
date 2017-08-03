@@ -14,13 +14,6 @@ from math import pi
 from Dataset import DataSet
 import scipy.misc
 
-if "concat_v2" in dir(tf):
-    def concat(tensors, axis, *args, **kwargs):
-        return tf.concat_v2(tensors, axis, *args, **kwargs)
-else:
-    def concat(tensors, axis, *args, **kwargs):
-        return tf.concat(tensors, axis, *args, **kwargs)
-
 
 def xavier_init(size):
     in_dim = size[0]
@@ -30,9 +23,10 @@ def xavier_init(size):
 
 def conv_cond_concat(x, y):
     """Concatenate conditioning vector on feature map axis."""
+    # this propagates labels to other layers of neural network, probably according to https://arxiv.org/pdf/1611.01455.pdf
     x_shapes = x.get_shape()
     y_shapes = y.get_shape()
-    return concat([
+    return tf.concat([
         x, y * tf.ones([x_shapes[0], x_shapes[1], x_shapes[2], y_shapes[3]])], 3)
 
 
@@ -153,11 +147,6 @@ beta1 = 0.5  # Momentum term of adam
 sample_dir = 'samples'  # Directory name to save the image samples
 checkpoint_dir = "checkpoint"  # Directory name to save the checkpoints
 
-# """ Discriminator Net model """
-X = tf.placeholder(tf.float32, shape=[None, image_size[0], image_size[1]])
-y = tf.placeholder(tf.float32, shape=[None, y_dim])
-
-
 def discriminator(x, y, reuse=False):
     with tf.variable_scope("discriminator") as scope:
         if reuse:
@@ -174,10 +163,10 @@ def discriminator(x, y, reuse=False):
 
         h1 = lrelu(d_bn1(conv2d(h0, df_dim + y_dim, name='d_h1_conv')))
         h1 = tf.reshape(h1, [batch_size, -1])
-        h1 = concat([h1, y], 1)
+        h1 = tf.concat([h1, y], 1)
 
         h2 = lrelu(d_bn2(linear(h1, dfc_dim, 'd_h2_lin')))
-        h2 = concat([h2, y], 1)
+        h2 = tf.concat([h2, y], 1)
 
         h3 = linear(h2, 1, 'd_h3_lin')
 
@@ -195,13 +184,12 @@ def generator(z, y):
         s_h2, s_h4 = int(s_h / 2), int(s_h / 4)
         s_w2, s_w4 = int(s_w / 2), int(s_w / 4)
 
-        # yb = tf.expand_dims(tf.expand_dims(y, 1),2)
         yb = tf.reshape(y, [batch_size, 1, 1, y_dim])
-        z = concat([z, y], 1)
+        z = tf.concat([z, y], 1)
 
         h0 = tf.nn.relu(
             g_bn0(linear(z, gfc_dim, 'g_h0_lin')))
-        h0 = concat([h0, y], 1)
+        h0 = tf.concat([h0, y], 1)
 
         h1 = tf.nn.relu(g_bn1(
             linear(h0, gf_dim * 2 * s_h4 * s_w4, 'g_h1_lin')))
@@ -209,8 +197,7 @@ def generator(z, y):
 
         h1 = conv_cond_concat(h1, yb)
 
-        h2 = tf.nn.relu(g_bn2(deconv2d(h1,
-                                       [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
+        h2 = tf.nn.relu(g_bn2(deconv2d(h1, [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
         h2 = conv_cond_concat(h2, yb)
 
         return tf.nn.sigmoid(
@@ -290,37 +277,38 @@ def plot(samples):
 
     return fig
 
-
-t_vars = tf.trainable_variables()
-d_vars = [var for var in t_vars if 'd_' in var.name]
-g_vars = [var for var in t_vars if 'g_' in var.name]
-
-Z = tf.placeholder(tf.float32, shape=[None, Z_dim])
-z_sum = tf.summary.histogram("z", Z)
-
+# """ Discriminator Net model """
+X = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim])
+y = tf.placeholder(tf.float32, shape=[batch_size, y_dim])
+Z = tf.placeholder(tf.float32, shape=[batch_size, Z_dim])
 G = generator(Z, y)
 D_real, D_logits_real = discriminator(X, y, reuse=False)
 sampler = G
 D_fake, D_logits_fake = discriminator(G, y, reuse=True)
 
+z_sum = tf.summary.histogram("z", Z)
 d_sum = tf.summary.histogram("d", D_real)
 d__sum = tf.summary.histogram("d_", D_fake)
-G_sum = tf.image_summary("G", G)
+G_sum = tf.summary.image("G", G)
 
 d_loss_real = tf.reduce_mean(
-    tf.nn.sigmoid_cross_entropy_with_logits(D_logits_real, tf.ones_like(D_real)))
+    tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
 d_loss_fake = tf.reduce_mean(
-    tf.nn.sigmoid_cross_entropy_with_logits(D_logits_fake, tf.zeros_like(D_fake)))
+    tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.zeros_like(D_fake)))
 g_loss = tf.reduce_mean(
-    tf.nn.sigmoid_cross_entropy_with_logits(D_logits_fake, tf.ones_like(D_fake)))
+    tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake)))
 
-d_loss_real_sum = tf.scalar_summary("d_loss_real", d_loss_real)
-d_loss_fake_sum = tf.scalar_summary("d_loss_fake", d_loss_fake)
+d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
+d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
 
 d_loss = d_loss_real + d_loss_fake
 
-g_loss_sum = tf.scalar_summary("g_loss", g_loss)
-d_loss_sum = tf.scalar_summary("d_loss", d_loss)
+g_loss_sum = tf.summary.scalar("g_loss", g_loss)
+d_loss_sum = tf.summary.scalar("d_loss", d_loss)
+
+t_vars = tf.trainable_variables()
+d_vars = [var for var in t_vars if 'd_' in var.name]
+g_vars = [var for var in t_vars if 'g_' in var.name]
 
 d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1) \
     .minimize(d_loss, var_list=d_vars)
@@ -330,11 +318,11 @@ g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1) \
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
-g_sum = tf.merge_summary([z_sum, d__sum,
+g_sum = tf.summary.merge([z_sum, d__sum,
                           G_sum, d_loss_fake_sum, g_loss_sum])
-d_sum = tf.merge_summary(
+d_sum = tf.summary.merge(
     [z_sum, d_sum, d_loss_real_sum, d_loss_sum])
-writer = tf.train.SummaryWriter("./logs", sess.graph)
+writer = tf.summary.FileWriter("./logs", sess.graph)
 
 if not os.path.exists('out/'):
     os.makedirs('out/')
@@ -344,12 +332,12 @@ start_time = time.time()
 
 for epoch in range(epochs):
     num_batches = dataset.num_batches(batch_size)
-    for i in range(num_batches):
+    for i in range(int(num_batches)):
         X_batch, y_batch = dataset.next_batch(batch_size)
         Z_sample = sample_Z(batch_size, Z_dim)
 
         # Update D network
-        _, summary_str = sess.run([d_optim, d_sum], feed_dict={X: X_batch, Z: Z_sample})
+        _, summary_str = sess.run([d_optim, d_sum], feed_dict={X: X_batch, Z: Z_sample, y: y_batch})
         writer.add_summary(summary_str, counter)
 
         # Update G network

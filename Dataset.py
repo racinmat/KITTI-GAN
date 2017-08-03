@@ -19,6 +19,7 @@ class DataSet(object):
 
         # Convert from [0, 255] -> [0.0, 1.0].
         images = images.astype(np.float32)
+        images = np.expand_dims(images, axis=3)       # because it awaits image to be 3D array (w x h x channels)
         images = np.multiply(images, 1.0 / 255.0)
 
         self.images = images
