@@ -230,14 +230,21 @@ def merge(images, size):
                          'must have dimensions: HxW or HxWx3 or HxWx4')
 
 
-def save(self, checkpoint_dir, step):
+
+def model_dir():
+    return "{}_{}_{}_{}".format(
+        'KITTI', batch_size,
+        image_size[1], image_size[0])
+
+
+def save(checkpoint_dir, step):
     model_name = "DCGAN.model"
-    checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
+    checkpoint_dir = os.path.join(checkpoint_dir, model_dir())
 
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
 
-    self.saver.save(self.sess,
+    saver.save(sess,
                     os.path.join(checkpoint_dir, model_name),
                     global_step=step)
 
@@ -327,12 +334,16 @@ writer = tf.summary.FileWriter("./logs", sess.graph)
 if not os.path.exists('out/'):
     os.makedirs('out/')
 
+# graph = tf.Graph()
+# with graph.as_default():
+saver = tf.train.Saver()
+
 counter = 1
 start_time = time.time()
 
 for epoch in range(epochs):
-    num_batches = dataset.num_batches(batch_size)
-    for i in range(int(num_batches)):
+    num_batches = int(dataset.num_batches(batch_size))
+    for i in range(num_batches):
         X_batch, y_batch = dataset.next_batch(batch_size)
         Z_sample = sample_Z(batch_size, Z_dim)
 
@@ -347,13 +358,13 @@ for epoch in range(epochs):
         # # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
         # _, summary_str = sess.run([g_optim, g_sum], feed_dict={Z: Z_sample, y: y_batch})
         # writer.add_summary(summary_str, counter)
-
-        errD_fake = d_loss_fake.eval({Z: Z_sample})
-        errD_real = d_loss_real.eval({X: X_batch})
-        errG = g_loss.eval({Z: Z_sample})
+        with sess.as_default():
+            errD_fake = d_loss_fake.eval({Z: Z_sample, y: y_batch})
+            errD_real = d_loss_real.eval({X: X_batch, y: y_batch})
+            errG = g_loss.eval({Z: Z_sample, y: y_batch})
 
         counter += 1
-        print("Epoch: {:2d} {:4d/:4d} time: :4.4f, d_loss: :.8f, g_loss: :.8f".format(epoch, i, num_batches,
+        print("Epoch: {:2d} {:4d}/{:4d} time: {:4.4f}, d_loss: {:.8f}, g_loss: {:.8f}".format(epoch, i, num_batches,
                                                                                       time.time() - start_time,
                                                                                       errD_fake + errD_real, errG))
 
