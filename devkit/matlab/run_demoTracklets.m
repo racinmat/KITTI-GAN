@@ -42,7 +42,8 @@ disp('======= KITTI DevKit Demo =======');
 %   - 2 = left color
 %   - 3 = right color
 if nargin<1
-  base_dir = './../../data/2011_09_26/2011_09_26_drive_0009_sync';
+%   base_dir = './../../data/2011_09_26/2011_09_26_drive_0009_sync';
+  base_dir = './../../data/2011_09_26/2011_09_26_drive_0015_sync';
   % base_dir = '/media/data/kitti/2012_raw_data_extract/2011_09_26/2011_09_26_drive_0056';
 end
 if nargin<2

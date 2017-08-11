@@ -135,7 +135,7 @@ def is_tracklet_seen(tracklet, frame, calib_dir, cam):
 
 
 # @timeit
-@cache_velo.memoize
+# @cache_velo.memoize
 def get_pointcloud(base_dir, frame, calib_dir, cam, area=None):
     P_velo_to_img = get_P_velo_to_img(calib_dir=calib_dir, cam=cam)
     # load velodyne points
