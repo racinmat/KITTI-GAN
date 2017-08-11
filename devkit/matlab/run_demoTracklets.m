@@ -97,7 +97,7 @@ face_idx = [ 1,2,6,5   % front face
              4,1,5,8]; % right face
 
 % main loop (start at first image of sequence)
-img_idx = 18;
+img_idx = 279;
 while 1
   
   % visualization update for next frame

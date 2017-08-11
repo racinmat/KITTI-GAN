@@ -7,7 +7,7 @@ import sys
 from functools import lru_cache
 
 
-@lru_cache(maxsize=32)
+# @lru_cache(maxsize=32)
 def readTracklets(filename):
     version = '.'.join([str(i) for i in sys.version_info[0:3]])
     if os.path.isfile(filename + '.' + version + '.cache'):

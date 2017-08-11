@@ -33,7 +33,7 @@ cache_bb = Cache('./cache/bb')
 atexit.register(lambda: cache_bb.close())
 
 
-@lru_cache(maxsize=32)
+# @lru_cache(maxsize=32)
 def load_tracklets(base_dir):
     # read tracklets for the selected sequence
     tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
