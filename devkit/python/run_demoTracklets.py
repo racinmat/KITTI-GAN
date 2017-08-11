@@ -134,13 +134,13 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
         # project the 3D bounding box into the image plane
         corners_2D = projectToImage(corners_3D, K)
         orientation_2D = projectToImage(orientation_3D, K)
-        drawBox3D(gh, occlusion[it][pose_idx], corners_2D, face_idx, orientation_2D)
+        drawBox3D(gh[1], occlusion[it][pose_idx], corners_2D, face_idx, orientation_2D)
         # compute and draw the 2D bounding box from the 3D box projection
         box = {'x1': min(corners_2D[0, :]),
                'x2': max(corners_2D[0, :]),
                'y1': min(corners_2D[1, :]),
                'y2': max(corners_2D[1, :])}
-        drawBox2D(gh, box, occlusion[it][pose_idx], tracklets[it]['objectType'])
+        drawBox2D(gh[0], box, occlusion[it][pose_idx], tracklets[it]['objectType'])
 
     plt.savefig('bar3.png')
 

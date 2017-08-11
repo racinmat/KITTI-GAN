@@ -33,6 +33,7 @@ input_prefix = 'tracklets_points_grayscale_bg_white_'
 output_prefix = 'tracklets_points_normalized_'
 
 new_size = (32, 32)
+# new_size = (64, 64)
 
 for drive in drives:
     filename = data_dir + '/' + input_prefix + drive + '.data'
@@ -61,6 +62,8 @@ for drive in drives:
 
         pair['y'] = 255 - pair['y']     # inverting black and white
 
-    file = open(data_dir + '/' + output_prefix + drive + '_' + str(new_size[0]) + '_' + str(new_size[1]) + '.data', 'wb')
+    filename = data_dir + '/' + output_prefix + drive + '_' + str(new_size[0]) + '_' + str(new_size[1]) + '.data'
+    file = open(filename, 'wb')
     pickle.dump(data, file)
+    print("data written to file: " + filename)
     file.close()

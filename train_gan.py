@@ -166,6 +166,7 @@ def discriminator(x, y, reuse=False):
         h1 = tf.concat([h1, y], 1)
 
         h2 = lrelu(d_bn2(linear(h1, dfc_dim, 'd_h2_lin')))
+        h2 = lrelu(d_bn2(linear(h0, dfc_dim, 'd_h2_lin')))
         h2 = tf.concat([h2, y], 1)
 
         h3 = linear(h2, 1, 'd_h3_lin')
@@ -196,12 +197,19 @@ def generator(z, y):
         h1 = tf.reshape(h1, [batch_size, s_h4, s_w4, gf_dim * 2])
 
         h1 = conv_cond_concat(h1, yb)
+        #
+        # h2 = tf.nn.relu(g_bn2(deconv2d(h1, [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
+        # h2 = conv_cond_concat(h2, yb)
 
-        h2 = tf.nn.relu(g_bn2(deconv2d(h1, [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
-        h2 = conv_cond_concat(h2, yb)
+        # h1 = tf.nn.relu(g_bn1(
+        #     linear(h0, gf_dim * 2 * s_h2 * s_w2, 'g_h1_lin')))
+        # h1 = tf.reshape(h1, [batch_size, s_h2, s_w2, gf_dim * 2])
+        #
+        # h1 = conv_cond_concat(h1, yb)
 
         return tf.nn.sigmoid(
-            deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
+            # deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
+            deconv2d(h1, [batch_size, s_h, s_w, c_dim], name='g_h3'))
 
 
 def sample_Z(m, n):

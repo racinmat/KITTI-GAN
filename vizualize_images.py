@@ -1,12 +1,11 @@
-import glob
-
 import matplotlib
-
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
-from devkit.python.utils import loadFromFile, transform_to_range
-
 matplotlib.use('Agg')
 
+from devkit.python.utils import loadFromFile, transform_to_range, load_image
+from utils import get_pointcloud, tracklet_to_bounding_box, pointcloud_to_image, bounding_box_to_image, \
+    pointcloud_to_figure, figure_to_image
+import glob
 from devkit.python.readTracklets import readTracklets
 import numpy as np
 from devkit.python.wrapToPi import wrapToPi
@@ -17,7 +16,6 @@ import operator
 import os
 import pickle
 from PIL import Image, ImageOps
-
 
 data_dir = 'data/extracted'
 sizes_x = np.empty((1, 0))
@@ -31,8 +29,15 @@ drives = [
 
 input_prefix = 'tracklets_points_normalized_'
 resolution = '32_32'
+# resolution = '64_64'
 
 directory = 'images/' + resolution
+directory = directory + '/normalized/'
+
+cam = 2
+drive_dir = './data/2011_09_26/2011_09_26_'
+calib_dir = './data/2011_09_26'
+
 if not os.path.exists(directory):
     os.makedirs(directory)
 
@@ -45,5 +50,36 @@ for i, drive in enumerate(drives):
     for j, pair in enumerate(data):
         img = Image.fromarray(pair['y'])
 
-        # resize image
-        img.save(directory + '/normalized_' + drive + '_' + str(j) + '.png')
+        # metadata loading and kitti image generating
+        metadata = pair['metadata']
+        current_dir = drive_dir + drive
+        image_dir = current_dir + '/image_{:02d}/data'.format(cam)
+        frame = metadata['frame']
+        tracklet = metadata['tracklet']
+
+        corners, t, rz, box, corners_3D, pose_idx = tracklet_to_bounding_box(tracklet=tracklet,
+                                                                             cam=cam,
+                                                                             frame=frame,
+                                                                             calib_dir=calib_dir)
+
+        kitti_img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(current_dir, cam, frame))
+        image_resolution = kitti_img.shape
+        area = (box['x1'], box['y1'], box['x2'], box['y2'])
+        original_area = (0, 0, image_resolution[0], image_resolution[1])
+        # because some parts of areas are out of the image
+        area = (
+            max(area[0], original_area[0]),
+            max(area[1], original_area[1]),
+            min(area[2], original_area[2]),
+            min(area[3], original_area[3]),
+        )
+        velo, velo_img = get_pointcloud(current_dir, frame, calib_dir, cam, area=area)
+        fig, ax = pointcloud_to_figure(velo, velo_img, kitti_img, False)
+        bounding_box_to_image(ax=ax, box=box, occlusion=tracklet['poses_dict'][pose_idx]['occlusion'],
+                              object_type=tracklet['objectType'])
+        buf, im = figure_to_image(fig)
+
+        # save images
+        img.save(directory + drive + '_' + str(j) + '.png')
+        im.save(directory + drive + '_' + str(j) + '_src.png')
+        buf.close()

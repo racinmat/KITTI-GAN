@@ -1,5 +1,18 @@
 KITTY dataset - stahnout
 udelat statistiku viewpointu z nej
-vybrat nejcastejší viewpoint
-udelat GAN na generování lidar obrázku z daného viewpointu - jen GAN s niosem na vstupu
-potom udelat GAN, kterı bude mít na vstpu noise a viewpoit, a pouít jako trénovací data všechny viewpointy
+vybrat nejcastejï¿½ï¿½ viewpoint
+udelat GAN na generovï¿½nï¿½ lidar obrï¿½zku z danï¿½ho viewpointu - jen GAN s niosem na vstupu
+potom udelat GAN, kterï¿½ bude mï¿½t na vstpu noise a viewpoit, a pouï¿½ï¿½t jako trï¿½novacï¿½ data vï¿½echny viewpointy
+
+
+uklÃ¡dat k datÅ¯m i vizuÃ¡ly, z Äeho je danÃ½ vÃ½Å™ez
+zkusit data normallizovat na vzdÃ¡lenost v rÃ¡mci bounding boxu
+
+1. experiment-podle bounding boxu generovat obrÃ¡zky z kamery
+
+udÄ›lat na googlu sloÅ¾ku, v nÃ­ mÃ­t google doc a sloÅ¾ku s daty
+
+kouknout na objective loss
+
+zkusit u viewpointu bb diskretizovat Ãºhel na napÅ™. 5stupÅˆovÃ© segmety a one hot encodovat je jako feature vector
+a i u dalÅ¡Ã­ch vÄ›cÃ­ zkusit onehot encodovat

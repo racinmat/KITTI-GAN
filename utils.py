@@ -1,11 +1,39 @@
+import io
+import matplotlib
+from devkit.python.drawBox2D import drawBox2D
+import atexit
+import diskcache
 from devkit.python.loadCalibration import loadCalibration
 from functools import lru_cache
 from devkit.python.loadCalibrationCamToCam import loadCalibrationCamToCam
 from devkit.python.loadCalibrationRigid import loadCalibrationRigid
+from devkit.python.project import project
+from devkit.python.utils import loadFromFile, transform_to_range
 from devkit.python.wrapToPi import wrapToPi
 import numpy as np
 from devkit.python.projectToImage import projectToImage
 from math import cos, sin
+import matplotlib.pyplot as plt
+from PIL import Image
+
+
+class Cache(diskcache.Cache):
+    def memoize(self, func):
+
+        def wrapper(*args, **kw):
+            key = (args, frozenset(kw.items()))
+            try:
+                return self[key]
+            except KeyError:
+                value = func(*args, **kw)
+                self[key] = value
+                return value
+
+        return wrapper
+
+
+cache_velo = Cache('./cache/velo')
+atexit.register(lambda: cache_velo.close())
 
 
 @lru_cache(maxsize=64)
@@ -63,7 +91,7 @@ def tracklet_to_bounding_box(tracklet, cam, frame, calib_dir):
            'y1': min(corners_2D[1, :]),
            'y2': max(corners_2D[1, :])}
 
-    return corners, t, rz, box, corners_3D
+    return corners, t, rz, box, corners_3D, pose_idx
 
 
 def rz_to_R(rz):
@@ -104,3 +132,84 @@ def is_tracklet_seen(tracklet, frame, calib_dir, cam):
         return False
 
     return True
+
+
+# @timeit
+@cache_velo.memoize
+def get_pointcloud(base_dir, frame, calib_dir, cam, area=None):
+    P_velo_to_img = get_P_velo_to_img(calib_dir=calib_dir, cam=cam)
+    # load velodyne points
+    fname = '{:s}/velodyne_points/data/{:010d}.bin'.format(base_dir, frame)
+    velo = loadFromFile(fname, 4, np.float32)
+    # keep only every 5-th point for visualization
+    # velo = velo[0::5, :]
+
+    # remove all points behind image plane (approximation)
+    idx = velo[:, 0] < 5
+    velo = velo[np.invert(idx), :]
+
+    # project to image plane (exclude luminance)
+    velo_img = project(velo[:, 0:3], P_velo_to_img)
+
+    if area is not None:
+        x1, y1, x2, y2 = area
+        ll = np.array([x1, y1])  # lower-left
+        ur = np.array([x2, y2])  # upper-right
+
+        indices = np.all(np.logical_and(ll <= velo_img, velo_img <= ur), axis=1)
+        velo_img = velo_img[indices]
+        velo = velo[indices]
+
+    return velo, velo_img
+
+
+# @timeit
+def pointcloud_to_image(velo, velo_img, img=None, grayscale=False):
+    fig, ax = pointcloud_to_figure(velo, velo_img, img, grayscale)
+    buf, im = figure_to_image(fig)
+    return buf, im
+
+
+# @timeit
+def pointcloud_to_figure(velo, velo_img, img=None, grayscale=False):
+    image_resolution = np.array([1242, 375])
+    fig = plt.figure()
+    plt.axes([0, 0, 1, 1])
+
+    # plot points
+
+    if grayscale:
+        # transform to grayscale color, black is nearest (lowest distance -> lowest value)
+        colors = transform_to_range(5, 80, 0, 1, velo[:, 0])
+        plt.style.use('grayscale')
+        plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=colors, marker='o', s=1)
+    else:
+        cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
+        # because I want the most distant value to have more cold color (lower value)
+        col_indices = np.round(transform_to_range(1/80, 1/5, 0, 255, 1 / velo[:, 0])).astype(int)
+        plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
+
+    dpi = fig.dpi
+    fig.set_size_inches(image_resolution / dpi)
+    ax = plt.gca()
+    ax.set_xlim((-0.5, image_resolution[0] - 0.5))
+    ax.set_ylim((image_resolution[1] - 0.5, -0.5))
+
+    if img is not None:
+        plt.imshow(img)
+
+    return fig, ax
+
+
+# @timeit
+def figure_to_image(fig):
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
+    im = Image.open(buf)
+    return buf, im
+
+
+def bounding_box_to_image(ax, box, occlusion, object_type):
+    drawBox2D(ax, box, occlusion, object_type)
