@@ -63,15 +63,8 @@ for i, drive in enumerate(drives):
                                                                              calib_dir=calib_dir)
 
         kitti_img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(current_dir, cam, frame))
-        img_height, img_width, _ = kitti_img.shape
-        # because some parts of areas are out of the image
-        area = (
-            max(box['x1'], 0),
-            max(box['y1'], 0),
-            min(box['x2'], img_width),
-            min(box['y2'], img_height),
-        )
-        velo, velo_img = get_pointcloud(current_dir, frame, calib_dir, cam, area=area)
+        velo = metadata['velo']
+        velo_img = metadata['velo_img']
         fig, ax = pointcloud_to_figure(velo, velo_img, kitti_img, False)
         bounding_box_to_image(ax=ax, box=box, occlusion=tracklet['poses_dict'][pose_idx]['occlusion'],
                               object_type=tracklet['objectType'])

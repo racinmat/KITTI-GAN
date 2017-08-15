@@ -124,7 +124,9 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
         'metadata': {
             'tracklet': tracklet,
             'frame': frame,
-            'pose_idx': pose_idx
+            'pose_idx': pose_idx,
+            'velo': velo,
+            'velo_img': velo_img
         }
     }
 
