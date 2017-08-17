@@ -8,8 +8,8 @@ from devkit.python.drawBox2D import drawBox2D
 from devkit.python.drawBox3D import drawBox3D
 from devkit.python.projectToImage import projectToImage
 from devkit.python.wrapToPi import wrapToPi
-from devkit.python.loadCalibration import loadCalibration
-from devkit.python.readTracklets import readTracklets
+from devkit.python.load_calibration import load_calibration
+from devkit.python.readTracklets import read_tracklets
 from devkit.python.visualization import visualizationUpdate, visualizationInit
 import glob
 import matplotlib.pyplot as plt
@@ -67,9 +67,9 @@ def run_demoTracklets(base_dir=None, calib_dir=None):
     # set up figure
     gh = visualizationInit(image_dir, frame)
     # read calibration for the day
-    veloToCam, K = loadCalibration(calib_dir)
+    veloToCam, K = load_calibration(calib_dir)
     # read tracklets for the selected sequence
-    tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
+    tracklets = read_tracklets(base_dir + '/tracklet_labels.xml')
 
     # extract tracklets
     # LOCAL OBJECT COORDINATE SYSTEM:

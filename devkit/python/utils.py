@@ -18,7 +18,7 @@ def readVariable(data=None, name=None, M=None, N=None):
         return data[name]
 
 
-@lru_cache(maxsize=32)
+# @lru_cache(maxsize=32)
 def loadFromFile(fname, columns, dtype):
     with open(fname, 'rb') as f:
         result = np.fromfile(f, dtype).reshape((-1, columns))
@@ -46,7 +46,7 @@ def isempty(a):
         return False
 
 
-@lru_cache(maxsize=32)
+# @lru_cache(maxsize=32)
 def load_image(filename):
     return mpimg.imread(filename)
 

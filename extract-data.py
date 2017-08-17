@@ -4,28 +4,15 @@ import matplotlib
 matplotlib.use('Agg')
 
 import atexit
-import diskcache as diskcache
 import glob
-import datetime
-import io
 from PIL import Image
-from devkit.python.loadCalibration import loadCalibration
-from devkit.python.loadCalibrationCamToCam import loadCalibrationCamToCam
-from devkit.python.loadCalibrationRigid import loadCalibrationRigid
-from devkit.python.project import project
-from devkit.python.projectToImage import projectToImage
-from devkit.python.readTracklets import readTracklets
+from devkit.python.readTracklets import read_tracklets
 import numpy as np
-from devkit.python.utils import loadFromFile, load_image, timeit, transform_to_range
-from devkit.python.wrapToPi import wrapToPi
-from math import cos, sin, pi
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+from devkit.python.utils import load_image
+from math import pi
 import pickle
-from functools import lru_cache
 import os
-import diskcache
-from utils import get_P_velo_to_img, tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, \
+from utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, \
     pointcloud_to_image
 
 cache_bb = Cache('./cache/bb')
@@ -36,7 +23,7 @@ atexit.register(lambda: cache_bb.close())
 # @lru_cache(maxsize=32)
 def load_tracklets(base_dir):
     # read tracklets for the selected sequence
-    tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
+    tracklets = read_tracklets(base_dir + '/tracklet_labels.xml')
     return tracklets
 
 
@@ -134,9 +121,9 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
 # @timeit
 def main():
     drives = [
-        'drive_0009_sync',
-        'drive_0015_sync',
-        'drive_0023_sync',
+        # 'drive_0009_sync',
+        # 'drive_0015_sync',
+        # 'drive_0023_sync',
         'drive_0032_sync',
     ]
     drive_dir = './data/2011_09_26/2011_09_26_'
@@ -244,11 +231,11 @@ if __name__ == '__main__':
     # extract_one_tracklet()
     main()
     # print(load_tracklets.cache_info())
-    # print(loadCalibrationRigid.cache_info())
-    # print(loadCalibration.cache_info())
-    # print(loadCalibrationCamToCam.cache_info())
+    # print(load_calibration_rigid.cache_info())
+    # print(load_calibration.cache_info())
+    # print(load_calibration_cam_to_cam.cache_info())
     # print(load_image.cache_info())
-    # print(readTracklets.cache_info())
+    # print(read_tracklets.cache_info())
     # print(loadFromFile.cache_info())
     # print(get_corners.cache_info())
     # print(get_P_velo_to_img.cache_info())

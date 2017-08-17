@@ -16,3 +16,6 @@ kouknout na objective loss
 
 zkusit u viewpointu bb diskretizovat úhel na např. 5stupňové segmety a one hot encodovat je jako feature vector
 a i u dalších věcí zkusit onehot encodovat
+
+zkusit opravdu funkčnost lru cache.
+zkusit extrahovat jenom metadata a na nich rychle najít problém - ale asi to bude v té lru cache

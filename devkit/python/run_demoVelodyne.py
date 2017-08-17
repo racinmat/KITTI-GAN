@@ -7,11 +7,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
-from devkit.python.loadCalibrationCamToCam import loadCalibrationCamToCam
-from devkit.python.loadCalibrationRigid import loadCalibrationRigid
+from devkit.python.load_calibration import load_calibration_rigid, load_calibration_cam_to_cam
 from devkit.python.project import project
 from devkit.python.utils import loadFromFile
-from utils import size
+from devkit.python.utils import size
 
 
 def run_demoVelodyne(base_dir=None, calib_dir=None):
@@ -36,8 +35,8 @@ def run_demoVelodyne(base_dir=None, calib_dir=None):
 
     image_resolution = np.array([1242, 375])
     # load calibration
-    calib = loadCalibrationCamToCam(calib_dir + '/calib_cam_to_cam.txt')
-    Tr_velo_to_cam = loadCalibrationRigid(calib_dir + '/calib_velo_to_cam.txt')
+    calib = load_calibration_cam_to_cam(calib_dir + '/calib_cam_to_cam.txt')
+    Tr_velo_to_cam = load_calibration_rigid(calib_dir + '/calib_velo_to_cam.txt')
     # compute projection matrix velodyne->image plane
     R_cam_to_rect = np.eye(4)
     R_cam_to_rect[0:3, 0:3] = calib['R_rect'][0]

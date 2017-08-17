@@ -109,3 +109,13 @@ import numpy as np
 # im = plt.scatter(x=Z2[0, :], y=Z2[1, :], c=cols[col_indices, 0:3], marker='o', s=1)
 #
 # plt.show()
+
+drives = [
+    'drive_0009_sync',
+    'drive_0015_sync',
+    'drive_0023_sync',
+    'drive_0032_sync',
+]
+drive_dir = './data/2011_09_26/2011_09_26_'
+calib_dir = './data/2011_09_26'
+

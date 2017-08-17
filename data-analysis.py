@@ -8,7 +8,7 @@ from utils import tracklet_to_bounding_box, is_tracklet_seen
 
 matplotlib.use('Agg')
 
-from devkit.python.readTracklets import readTracklets
+from devkit.python.readTracklets import read_tracklets
 import numpy as np
 from devkit.python.wrapToPi import wrapToPi
 from math import cos, sin, pi, ceil, log
@@ -24,7 +24,7 @@ def load_tracklets(base_dir=None):
 
     # get image sub-directory
     # read tracklets for the selected sequence
-    tracklets = readTracklets(base_dir + '/tracklet_labels.xml')
+    tracklets = read_tracklets(base_dir + '/tracklet_labels.xml')
     return tracklets
 
 

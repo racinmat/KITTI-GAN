@@ -3,10 +3,8 @@ import matplotlib
 from devkit.python.drawBox2D import drawBox2D
 import atexit
 import diskcache
-from devkit.python.loadCalibration import loadCalibration
+from devkit.python.load_calibration import load_calibration, load_calibration_cam_to_cam, load_calibration_rigid
 from functools import lru_cache
-from devkit.python.loadCalibrationCamToCam import loadCalibrationCamToCam
-from devkit.python.loadCalibrationRigid import loadCalibrationRigid
 from devkit.python.project import project
 from devkit.python.utils import loadFromFile, transform_to_range
 from devkit.python.wrapToPi import wrapToPi
@@ -36,7 +34,7 @@ cache_velo = Cache('./cache/velo')
 atexit.register(lambda: cache_velo.close())
 
 
-@lru_cache(maxsize=64)
+# @lru_cache(maxsize=64)
 def get_corners(w, h, l):
     corners = {
         'x': [l / 2,   l / 2, - l / 2, - l / 2, l / 2,   l / 2, - l / 2, - l / 2],
@@ -61,11 +59,11 @@ def get_corners_and_orientation(corners, rz, l, t, veloToCam, cam):
     return corners_3D, orientation_3D
 
 
-@lru_cache(maxsize=32)
+# @lru_cache(maxsize=32)
 def get_P_velo_to_img(calib_dir, cam):
     # load calibration
-    calib = loadCalibrationCamToCam(calib_dir + '/calib_cam_to_cam.txt')
-    Tr_velo_to_cam = loadCalibrationRigid(calib_dir + '/calib_velo_to_cam.txt')
+    calib = load_calibration_cam_to_cam(calib_dir + '/calib_cam_to_cam.txt')
+    Tr_velo_to_cam = load_calibration_rigid(calib_dir + '/calib_velo_to_cam.txt')
     # compute projection matrix velodyne->image plane
     R_cam_to_rect = np.eye(4)
     R_cam_to_rect[0:3, 0:3] = calib['R_rect'][0]
@@ -75,7 +73,7 @@ def get_P_velo_to_img(calib_dir, cam):
 
 # @cache_bb.memoize
 def tracklet_to_bounding_box(tracklet, cam, frame, calib_dir):
-    veloToCam, K = loadCalibration(dir=calib_dir)
+    veloToCam, K = load_calibration(dir=calib_dir)
     corners = get_corners(w=tracklet['w'], h=tracklet['h'], l=tracklet['l'])
 
     pose_idx = frame - tracklet['first_frame']
@@ -102,7 +100,7 @@ def rz_to_R(rz):
 
 
 def is_tracklet_seen(tracklet, frame, calib_dir, cam):
-    veloToCam, K = loadCalibration(calib_dir)
+    veloToCam, K = load_calibration(calib_dir)
     image_resolution = np.array([1242, 375])
 
     pose_idx = frame - tracklet['first_frame']
