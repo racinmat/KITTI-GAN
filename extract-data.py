@@ -13,7 +13,7 @@ from math import pi
 import pickle
 import os
 from utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, \
-    pointcloud_to_image
+    pointcloud_to_image, sample_to_image
 
 cache_bb = Cache('./cache/bb')
 
@@ -121,9 +121,9 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
 # @timeit
 def main():
     drives = [
-        # 'drive_0009_sync',
-        # 'drive_0015_sync',
-        # 'drive_0023_sync',
+        'drive_0009_sync',
+        'drive_0015_sync',
+        'drive_0023_sync',
         'drive_0032_sync',
     ]
     drive_dir = './data/2011_09_26/2011_09_26_'
@@ -131,27 +131,27 @@ def main():
 
     cam = 2
 
-    data = []
-
     for i, drive in enumerate(drives):
+        data = []
         current_dir = drive_dir + drive
         image_dir = current_dir + '/image_{:02d}/data'.format(cam)
         # get number of images for this dataset
         frames = len(glob.glob(image_dir + '/*.png'))
-        # start = 18
+        # start = 0
         # end = 20
         start = 0
         end = frames
         # end = round(frames / 50)
 
-        print('processing drive no. {:d}/{:d} with {:d} frames'.format(i + 1, len(drives), frames))
+        print('processing drive no. {:d}/{:d} with {:d} frames'.format(i + 1, len(drives), end - start))
 
+        length = end - start
         tracklets = load_tracklets(base_dir=current_dir)
         for frame in range(start, end):
             # percentage printing
             percent = 5
-            part = int(((100 * frame) / frames) / percent)
-            previous = int(((100 * (frame - 1)) / frames) / percent)
+            part = int(((100 * (frame - start)) / length) / percent)
+            previous = int(((100 * (frame - start - 1)) / length) / percent)
             if part - previous > 0:
                 print(str(percent * part) + '% extracted.')
 
@@ -172,9 +172,19 @@ def main():
                                           current_dir=current_dir,
                                           with_image=False,
                                           grayscale=True)
+
+                # visualization of sample
+                buf, im = sample_to_image(sample, cam, calib_dir, current_dir)
+                im.save('images/extraction/' + drive + '_{:d}_src_frame_{:d}.png'.format(j, frame))
+                buf.close()
+                # end of visualization
+
                 data.append(sample)
 
-        file_name = 'data/extracted/tracklets_points_grayscale_bg_white_' + drive + '.data'
+        file_name = 'data/extracted/tracklets_points_grayscale_bg_white_' + drive
+        if start != 0 or end != frames:
+            file_name = file_name + "_{:d}_{:d}".format(start, end)
+        file_name = file_name + '.data'
         file = open(file_name, 'wb')
         pickle.dump(data, file)
         print('data saved to file: ' + file_name)

@@ -4,7 +4,7 @@ matplotlib.use('Agg')
 
 from devkit.python.utils import load_image
 from utils import tracklet_to_bounding_box, bounding_box_to_image, \
-    pointcloud_to_figure, figure_to_image
+    pointcloud_to_figure, figure_to_image, sample_to_image
 import numpy as np
 import os
 import pickle
@@ -12,17 +12,19 @@ from PIL import Image
 
 
 if __name__ == '__main__':
+    show_data_image = False
+    show_metadata_image = True
+
     data_dir = 'data/extracted'
-    sizes_x = np.empty((1, 0))
-    sizes_y = np.empty((1, 0))
     drives = [
-        # 'drive_0009_sync',
-        # 'drive_0015_sync',
-        # 'drive_0023_sync',
+        'drive_0009_sync',
+        'drive_0015_sync',
+        'drive_0023_sync',
         'drive_0032_sync',
     ]
 
     input_prefix = 'tracklets_points_normalized_'
+    input_suffix = '_0_20'
     resolution = '32_32'
     # resolution = '64_64'
 
@@ -37,11 +39,12 @@ if __name__ == '__main__':
         os.makedirs(directory)
 
     for i, drive in enumerate(drives):
-        filename = data_dir + '/' + input_prefix + drive + '_' + resolution + '.data'
-        print("processing: " + filename)
+        filename = data_dir + '/' + input_prefix + drive + '_' + resolution + input_suffix + '.data'
+        print("processing: " + filename + 'with {:d} samples'.format(len(drives)))
         file = open(filename, 'rb')
         data = pickle.load(file)
         file.close()
+        current_dir = drive_dir + drive
         samples = len(data)
         for j, sample in enumerate(data):
             # percentage printing
@@ -51,29 +54,24 @@ if __name__ == '__main__':
             if part - previous > 0:
                 print(str(percent * part) + '% visualized.')
 
-            img = Image.fromarray(sample['y'])
+            if show_data_image:
+                img = Image.fromarray(sample['y'])
+            else:
+                img = None
 
-            # metadata loading and kitti image generating
-            metadata = sample['metadata']
-            current_dir = drive_dir + drive
-            image_dir = current_dir + '/image_{:02d}/data'.format(cam)
-            frame = metadata['frame']
-            tracklet = metadata['tracklet']
-
-            corners, t, rz, box, corners_3D, pose_idx = tracklet_to_bounding_box(tracklet=tracklet,
-                                                                                 cam=cam,
-                                                                                 frame=frame,
-                                                                                 calib_dir=calib_dir)
-
-            kitti_img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(current_dir, cam, frame))
-            velo = metadata['velo']
-            velo_img = metadata['velo_img']
-            fig, ax = pointcloud_to_figure(velo, velo_img, kitti_img, False)
-            bounding_box_to_image(ax=ax, box=box, occlusion=tracklet['poses_dict'][pose_idx]['occlusion'],
-                                  object_type=tracklet['objectType'])
-            buf, im = figure_to_image(fig)
+            if show_metadata_image:
+                # metadata loading and kitti image generating
+                metadata = sample['metadata']
+                frame = metadata['frame']
+                buf, im = sample_to_image(sample, cam, calib_dir, current_dir)
+            else:
+                im = None
+                frame = None
+                buf = None
 
             # save images
-            img.save(directory + drive + '_{:d}.png'.format(j))
-            im.save(directory + drive + '_{:d}_src_frame_{:d}.png'.format(j, frame))
-            buf.close()
+            if show_data_image:
+                img.save(directory + drive + '_{:d}.png'.format(j))
+            if show_metadata_image:
+                im.save(directory + drive + '_{:d}_src_frame_{:d}.png'.format(j, frame))
+                buf.close()

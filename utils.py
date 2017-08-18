@@ -6,7 +6,7 @@ import diskcache
 from devkit.python.load_calibration import load_calibration, load_calibration_cam_to_cam, load_calibration_rigid
 from functools import lru_cache
 from devkit.python.project import project
-from devkit.python.utils import loadFromFile, transform_to_range
+from devkit.python.utils import loadFromFile, transform_to_range, load_image
 from devkit.python.wrapToPi import wrapToPi
 import numpy as np
 from devkit.python.projectToImage import projectToImage
@@ -211,3 +211,23 @@ def figure_to_image(fig):
 
 def bounding_box_to_image(ax, box, occlusion, object_type):
     drawBox2D(ax, box, occlusion, object_type)
+
+
+def sample_to_image(sample, cam, calib_dir, current_dir):
+    metadata = sample['metadata']
+    frame = metadata['frame']
+    tracklet = metadata['tracklet']
+
+    corners, t, rz, box, corners_3D, pose_idx = tracklet_to_bounding_box(tracklet=tracklet,
+                                                                         cam=cam,
+                                                                         frame=frame,
+                                                                         calib_dir=calib_dir)
+
+    kitti_img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(current_dir, cam, frame))
+    velo = metadata['velo']
+    velo_img = metadata['velo_img']
+    fig, ax = pointcloud_to_figure(velo, velo_img, kitti_img, False)
+    bounding_box_to_image(ax=ax, box=box, occlusion=tracklet['poses_dict'][pose_idx]['occlusion'],
+                          object_type=tracklet['objectType'])
+    buf, im = figure_to_image(fig)
+    return buf, im

@@ -21,13 +21,16 @@ if __name__ == '__main__':
     ]
 
     input_prefix = 'tracklets_points_grayscale_bg_white_'
+    # input_suffix = ''
+    input_suffix = '_0_20'
     output_prefix = 'tracklets_points_normalized_'
+    output_suffix = input_suffix
 
     new_size = (32, 32)
     # new_size = (64, 64)
 
     for drive in drives:
-        filename = data_dir + '/' + input_prefix + drive + '.data'
+        filename = data_dir + '/' + input_prefix + drive + input_suffix + '.data'
         print("processing: " + filename)
         file = open(filename, 'rb')
         data = pickle.load(file)
@@ -53,7 +56,7 @@ if __name__ == '__main__':
 
             pair['y'] = 255 - pair['y']     # inverting black and white
 
-        filename = data_dir + '/' + output_prefix + drive + '_' + str(new_size[0]) + '_' + str(new_size[1]) + '.data'
+        filename = data_dir + '/' + output_prefix + drive + '_' + str(new_size[0]) + '_' + str(new_size[1]) + output_suffix + '.data'
         file = open(filename, 'wb')
         pickle.dump(data, file)
         print("data written to file: " + filename)
