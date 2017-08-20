@@ -166,7 +166,7 @@ def discriminator(x, y, reuse=False):
         h1 = tf.concat([h1, y], 1)
 
         h2 = lrelu(d_bn2(linear(h1, dfc_dim, 'd_h2_lin')))
-        h2 = lrelu(d_bn2(linear(h0, dfc_dim, 'd_h2_lin')))
+        # h2 = lrelu(d_bn2(linear(h0, dfc_dim, 'd_h2_lin')))
         h2 = tf.concat([h2, y], 1)
 
         h3 = linear(h2, 1, 'd_h3_lin')
@@ -197,9 +197,9 @@ def generator(z, y):
         h1 = tf.reshape(h1, [batch_size, s_h4, s_w4, gf_dim * 2])
 
         h1 = conv_cond_concat(h1, yb)
-        #
-        # h2 = tf.nn.relu(g_bn2(deconv2d(h1, [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
-        # h2 = conv_cond_concat(h2, yb)
+
+        h2 = tf.nn.relu(g_bn2(deconv2d(h1, [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
+        h2 = conv_cond_concat(h2, yb)
 
         # h1 = tf.nn.relu(g_bn1(
         #     linear(h0, gf_dim * 2 * s_h2 * s_w2, 'g_h1_lin')))
@@ -208,8 +208,8 @@ def generator(z, y):
         # h1 = conv_cond_concat(h1, yb)
 
         return tf.nn.sigmoid(
-            # deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
-            deconv2d(h1, [batch_size, s_h, s_w, c_dim], name='g_h3'))
+            deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
+            # deconv2d(h1, [batch_size, s_h, s_w, c_dim], name='g_h3'))
 
 
 def sample_Z(m, n):
@@ -378,7 +378,7 @@ for epoch in range(epochs):
 
         if np.mod(counter, 100) == 1:
             try:
-                samples, d_loss, g_loss = sess.run(
+                samples, d_loss_val, g_loss_val = sess.run(
                     [sampler, d_loss, g_loss],
                     feed_dict={
                         Z: Z_sample,
@@ -388,9 +388,11 @@ for epoch in range(epochs):
                 )
                 save_images(samples, image_manifold_size(samples.shape[0]),
                             './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
-                print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss))
-            except:
-                print("one pic error!...")
+                print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss_val, g_loss_val))
+            except Exception as e:
+                print("pic saving error:")
+                print(e)
+                raise e
 
         if np.mod(counter, 500) == 2:
             save(checkpoint_dir, counter)
