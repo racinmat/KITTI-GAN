@@ -57,14 +57,16 @@ def is_for_dataset(tracklet, frame, calib_dir, cam):
     # Angle in cylindrical coordinates is ange under which car is seen, so it is used for filtering.
     # orientation_3D is represented by 2 points.
     # car is in front of camera when angle of both points (in cylindrical coordinates) is same
-    theta = np.arctan2(orientation_3D[2, :], orientation_3D[0, :])
-    r = np.linalg.norm((corners_3D[0, :], corners_3D[2, :]), axis=0)    # r is used for distance measurement
-    angle = theta[1] - theta[0]
+    orientation_vector = orientation_3D[:, 1] - orientation_3D[:, 0]
+    vector_theta = np.arctan2(orientation_vector[2], orientation_vector[0])
+    start_theta = np.arctan2(orientation_3D[2, 0], orientation_3D[0, 0])
+    r = np.linalg.norm((corners_3D[0, :], corners_3D[2, :]), axis=0)  # r is used for distance measurement
+    angle = vector_theta - start_theta
     if angle > treshold or angle < - treshold:
         return False
 
-    distance = r[
-        7]  # instead of fixed distance in X axis, we use distance from cylindrical coordinates, because this is more accurate
+    # instead of fixed distance in X axis, we use distance from cylindrical coordinates, because this is more accurate
+    distance = r[7]
     # corner_ldf = corners_3D[:, 7]
     # distance = corner_ldf.T[2]
     if distance < min_distance or distance > max_distance:
