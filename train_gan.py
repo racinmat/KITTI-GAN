@@ -203,8 +203,8 @@ def save(checkpoint_dir, step, batch_size, image_size, saver, sess):
         os.makedirs(checkpoint_dir)
 
     saver.save(sess,
-                    os.path.join(checkpoint_dir, model_name),
-                    global_step=step)
+               os.path.join(checkpoint_dir, model_name),
+               global_step=step)
 
 
 def imsave(images, size, path):
@@ -367,8 +367,9 @@ def main():
 
             counter += 1
             print("Epoch: {:2d} {:4d}/{:4d} time: {:4.4f}, d_loss: {:.8f}, g_loss: {:.8f}".format(epoch, i, num_batches,
-                                                                                          time.time() - start_time,
-                                                                                          errD_fake + errD_real, errG))
+                                                                                                  time.time() - start_time,
+                                                                                                  errD_fake + errD_real,
+                                                                                                  errG))
 
             if np.mod(counter, 100) == 1:
                 try:
@@ -390,6 +391,7 @@ def main():
 
             if np.mod(counter, 500) == 2:
                 save(checkpoint_dir, counter, batch_size, image_size, saver, sess)
+
 
 if __name__ == '__main__':
     main()

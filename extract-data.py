@@ -114,13 +114,21 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
     pix = np.array(cropped_im)
     buf.close()
 
-    corner_ldf = corners_3D[:, 7]
+    orientation_vector = orientation_3D[:, 1] - orientation_3D[:, 0]
+    vector_theta = np.arctan2(orientation_vector[2], orientation_vector[0])
+    start_theta = np.arctan2(orientation_3D[2, 0], orientation_3D[0, 0])
+    angle = vector_theta - start_theta
+
+    # corner_ldf = corners_3D[:, 7]
+    r = np.linalg.norm((corners_3D[0, :], corners_3D[2, :]), axis=0)  # r is used for distance measurement
+    # instead of fixed distance in X axis, we use distance from cylindrical coordinates, because this is more accurate
+    distance = r[7]
     return {
         'x': [
-            rz,
+            angle,
             tracklet['h'] / tracklet['w'],  # height/width ratio
             tracklet['l'] / tracklet['w'],  # depth/width ratio
-            corner_ldf.T[2]  # distance from image
+            distance  # distance from image
         ],
         'y': pix,
         'metadata': {
