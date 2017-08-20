@@ -6,13 +6,14 @@ import diskcache
 from devkit.python.load_calibration import load_calibration, load_calibration_cam_to_cam, load_calibration_rigid
 from functools import lru_cache
 from devkit.python.project import project
-from devkit.python.utils import loadFromFile, transform_to_range, load_image
+from devkit.python.utils import loadFromFile, transform_to_range, load_image, Timeit
 from devkit.python.wrapToPi import wrapToPi
 import numpy as np
 from devkit.python.projectToImage import projectToImage
 from math import cos, sin
 import matplotlib.pyplot as plt
 from PIL import Image
+from devkit.python.utils import timeit
 
 
 class Cache(diskcache.Cache):
@@ -37,9 +38,9 @@ atexit.register(lambda: cache_velo.close())
 # @lru_cache(maxsize=64)
 def get_corners(w, h, l):
     corners = {
-        'x': [l / 2,   l / 2, - l / 2, - l / 2, l / 2,   l / 2, - l / 2, - l / 2],
-        'y': [w / 2, - w / 2, - w / 2,   w / 2, w / 2, - w / 2, - w / 2,   w / 2],
-        'z': [0,           0,       0,       0,     h,       h,       h,       h]
+        'x': [l / 2, l / 2, - l / 2, - l / 2, l / 2, l / 2, - l / 2, - l / 2],
+        'y': [w / 2, - w / 2, - w / 2, w / 2, w / 2, - w / 2, - w / 2, w / 2],
+        'z': [0, 0, 0, 0, h, h, h, h]
     }
     return corners
 
@@ -59,7 +60,7 @@ def get_corners_and_orientation(corners, rz, l, t, veloToCam, cam):
     return corners_3D_cam, orientation_3D_cam
 
 
-# @lru_cache(maxsize=32)
+@lru_cache(maxsize=32)
 def get_P_velo_to_img(calib_dir, cam):
     # load calibration
     calib = load_calibration_cam_to_cam(calib_dir + '/calib_cam_to_cam.txt')
@@ -72,6 +73,8 @@ def get_P_velo_to_img(calib_dir, cam):
 
 
 # @cache_bb.memoize
+# @lru_cache(maxsize=32)
+@Timeit
 def tracklet_to_bounding_box(tracklet, cam, frame, calib_dir):
     veloToCam, K = load_calibration(dir=calib_dir)
     corners = get_corners(w=tracklet['w'], h=tracklet['h'], l=tracklet['l'])
@@ -89,7 +92,7 @@ def tracklet_to_bounding_box(tracklet, cam, frame, calib_dir):
            'y1': min(corners_2D[1, :]),
            'y2': max(corners_2D[1, :])}
 
-    return corners, t, rz, box, corners_3D, pose_idx
+    return corners, t, rz, box, corners_3D, pose_idx, orientation_3D
 
 
 def rz_to_R(rz):
@@ -99,6 +102,7 @@ def rz_to_R(rz):
     return R
 
 
+@Timeit
 def is_tracklet_seen(tracklet, frame, calib_dir, cam):
     veloToCam, K = load_calibration(calib_dir)
     image_resolution = np.array([1242, 375])
@@ -132,8 +136,9 @@ def is_tracklet_seen(tracklet, frame, calib_dir, cam):
     return True
 
 
-# @timeit
 # @cache_velo.memoize
+@lru_cache(maxsize=32)
+@Timeit
 def get_pointcloud(base_dir, frame, calib_dir, cam, area=None):
     P_velo_to_img = get_P_velo_to_img(calib_dir=calib_dir, cam=cam)
     # load velodyne points
@@ -161,14 +166,15 @@ def get_pointcloud(base_dir, frame, calib_dir, cam, area=None):
     return velo, velo_img
 
 
-# @timeit
+# @lru_cache(maxsize=32)
+@Timeit
 def pointcloud_to_image(velo, velo_img, img=None, grayscale=False):
     fig, ax = pointcloud_to_figure(velo, velo_img, img, grayscale)
     buf, im = figure_to_image(fig)
     return buf, im
 
 
-# @timeit
+@Timeit
 def pointcloud_to_figure(velo, velo_img, img=None, grayscale=False):
     image_resolution = np.array([1242, 375])
     fig = plt.figure()
@@ -184,7 +190,7 @@ def pointcloud_to_figure(velo, velo_img, img=None, grayscale=False):
     else:
         cols = matplotlib.cm.jet(np.arange(256))  # jet is colormap, represented by lookup table
         # because I want the most distant value to have more cold color (lower value)
-        col_indices = np.round(transform_to_range(1/80, 1/5, 0, 255, 1 / velo[:, 0])).astype(int)
+        col_indices = np.round(transform_to_range(1 / 80, 1 / 5, 0, 255, 1 / velo[:, 0])).astype(int)
         plt.scatter(x=velo_img[:, 0], y=velo_img[:, 1], c=cols[col_indices, 0:3], marker='o', s=1)
 
     dpi = fig.dpi
@@ -199,7 +205,7 @@ def pointcloud_to_figure(velo, velo_img, img=None, grayscale=False):
     return fig, ax
 
 
-# @timeit
+@Timeit
 def figure_to_image(fig):
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
@@ -218,10 +224,10 @@ def sample_to_image(sample, cam, calib_dir, current_dir):
     frame = metadata['frame']
     tracklet = metadata['tracklet']
 
-    corners, t, rz, box, corners_3D, pose_idx = tracklet_to_bounding_box(tracklet=tracklet,
-                                                                         cam=cam,
-                                                                         frame=frame,
-                                                                         calib_dir=calib_dir)
+    corners, t, rz, box, corners_3D, pose_idx, orientation_3D = tracklet_to_bounding_box(tracklet=tracklet,
+                                                                                         cam=cam,
+                                                                                         frame=frame,
+                                                                                         calib_dir=calib_dir)
 
     kitti_img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(current_dir, cam, frame))
     velo = metadata['velo']

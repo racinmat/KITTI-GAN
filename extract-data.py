@@ -8,16 +8,17 @@ import glob
 from PIL import Image
 from devkit.python.readTracklets import read_tracklets
 import numpy as np
-from devkit.python.utils import load_image
+from devkit.python.utils import load_image, Timeit
 from math import pi
 import pickle
 import os
-from utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, \
-    pointcloud_to_image, sample_to_image
+from utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, pointcloud_to_image
+from devkit.python.utils import timeit
 
-cache_bb = Cache('./cache/bb')
 
-atexit.register(lambda: cache_bb.close())
+# cache_bb = Cache('./cache/bb')
+#
+# atexit.register(lambda: cache_bb.close())
 
 
 # @lru_cache(maxsize=32)
@@ -46,20 +47,24 @@ def is_for_dataset(tracklet, frame, calib_dir, cam):
     treshold = treshold_degrees * pi / 180
     # filter out cars with high rotation
 
-    corners, t, rz, box, corners_3D, pose_idx = tracklet_to_bounding_box(tracklet=tracklet,
-                                                                         cam=cam,
-                                                                         frame=frame,
-                                                                         calib_dir=calib_dir)
+    corners, t, rz, box, corners_3D, pose_idx, orientation_3D = tracklet_to_bounding_box(tracklet=tracklet,
+                                                                                         cam=cam,
+                                                                                         frame=frame,
+                                                                                         calib_dir=calib_dir)
 
     # Rotation is calculated in 3D coordinates.
-    # Bounding box is transferred to cylindrical coordinates (so we do not care about the Y axis). [x, z => r, theta, y => y]
+    # Orientation of bounding box is transferred to cylindrical coordinates (so we do not care about the Y axis). [x, z => r, theta, y => y]
     # Angle in cylindrical coordinates is ange under which car is seen, so it is used for filtering.
-    theta = np.arctan2(corners_3D[2, :], corners_3D[0, :]) - np.pi / 2  # so theta == 0 is angle of car in front of camera
-    r = np.linalg.norm((corners_3D[0, :], corners_3D[2, :]), axis=0)
-    if theta > treshold or theta < - treshold:
+    # orientation_3D is represented by 2 points.
+    # car is in front of camera when angle of both points (in cylindrical coordinates) is same
+    theta = np.arctan2(orientation_3D[2, :], orientation_3D[0, :])
+    r = np.linalg.norm((corners_3D[0, :], corners_3D[2, :]), axis=0)    # r is used for distance measurement
+    angle = theta[1] - theta[0]
+    if angle > treshold or angle < - treshold:
         return False
 
-    distance = r[7]  # instead of fixed distance in X axis, we use distance from cylindrical coordinates, because this is more accurate
+    distance = r[
+        7]  # instead of fixed distance in X axis, we use distance from cylindrical coordinates, because this is more accurate
     # corner_ldf = corners_3D[:, 7]
     # distance = corner_ldf.T[2]
     if distance < min_distance or distance > max_distance:
@@ -73,14 +78,14 @@ def velodyne_data_exist(base_dir, frame):
     return os.path.isfile(filename)
 
 
-# @timeit
+@Timeit
 def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=False, grayscale=False):
     image_resolution = np.array([1242, 375])
 
-    corners, t, rz, box, corners_3D, pose_idx = tracklet_to_bounding_box(tracklet=tracklet,
-                                                                         cam=cam,
-                                                                         frame=frame,
-                                                                         calib_dir=calib_dir)
+    corners, t, rz, box, corners_3D, pose_idx, orientation_3D = tracklet_to_bounding_box(tracklet=tracklet,
+                                                                                         cam=cam,
+                                                                                         frame=frame,
+                                                                                         calib_dir=calib_dir)
 
     area = (box['x1'], box['y1'], box['x2'], box['y2'])
     original_area = (0, 0, image_resolution[0], image_resolution[1])
@@ -126,10 +131,10 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
     }
 
 
-# @timeit
+@timeit
 def main():
     drives = [
-        # 'drive_0009_sync',
+        'drive_0009_sync',
         'drive_0015_sync',
         'drive_0023_sync',
         'drive_0032_sync',
@@ -146,7 +151,7 @@ def main():
         # get number of images for this dataset
         frames = len(glob.glob(image_dir + '/*.png'))
         # start = 0
-        # end = 20
+        # end = 40
         start = 0
         end = frames
         # end = round(frames / 50)
@@ -181,7 +186,6 @@ def main():
                                           with_image=False,
                                           grayscale=True)
 
-
                 # visualization of sample
                 # buf, im = sample_to_image(sample, cam, calib_dir, current_dir)
                 # im.save('images/extraction/' + drive + '_{:d}_src_frame_{:d}.png'.format(j, frame))
@@ -196,7 +200,7 @@ def main():
         file_name = file_name + '.data'
         file = open(file_name, 'wb')
         pickle.dump(data, file)
-        print('data saved to file: ' + file_name)
+        print('data saved to file: {}, extracted {} samples.'.format(file_name, len(data)))
         file.close()
 
 
@@ -249,6 +253,13 @@ def extract_one_tracklet():
 if __name__ == '__main__':
     # extract_one_tracklet()
     main()
+    print("extraction done")
+    # print(tracklet_to_bounding_box.get_time())
+    # print(get_pointcloud.get_time())
+    # print(pointcloud_to_image.get_time())
+    # print(is_tracklet_seen.get_time())
+    # print(get_x_y_data_for.get_time())
+
     # print(load_tracklets.cache_info())
     # print(load_calibration_rigid.cache_info())
     # print(load_calibration.cache_info())
