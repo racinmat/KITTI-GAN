@@ -245,8 +245,6 @@ def image_manifold_size(num_images):
 
 def main():
     data_dir = 'data/extracted'
-    sizes_x = np.empty((1, 0))
-    sizes_y = np.empty((1, 0))
     drives = [
         'drive_0009_sync',
         'drive_0015_sync',
@@ -271,8 +269,8 @@ def main():
 
     batch_size = 64
     Z_dim = 100
-    image_size = data[0]['y'].shape
-    y_dim = len(data[0]['x'])
+    image_size = dataset.get_image_size()
+    y_dim = dataset.get_labels_dim()
 
     epochs = 500
     h_dim = 128

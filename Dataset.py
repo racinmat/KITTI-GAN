@@ -15,7 +15,7 @@ class DataSet(object):
         self.num_examples = len(data)
 
         images = np.array([t['y'] for t in data])
-        labels = np.array([t['x'] for t in data])
+        labels = np.array([t['x'][1:6] for t in data])  # removed angle for this first iteration
 
         # Convert from [0, 255] -> [0.0, 1.0].
         images = images.astype(np.float32)
@@ -47,3 +47,9 @@ class DataSet(object):
 
     def num_batches(self, batch_size):
         return np.floor(self.num_examples / batch_size)
+
+    def get_image_size(self):
+        return self.images[0].shape
+
+    def get_labels_dim(self):
+        return len(self.labels[0])
