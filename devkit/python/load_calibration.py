@@ -1,13 +1,16 @@
 import numpy as np
-import ruamel.yaml as yaml
 from functools import lru_cache
 from devkit.python.utils import readVariable, isempty
+import os
+import pickle
+import sys
 
 
 @lru_cache(maxsize=32)
 def load_calibration_rigid(filename=None):
     # open file
     with open(filename, 'r') as stream:
+        import ruamel.yaml as yaml
         try:
             data = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
@@ -24,6 +27,7 @@ def load_calibration_rigid(filename=None):
 def load_calibration_cam_to_cam(filename):
     # open file
     with open(filename, 'r') as stream:
+        import ruamel.yaml as yaml
         try:
             data = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
@@ -72,6 +76,16 @@ def load_calibration_cam_to_cam(filename):
 
 @lru_cache(maxsize=32)
 def load_calibration(dir=None):
+    version = '.'.join([str(i) for i in sys.version_info[0:3]])
+    if os.path.isfile(dir + 'calib_' + '.' + version + '.cache'):
+        file = open(dir + 'calib_' + '.' + version + '.cache', 'rb')
+        try:
+            veloToCam, K = pickle.load(file)
+            file.close()
+            return veloToCam, K
+        except UnicodeDecodeError:
+            pass
+
     # LOADCALIBRATION provides all needed coordinate system transformations
     # returns the pre-computed velodyne to cam (gray and color) projection
 
@@ -94,11 +108,17 @@ def load_calibration(dir=None):
     T3[0, 3] = calib['P_rect'][3][0, 3] / calib['P_rect'][3][0, 0]
     # transformation: velodyne -> rectified camera coordinates
 
-    veloToCam = {}
-    veloToCam[0] = np.dot(np.dot(T0, R_rect00), Tr_velo_to_cam)
-    veloToCam[1] = np.dot(np.dot(T1, R_rect00), Tr_velo_to_cam)
-    veloToCam[2] = np.dot(np.dot(T2, R_rect00), Tr_velo_to_cam)
-    veloToCam[3] = np.dot(np.dot(T3, R_rect00), Tr_velo_to_cam)
+    veloToCam = {
+        0: np.dot(np.dot(T0, R_rect00), Tr_velo_to_cam),
+        1: np.dot(np.dot(T1, R_rect00), Tr_velo_to_cam),
+        2: np.dot(np.dot(T2, R_rect00), Tr_velo_to_cam),
+        3: np.dot(np.dot(T3, R_rect00), Tr_velo_to_cam)
+    }
     # calibration matrix after rectification (equal for all cameras)
     K = calib['P_rect'][1][:, 0:3]
+
+    file = open(dir + 'calib_' + '.' + version + '.cache', 'wb')
+    pickle.dump((veloToCam, K), file)
+    file.close()
+
     return veloToCam, K

@@ -21,8 +21,8 @@ if __name__ == '__main__':
     ]
 
     input_prefix = 'tracklets_points_grayscale_bg_white_'
-    # input_suffix = ''
-    input_suffix = '_0_20'
+    input_suffix = ''
+    # input_suffix = '_0_20'
     output_prefix = 'tracklets_points_normalized_'
     output_suffix = input_suffix
 

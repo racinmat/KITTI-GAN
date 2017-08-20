@@ -12,7 +12,7 @@ from PIL import Image
 
 
 if __name__ == '__main__':
-    show_data_image = False
+    show_data_image = True
     show_metadata_image = True
 
     data_dir = 'data/extracted'
@@ -24,7 +24,8 @@ if __name__ == '__main__':
     ]
 
     input_prefix = 'tracklets_points_normalized_'
-    input_suffix = '_0_20'
+    input_suffix = ''
+    # input_suffix = '_0_20'
     resolution = '32_32'
     # resolution = '64_64'
 
@@ -40,12 +41,12 @@ if __name__ == '__main__':
 
     for i, drive in enumerate(drives):
         filename = data_dir + '/' + input_prefix + drive + '_' + resolution + input_suffix + '.data'
-        print("processing: " + filename + 'with {:d} samples'.format(len(drives)))
         file = open(filename, 'rb')
         data = pickle.load(file)
         file.close()
         current_dir = drive_dir + drive
         samples = len(data)
+        print("processing: {:s} with {:d} samples".format(filename, samples))
         for j, sample in enumerate(data):
             # percentage printing
             percent = 5

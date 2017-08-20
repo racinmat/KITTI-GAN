@@ -121,7 +121,7 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
 # @timeit
 def main():
     drives = [
-        'drive_0009_sync',
+        # 'drive_0009_sync',
         'drive_0015_sync',
         'drive_0023_sync',
         'drive_0032_sync',
@@ -173,10 +173,11 @@ def main():
                                           with_image=False,
                                           grayscale=True)
 
+
                 # visualization of sample
-                buf, im = sample_to_image(sample, cam, calib_dir, current_dir)
-                im.save('images/extraction/' + drive + '_{:d}_src_frame_{:d}.png'.format(j, frame))
-                buf.close()
+                # buf, im = sample_to_image(sample, cam, calib_dir, current_dir)
+                # im.save('images/extraction/' + drive + '_{:d}_src_frame_{:d}.png'.format(j, frame))
+                # buf.close()
                 # end of visualization
 
                 data.append(sample)

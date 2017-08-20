@@ -50,13 +50,13 @@ def get_corners_and_orientation(corners, rz, l, t, veloToCam, cam):
     corners_3D[0, :] = corners_3D[0, :] + t[0]
     corners_3D[1, :] = corners_3D[1, :] + t[1]
     corners_3D[2, :] = corners_3D[2, :] + t[2]
-    corners_3D = np.dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, np.size(corners_3D, 1))))))
+    corners_3D_cam = np.dot(veloToCam[cam], np.vstack((corners_3D, np.ones((1, np.size(corners_3D, 1))))))
     orientation_3D = np.dot(R, [[0.0, 0.7 * l], [0.0, 0.0], [0.0, 0.0]])
     orientation_3D[0, :] = orientation_3D[0, :] + t[0]
     orientation_3D[1, :] = orientation_3D[1, :] + t[1]
     orientation_3D[2, :] = orientation_3D[2, :] + t[2]
-    orientation_3D = np.dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, np.size(orientation_3D, 1))))))
-    return corners_3D, orientation_3D
+    orientation_3D_cam = np.dot(veloToCam[cam], np.vstack((orientation_3D, np.ones((1, np.size(orientation_3D, 1))))))
+    return corners_3D_cam, orientation_3D_cam
 
 
 # @lru_cache(maxsize=32)

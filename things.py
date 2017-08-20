@@ -109,7 +109,8 @@ import numpy as np
 # im = plt.scatter(x=Z2[0, :], y=Z2[1, :], c=cols[col_indices, 0:3], marker='o', s=1)
 #
 # plt.show()
-from devkit.python.readTracklets import read_tracklets, read_tracklets_cached
+from devkit.python.load_calibration import load_calibration
+from devkit.python.readTracklets import read_tracklets
 
 drives = [
     'drive_0009_sync',
@@ -174,11 +175,47 @@ def tracklets_equal(tracklets_1, tracklets_2):
         return True
 
 
-for i, drive in enumerate(drives):
-    current_dir = drive_dir + drive
-    tracklets = read_tracklets(current_dir + '/tracklet_labels.xml')
-    tracklets2 = read_tracklets(current_dir + '/tracklet_labels.xml')
-    tracklets_cached = read_tracklets_cached(current_dir + '/tracklet_labels.xml')
-    print(tracklets_equal(tracklets, tracklets2))
-    print(tracklets_equal(tracklets, tracklets_cached))
-    pass
+# for i, drive in enumerate(drives):
+#     current_dir = drive_dir + drive
+#     tracklets = read_tracklets(current_dir + '/tracklet_labels.xml')
+#     tracklets2 = read_tracklets(current_dir + '/tracklet_labels.xml')
+#     tracklets_cached = read_tracklets_cached(current_dir + '/tracklet_labels.xml')
+#     print(tracklets_equal(tracklets, tracklets2))
+#     print(tracklets_equal(tracklets, tracklets_cached))
+#     pass
+
+
+# velo_to_camera = [
+#     [2.34773698e-04, -9.99944155e-01, -1.05634778e-02, 5.93721868e-02],
+#     [0.01044941, 0.01056535, -0.99988957, -0.07510879],
+#     [9.99945389e-01, 1.24365378e-04, 1.04513030e-02, -2.72132796e-01],
+#     [0., 0., 0., 1.],
+# ]
+# 
+# trans_1 = [
+#     [2, 1],
+#     [1, 2],
+# ]
+# 
+# vec_1 = [1, 0]
+# vec_2 = [0, 1]
+# # np.dot()
+
+t_1 = [[-21.88474084, -20.2576105, -20.37183918, -21.99896953, -21.9028679, -20.27573756, -20.38996624, -22.01709658],
+       [1.92701447, 1.90927746, 1.87348452, 1.89122153, 0.21119176, 0.19345476, 0.15766181, 0.17539882],
+       [48.2920398, 48.23971212, 44.69990092, 44.7522286, 48.30997436, 48.25764668, 44.71783548, 44.77016316],
+       [1., 1., 1., 1., 1., 1., 1., 1.]]
+
+t_2 = [[-22.21369679, -20.7107318, -20.61106783, -22.11403282, -22.22976088, -20.72679589, -20.62713192, -22.13009691],
+       [1.81266215, 1.79723208, 1.75952516, 1.77495524, 0.29211008, 0.27668, 0.23897309, 0.25440316],
+       [59.30642015, 59.34930143, 55.8425665, 55.79968522, 59.32231365, 59.36519493, 55.85846, 55.81557872],
+       [1., 1., 1., 1., 1., 1., 1., 1.]]
+
+t_3 = [[-1.71966301e+00, -9.12877793e-02, 1.55816821e-02, -1.61279354e+00, -1.73679688e+00, -1.08421659e-01,
+        -1.55219754e-03, -1.62992742e+00],
+       [1.71182884, 1.69503187, 1.64688273, 1.6636797, 0.09001565, 0.07321868, 0.02506954, 0.04186651],
+       [37.03159974, 37.07046457, 32.57199137, 32.53312655, 37.04855168, 37.0874165, 32.5889433, 32.55007848],
+       [1., 1., 1., 1., 1., 1., 1., 1.]]
+
+print(t_1)
+load_calibration(calib_dir)
