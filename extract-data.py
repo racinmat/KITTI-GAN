@@ -45,15 +45,23 @@ def is_for_dataset(tracklet, frame, calib_dir, cam):
 
     treshold = treshold_degrees * pi / 180
     # filter out cars with high rotation
-    if pose['rz'] > treshold or pose['rz'] < - treshold:
-        return False
 
     corners, t, rz, box, corners_3D, pose_idx = tracklet_to_bounding_box(tracklet=tracklet,
                                                                          cam=cam,
                                                                          frame=frame,
                                                                          calib_dir=calib_dir)
-    corner_ldf = corners_3D[:, 7]
-    distance = corner_ldf.T[2]
+
+    # Rotation is calculated in 3D coordinates.
+    # Bounding box is transferred to cylindrical coordinates (so we do not care about the Y axis). [x, z => r, theta, y => y]
+    # Angle in cylindrical coordinates is ange under which car is seen, so it is used for filtering.
+    theta = np.arctan2(corners_3D[2, :], corners_3D[0, :]) - np.pi / 2  # so theta == 0 is angle of car in front of camera
+    r = np.linalg.norm((corners_3D[0, :], corners_3D[2, :]), axis=0)
+    if theta > treshold or theta < - treshold:
+        return False
+
+    distance = r[7]  # instead of fixed distance in X axis, we use distance from cylindrical coordinates, because this is more accurate
+    # corner_ldf = corners_3D[:, 7]
+    # distance = corner_ldf.T[2]
     if distance < min_distance or distance > max_distance:
         return False
 
