@@ -19,7 +19,7 @@ def main():
         batch_size = int(z.shape[0])
         z_dim = int(z.shape[1])
         samples_in_batch = batch_size
-        z_sample = sample_Z(samples_in_batch, z_dim)
+        z_sample = sample_z(samples_in_batch, z_dim)
         feature_vector = [1, 1, 30, 32, 32]
         features = np.tile(feature_vector, [batch_size, 1])
 

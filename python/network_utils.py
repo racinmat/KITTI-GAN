@@ -19,8 +19,8 @@ def conv_cond_concat(x, y):
         x, y * tf.ones([x_shapes[0], x_shapes[1], x_shapes[2], y_shapes[3]])], 3)
 
 
-class batch_norm(object):
-    def __init__(self, epsilon=1e-5, momentum=0.9, name="batch_norm"):
+class BatchNorm(object):
+    def __init__(self, epsilon=1e-5, momentum=0.9, name="BatchNorm"):
         with tf.variable_scope(name):
             self.epsilon = epsilon
             self.momentum = momentum
@@ -36,12 +36,10 @@ class batch_norm(object):
                                             scope=self.name)
 
 
-def conv2d(input_, output_dim,
-           k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,
-           name="conv2d"):
+def conv2d(input_, output_dim, k_h=5, k_w=5, d_h=2, d_w=2, name="conv2d"):
     with tf.variable_scope(name):
         w = tf.get_variable('w', [k_h, k_w, input_.get_shape()[-1], output_dim],
-                            initializer=tf.truncated_normal_initializer(stddev=stddev))
+                            initializer=tf.contrib.layers.xavier_initializer(uniform=False))
         conv = tf.nn.conv2d(input_, w, strides=[1, d_h, d_w, 1], padding='SAME')
 
         biases = tf.get_variable('biases', [output_dim], initializer=tf.constant_initializer(0.0))
@@ -50,22 +48,14 @@ def conv2d(input_, output_dim,
         return conv
 
 
-def deconv2d(input_, output_shape,
-             k_h=5, k_w=5, d_h=2, d_w=2, stddev=0.02,
-             name="deconv2d", with_w=False):
+def deconv2d(input_, output_shape, k_h=5, k_w=5, d_h=2, d_w=2, name="deconv2d", with_w=False):
     with tf.variable_scope(name):
         # filter : [height, width, output_channels, in_channels]
         w = tf.get_variable('w', [k_h, k_w, output_shape[-1], input_.get_shape()[-1]],
-                            initializer=tf.random_normal_initializer(stddev=stddev))
+                            initializer=tf.contrib.layers.xavier_initializer(uniform=False))
 
-        try:
-            deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape,
-                                            strides=[1, d_h, d_w, 1])
-
-        # Support for verisons of TensorFlow before 0.7.0
-        except AttributeError:
-            deconv = tf.nn.deconv2d(input_, w, output_shape=output_shape,
-                                    strides=[1, d_h, d_w, 1])
+        deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape,
+                                        strides=[1, d_h, d_w, 1])
 
         biases = tf.get_variable('biases', [output_shape[-1]], initializer=tf.constant_initializer(0.0))
         deconv = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
@@ -77,15 +67,15 @@ def deconv2d(input_, output_shape,
 
 
 def lrelu(x, leak=0.2, name="lrelu"):
-    return tf.maximum(x, leak * x)
+    return tf.maximum(x, leak * x, name=name)
 
 
-def linear(input_, output_size, scope=None, stddev=0.02, bias_start=0.0, with_w=False):
+def linear(input_, output_size, scope=None, bias_start=0.0, with_w=False):
     shape = input_.get_shape().as_list()
 
     with tf.variable_scope(scope or "Linear"):
         matrix = tf.get_variable("Matrix", [shape[1], output_size], tf.float32,
-                                 tf.random_normal_initializer(stddev=stddev))
+                                 initializer=tf.contrib.layers.xavier_initializer(uniform=False))
         bias = tf.get_variable("bias", [output_size],
                                initializer=tf.constant_initializer(bias_start))
         if with_w:
@@ -99,8 +89,8 @@ def discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False):
         if reuse:
             scope.reuse_variables()
 
-        d_bn1 = batch_norm(name='d_bn1')
-        d_bn2 = batch_norm(name='d_bn2')
+        d_bn1 = BatchNorm(name='d_bn1')
+        d_bn2 = BatchNorm(name='d_bn2')
 
         yb = tf.reshape(y, [batch_size, 1, 1, y_dim])
         x = conv_cond_concat(x, yb)
@@ -113,7 +103,6 @@ def discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False):
         h1 = tf.concat([h1, y], 1)
 
         h2 = lrelu(d_bn2(linear(h1, dfc_dim, 'd_h2_lin')))
-        # h2 = lrelu(d_bn2(linear(h0, dfc_dim, 'd_h2_lin')))
         h2 = tf.concat([h2, y], 1)
 
         h3 = linear(h2, 1, 'd_h3_lin')
@@ -122,10 +111,10 @@ def discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False):
 
 
 def generator(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim):
-    with tf.variable_scope("generator") as scope:
-        g_bn0 = batch_norm(name='g_bn0')
-        g_bn1 = batch_norm(name='g_bn1')
-        g_bn2 = batch_norm(name='g_bn2')
+    with tf.variable_scope("generator"):
+        g_bn0 = BatchNorm(name='g_bn0')
+        g_bn1 = BatchNorm(name='g_bn1')
+        g_bn2 = BatchNorm(name='g_bn2')
 
         # taken from https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
         s_h, s_w = image_size[1], image_size[0]
@@ -153,7 +142,7 @@ def generator(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim):
         return tf.identity(h3, 'generator')
 
 
-def sample_Z(m, n):
+def sample_z(m, n):
     return np.random.uniform(-1., 1., size=[m, n])
 
 
@@ -202,7 +191,7 @@ def imsave(images, size, path):
     return scipy.misc.imsave(path, image)
 
 
-def inverse_transform(images):
+def inverse_transform(images: np.ndarray) -> np.ndarray:
     return (images + 1.) / 2.
 
 
@@ -224,15 +213,15 @@ def load(session, checkpoint_dir):
     import re
     print(" [*] Loading last checkpoint")
 
-    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
-    if ckpt and ckpt.model_checkpoint_path:
-        ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
-        data_file = os.path.join(checkpoint_dir, ckpt_name)
+    checkpoint = tf.train.get_checkpoint_state(checkpoint_dir)
+    if checkpoint and checkpoint.model_checkpoint_path:
+        checkpoint_name = os.path.basename(checkpoint.model_checkpoint_path)
+        data_file = os.path.join(checkpoint_dir, checkpoint_name)
         meta_file = data_file + '.meta'
         saver = tf.train.import_meta_graph(meta_file)
         saver.restore(session, data_file)
-        counter = int(next(re.finditer("(\d+)(?!.*\d)", ckpt_name)).group(0))
-        print(" [*] Success to read {}".format(ckpt_name))
+        counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
+        print(" [*] Success to read {}".format(checkpoint_name))
         return True, counter
     else:
         print(" [*] Failed to find a checkpoint")

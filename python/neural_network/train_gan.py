@@ -19,8 +19,9 @@ def load_data(resolution, drives, input_prefix, data_dir):
         data = np.concatenate((data, drive_data))
         file.close()
 
-    dataset = DataSet(data=data)
-    return dataset
+    data_set = DataSet(data=data)
+    return data_set
+
 
 def main():
     data_dir = 'data/extracted'
@@ -34,12 +35,12 @@ def main():
     input_prefix = 'tracklets_points_normalized_'
     resolution = (32, 32)
 
-    dataset = load_data(resolution, drives, input_prefix, data_dir)
+    data_set = load_data(resolution, drives, input_prefix, data_dir)
 
     batch_size = 64
     z_dim = 100
-    image_size = dataset.get_image_size()
-    y_dim = dataset.get_labels_dim()
+    image_size = data_set.get_image_size()
+    y_dim = data_set.get_labels_dim()
 
     epochs = 500
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
@@ -51,6 +52,7 @@ def main():
     beta1 = 0.5  # Momentum term of adam
     sample_dir = os.path.join('samples', str(int(time.time())))  # Directory name to save the image samples
     checkpoint_dir = os.path.join('checkpoint', str(int(time.time())))  # Directory name to save the checkpoints
+    logs_dir = os.path.join('logs', str(int(time.time())))
 
     x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
     y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
@@ -92,7 +94,11 @@ def main():
 
     g_sum = tf.summary.merge([z_sum, d__sum, G_sum, d_loss_fake_sum, g_loss_sum])
     d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
-    writer = tf.summary.FileWriter("./logs", tf.get_default_graph())
+
+    if not os.path.exists(os.path.dirname(logs_dir)):
+        os.makedirs(os.path.dirname(logs_dir))
+
+    writer = tf.summary.FileWriter(logs_dir, tf.get_default_graph())
 
     saver = tf.train.Saver()
 
@@ -100,29 +106,29 @@ def main():
     start_time = time.time()
 
     for epoch in range(epochs):
-        num_batches = int(dataset.num_batches(batch_size))
+        num_batches = int(data_set.num_batches(batch_size))
         for i in range(num_batches):
-            X_batch, y_batch = dataset.next_batch(batch_size)
-            Z_sample = sample_Z(batch_size, z_dim)
+            x_batch, y_batch = data_set.next_batch(batch_size)
+            z = sample_z(batch_size, z_dim)
 
             # Update D network
-            _, summary_str = sess.run([d_optim, d_sum], feed_dict={x: X_batch, z: Z_sample, y: y_batch})
+            _, summary_str = sess.run([d_optim, d_sum], feed_dict={x: x_batch, z: z, y: y_batch})
             writer.add_summary(summary_str, counter)
 
             # Update G network
-            _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: Z_sample, y: y_batch})
+            _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: z, y: y_batch})
             writer.add_summary(summary_str, counter)
 
             # # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
             # _, summary_str = sess.run([g_optim, g_sum], feed_dict={Z: Z_sample, y: y_batch})
             # writer.add_summary(summary_str, counter)
             with sess.as_default():
-                errD_fake = d_loss_fake.eval({z: Z_sample, y: y_batch})
-                errD_real = d_loss_real.eval({x: X_batch, y: y_batch})
-                errG = g_loss.eval({z: Z_sample, y: y_batch})
+                errD_fake = d_loss_fake.eval({z: z, y: y_batch})
+                errD_real = d_loss_real.eval({x: x_batch, y: y_batch})
+                errG = g_loss.eval({z: z, y: y_batch})
 
             counter += 1
-            print("Epoch: {:2d} {:4d}/{:4d} time: {:4.4f}, d_loss: {:.8f}, g_loss: {:.8f}".format(epoch, i, num_batches,
+            print("Epoch: {:2d} {:3d}/{:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}".format(epoch, i, num_batches,
                                                                                                   time.time() - start_time,
                                                                                                   errD_fake + errD_real,
                                                                                                   errG))
@@ -130,17 +136,14 @@ def main():
             if np.mod(counter, 100) == 1:
                 try:
                     samples = sess.run(sampler, feed_dict={
-                        z: Z_sample,
+                        z: z,
                         y: y_batch
                     })
-                    d_loss_val, g_loss_val = sess.run(
-                        [d_loss, g_loss],
-                        feed_dict={
-                            z: Z_sample,
-                            x: X_batch,
-                            y: y_batch
-                        },
-                    )
+                    d_loss_val, g_loss_val = sess.run([d_loss, g_loss], feed_dict={
+                        z: z,
+                        x: x_batch,
+                        y: y_batch
+                    })
                     save_images(samples, image_manifold_size(samples.shape[0]),
                                 './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
                     print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss_val, g_loss_val))
