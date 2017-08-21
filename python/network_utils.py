@@ -45,6 +45,9 @@ def conv2d(input_, output_dim, k_h=5, k_w=5, d_h=2, d_w=2, name="conv2d"):
         biases = tf.get_variable('biases', [output_dim], initializer=tf.constant_initializer(0.0))
         conv = tf.reshape(tf.nn.bias_add(conv, biases), conv.get_shape())
 
+        tf.summary.histogram("weights", w)
+        tf.summary.histogram("biases", biases)
+
         return conv
 
 
@@ -60,6 +63,9 @@ def deconv2d(input_, output_shape, k_h=5, k_w=5, d_h=2, d_w=2, name="deconv2d", 
         biases = tf.get_variable('biases', [output_shape[-1]], initializer=tf.constant_initializer(0.0))
         deconv = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
 
+        tf.summary.histogram("weights", w)
+        tf.summary.histogram("biases", biases)
+
         if with_w:
             return deconv, w, biases
         else:
@@ -74,14 +80,18 @@ def linear(input_, output_size, scope=None, bias_start=0.0, with_w=False):
     shape = input_.get_shape().as_list()
 
     with tf.variable_scope(scope or "Linear"):
-        matrix = tf.get_variable("Matrix", [shape[1], output_size], tf.float32,
-                                 initializer=tf.contrib.layers.xavier_initializer(uniform=False))
+        w = tf.get_variable("Matrix", [shape[1], output_size], tf.float32,
+                            initializer=tf.contrib.layers.xavier_initializer(uniform=False))
         bias = tf.get_variable("bias", [output_size],
                                initializer=tf.constant_initializer(bias_start))
+
+        tf.summary.histogram("weights", w)
+        tf.summary.histogram("biases", bias)
+
         if with_w:
-            return tf.matmul(input_, matrix) + bias, matrix, bias
+            return tf.matmul(input_, w) + bias, w, bias
         else:
-            return tf.matmul(input_, matrix) + bias
+            return tf.matmul(input_, w) + bias
 
 
 def discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False):
@@ -174,8 +184,7 @@ def model_dir(batch_size, image_size):
         image_size[1], image_size[0])
 
 
-def save(checkpoint_dir, step, batch_size, image_size, saver, sess):
-    model_name = "DCGAN.model"
+def save(checkpoint_dir, step, batch_size, image_size, saver, sess, model_name):
     checkpoint_dir = os.path.join(checkpoint_dir, model_dir(batch_size, image_size))
 
     if not os.path.exists(checkpoint_dir):

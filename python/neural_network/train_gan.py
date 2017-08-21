@@ -53,6 +53,7 @@ def main():
     sample_dir = os.path.join('samples', str(int(time.time())))  # Directory name to save the image samples
     checkpoint_dir = os.path.join('checkpoint', str(int(time.time())))  # Directory name to save the checkpoints
     logs_dir = os.path.join('logs', str(int(time.time())))
+    model_name = 'CGAN.model'
 
     x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
     y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
@@ -63,9 +64,9 @@ def main():
     D_fake, D_logits_fake = discriminator(G, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=True)
 
     z_sum = tf.summary.histogram("z", z)
-    d_sum = tf.summary.histogram("d", D_real)
-    d__sum = tf.summary.histogram("d_", D_fake)
-    G_sum = tf.summary.image("G", G)
+    d_real_sum = tf.summary.histogram("d_read", D_real)
+    d_fake_sum = tf.summary.histogram("d_fake", D_fake)
+    g_sum = tf.summary.image("g", G)
 
     d_loss_real = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
@@ -92,8 +93,10 @@ def main():
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
 
-    g_sum = tf.summary.merge([z_sum, d__sum, G_sum, d_loss_fake_sum, g_loss_sum])
-    d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
+    g_sum = tf.summary.merge([z_sum, d_fake_sum, g_sum, d_loss_fake_sum, g_loss_sum])
+    d_real_sum = tf.summary.merge([z_sum, d_real_sum, d_loss_real_sum, d_loss_sum])
+
+    summ = tf.summary.merge_all()
 
     if not os.path.exists(os.path.dirname(logs_dir)):
         os.makedirs(os.path.dirname(logs_dir))
@@ -109,23 +112,28 @@ def main():
         num_batches = int(data_set.num_batches(batch_size))
         for i in range(num_batches):
             x_batch, y_batch = data_set.next_batch(batch_size)
-            z = sample_z(batch_size, z_dim)
+            z_batch = sample_z(batch_size, z_dim)
 
             # Update D network
-            _, summary_str = sess.run([d_optim, d_sum], feed_dict={x: x_batch, z: z, y: y_batch})
+            _, summary_str = sess.run([d_optim, d_real_sum], feed_dict={x: x_batch, z: z_batch, y: y_batch})
             writer.add_summary(summary_str, counter)
 
             # Update G network
-            _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: z, y: y_batch})
+            _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: z_batch, y: y_batch})
+            writer.add_summary(summary_str, counter)
+
+            # run summary of all
+            summary_str = sess.run(summ, feed_dict={x: x_batch, z: z_batch, y: y_batch})
             writer.add_summary(summary_str, counter)
 
             # # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
             # _, summary_str = sess.run([g_optim, g_sum], feed_dict={Z: Z_sample, y: y_batch})
             # writer.add_summary(summary_str, counter)
+
             with sess.as_default():
-                errD_fake = d_loss_fake.eval({z: z, y: y_batch})
+                errD_fake = d_loss_fake.eval({z: z_batch, y: y_batch})
                 errD_real = d_loss_real.eval({x: x_batch, y: y_batch})
-                errG = g_loss.eval({z: z, y: y_batch})
+                errG = g_loss.eval({z: z_batch, y: y_batch})
 
             counter += 1
             print("Epoch: {:2d} {:3d}/{:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}".format(epoch, i, num_batches,
@@ -136,11 +144,11 @@ def main():
             if np.mod(counter, 100) == 1:
                 try:
                     samples = sess.run(sampler, feed_dict={
-                        z: z,
+                        z: z_batch,
                         y: y_batch
                     })
                     d_loss_val, g_loss_val = sess.run([d_loss, g_loss], feed_dict={
-                        z: z,
+                        z: z_batch,
                         x: x_batch,
                         y: y_batch
                     })
@@ -153,12 +161,12 @@ def main():
                     raise e
 
             if np.mod(counter, 400) == 2:
-                save(checkpoint_dir, counter, batch_size, image_size, saver, sess)
+                save(checkpoint_dir, counter, batch_size, image_size, saver, sess, model_name)
                 print("saved after {}. iteration".format(counter))
 
     writer.flush()
     writer.close()
-    save(checkpoint_dir, counter, batch_size, image_size, saver, sess)
+    save(checkpoint_dir, counter, batch_size, image_size, saver, sess, model_name)
     print("learning has ended")
 
 
