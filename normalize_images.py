@@ -51,8 +51,8 @@ if __name__ == '__main__':
             # bg.save('temp_resized_padded.png')
 
             pair['y'] = np.array(bg)
-            pair['x'].append(new_img.size[0])
-            pair['x'].append(new_img.size[1])
+            pair['x'].append(new_img.size[0] / new_size[0])  # because of regularization, I want to keep size as ratio, in values from 0 to 1
+            pair['x'].append(new_img.size[1] / new_size[1])
 
             pair['y'] = 255 - pair['y']     # inverting black and white
 

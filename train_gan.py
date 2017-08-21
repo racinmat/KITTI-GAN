@@ -6,11 +6,8 @@ matplotlib.use('Agg')
 import time
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import os
 import pickle
-from math import pi
 from Dataset import DataSet
 import scipy.misc
 
@@ -218,6 +215,9 @@ def inverse_transform(images):
 
 
 def save_images(images, size, image_path):
+    if not os.path.exists(os.path.dirname(image_path)):
+        os.makedirs(os.path.dirname(image_path))
+
     return imsave(inverse_transform(images), size, image_path)
 
 
@@ -226,22 +226,6 @@ def image_manifold_size(num_images):
     manifold_w = int(np.ceil(np.sqrt(num_images)))
     assert manifold_h * manifold_w == num_images
     return manifold_h, manifold_w
-
-
-# def plot(samples, resolution):
-#     fig = plt.figure(figsize=(4, 4))
-#     gs = gridspec.GridSpec(4, 4)
-#     gs.update(wspace=0.05, hspace=0.05)
-#
-#     for i, sample in enumerate(samples):
-#         ax = plt.subplot(gs[i])
-#         plt.axis('off')
-#         ax.set_xticklabels([])
-#         ax.set_yticklabels([])
-#         ax.set_aspect('equal')
-#         plt.imshow(sample.reshape(resolution[0], resolution[1]), cmap='Greys_r')
-#
-#     return fig
 
 
 def main():
@@ -273,8 +257,7 @@ def main():
     image_size = dataset.get_image_size()
     y_dim = dataset.get_labels_dim()
 
-    epochs = 3
-    h_dim = 128
+    epochs = 500
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
@@ -282,8 +265,8 @@ def main():
     c_dim = 1  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
     learning_rate = 0.0002  # Learning rate of for adam
     beta1 = 0.5  # Momentum term of adam
-    sample_dir = 'samples'  # Directory name to save the image samples
-    checkpoint_dir = "checkpoint"  # Directory name to save the checkpoints
+    sample_dir = os.path.join('samples', str(int(time.time())))  # Directory name to save the image samples
+    checkpoint_dir = os.path.join('checkpoint', str(int(time.time())))  # Directory name to save the checkpoints
 
     X = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='X')
     y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
@@ -330,11 +313,9 @@ def main():
     writer = tf.summary.FileWriter("./logs", tf.get_default_graph())
     writer.flush()
 
-    # graph = tf.Graph()
-    # with graph.as_default():
     saver = tf.train.Saver()
 
-    counter = 1
+    counter = 0
     start_time = time.time()
 
     for epoch in range(epochs):
@@ -387,7 +368,7 @@ def main():
                     print(e)
                     raise e
 
-            if np.mod(counter, 500) == 2:
+            if np.mod(counter, 400) == 2:
                 save(checkpoint_dir, counter, batch_size, image_size, saver, sess)
                 print("saved after {}. iteration".format(counter))
 

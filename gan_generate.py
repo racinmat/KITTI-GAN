@@ -3,15 +3,9 @@ import matplotlib
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
 matplotlib.use('Agg')
 
-import time
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import os
-import pickle
-from math import pi
-from Dataset import DataSet
 import scipy.misc
 import math
 
@@ -115,7 +109,7 @@ def main():
 
         image_frame_dim = int(math.ceil(batch_size ** .5))
 
-        sampler = graph.get_operation_by_name('generator/generator')    # this is last layer of generator layer
+        sampler = graph.get_tensor_by_name('generator/generator:0')    # this is last layer of generator layer
         samples = sess.run(sampler, feed_dict={Z: Z_sample, y: features})
 
         save_images(samples, [image_frame_dim, image_frame_dim], '{}/test_{:d}.png'.format(samples_dir, idx))
