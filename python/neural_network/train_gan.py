@@ -7,17 +7,7 @@ import os
 import pickle
 
 
-def main():
-    data_dir = 'data/extracted'
-    drives = [
-        'drive_0009_sync',
-        'drive_0015_sync',
-        'drive_0023_sync',
-        'drive_0032_sync',
-    ]
-
-    input_prefix = 'tracklets_points_normalized_'
-    resolution = (32, 32)
+def load_data(resolution, drives, input_prefix, data_dir):
     resolution_string = '{:d}_{:d}'.format(resolution[0], resolution[1])
 
     data = np.empty(shape=0)
@@ -30,9 +20,24 @@ def main():
         file.close()
 
     dataset = DataSet(data=data)
+    return dataset
+
+def main():
+    data_dir = 'data/extracted'
+    drives = [
+        'drive_0009_sync',
+        'drive_0015_sync',
+        'drive_0023_sync',
+        'drive_0032_sync',
+    ]
+
+    input_prefix = 'tracklets_points_normalized_'
+    resolution = (32, 32)
+
+    dataset = load_data(resolution, drives, input_prefix, data_dir)
 
     batch_size = 64
-    Z_dim = 100
+    z_dim = 100
     image_size = dataset.get_image_size()
     y_dim = dataset.get_labels_dim()
 
@@ -47,15 +52,15 @@ def main():
     sample_dir = os.path.join('samples', str(int(time.time())))  # Directory name to save the image samples
     checkpoint_dir = os.path.join('checkpoint', str(int(time.time())))  # Directory name to save the checkpoints
 
-    X = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='X')
+    x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
     y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
-    Z = tf.placeholder(tf.float32, shape=[batch_size, Z_dim], name='Z')
-    G = generator(Z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
-    D_real, D_logits_real = discriminator(X, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False)
+    z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
+    G = generator(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
+    D_real, D_logits_real = discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False)
     sampler = G
     D_fake, D_logits_fake = discriminator(G, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=True)
 
-    z_sum = tf.summary.histogram("z", Z)
+    z_sum = tf.summary.histogram("z", z)
     d_sum = tf.summary.histogram("d", D_real)
     d__sum = tf.summary.histogram("d_", D_fake)
     G_sum = tf.summary.image("G", G)
@@ -85,12 +90,9 @@ def main():
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
 
-    g_sum = tf.summary.merge([z_sum, d__sum,
-                              G_sum, d_loss_fake_sum, g_loss_sum])
-    d_sum = tf.summary.merge(
-        [z_sum, d_sum, d_loss_real_sum, d_loss_sum])
+    g_sum = tf.summary.merge([z_sum, d__sum, G_sum, d_loss_fake_sum, g_loss_sum])
+    d_sum = tf.summary.merge([z_sum, d_sum, d_loss_real_sum, d_loss_sum])
     writer = tf.summary.FileWriter("./logs", tf.get_default_graph())
-    writer.flush()
 
     saver = tf.train.Saver()
 
@@ -101,23 +103,23 @@ def main():
         num_batches = int(dataset.num_batches(batch_size))
         for i in range(num_batches):
             X_batch, y_batch = dataset.next_batch(batch_size)
-            Z_sample = sample_Z(batch_size, Z_dim)
+            Z_sample = sample_Z(batch_size, z_dim)
 
             # Update D network
-            _, summary_str = sess.run([d_optim, d_sum], feed_dict={X: X_batch, Z: Z_sample, y: y_batch})
+            _, summary_str = sess.run([d_optim, d_sum], feed_dict={x: X_batch, z: Z_sample, y: y_batch})
             writer.add_summary(summary_str, counter)
 
             # Update G network
-            _, summary_str = sess.run([g_optim, g_sum], feed_dict={Z: Z_sample, y: y_batch})
+            _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: Z_sample, y: y_batch})
             writer.add_summary(summary_str, counter)
 
             # # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
             # _, summary_str = sess.run([g_optim, g_sum], feed_dict={Z: Z_sample, y: y_batch})
             # writer.add_summary(summary_str, counter)
             with sess.as_default():
-                errD_fake = d_loss_fake.eval({Z: Z_sample, y: y_batch})
-                errD_real = d_loss_real.eval({X: X_batch, y: y_batch})
-                errG = g_loss.eval({Z: Z_sample, y: y_batch})
+                errD_fake = d_loss_fake.eval({z: Z_sample, y: y_batch})
+                errD_real = d_loss_real.eval({x: X_batch, y: y_batch})
+                errG = g_loss.eval({z: Z_sample, y: y_batch})
 
             counter += 1
             print("Epoch: {:2d} {:4d}/{:4d} time: {:4.4f}, d_loss: {:.8f}, g_loss: {:.8f}".format(epoch, i, num_batches,
@@ -128,14 +130,14 @@ def main():
             if np.mod(counter, 100) == 1:
                 try:
                     samples = sess.run(sampler, feed_dict={
-                        Z: Z_sample,
+                        z: Z_sample,
                         y: y_batch
                     })
                     d_loss_val, g_loss_val = sess.run(
                         [d_loss, g_loss],
                         feed_dict={
-                            Z: Z_sample,
-                            X: X_batch,
+                            z: Z_sample,
+                            x: X_batch,
                             y: y_batch
                         },
                     )

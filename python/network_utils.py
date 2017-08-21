@@ -218,3 +218,22 @@ def image_manifold_size(num_images):
     manifold_w = int(np.ceil(np.sqrt(num_images)))
     assert manifold_h * manifold_w == num_images
     return manifold_h, manifold_w
+
+
+def load(session, checkpoint_dir):
+    import re
+    print(" [*] Loading last checkpoint")
+
+    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+    if ckpt and ckpt.model_checkpoint_path:
+        ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
+        data_file = os.path.join(checkpoint_dir, ckpt_name)
+        meta_file = data_file + '.meta'
+        saver = tf.train.import_meta_graph(meta_file)
+        saver.restore(session, data_file)
+        counter = int(next(re.finditer("(\d+)(?!.*\d)", ckpt_name)).group(0))
+        print(" [*] Success to read {}".format(ckpt_name))
+        return True, counter
+    else:
+        print(" [*] Failed to find a checkpoint")
+        return False, 0
