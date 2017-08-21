@@ -159,8 +159,9 @@ def generator(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim):
         h2 = tf.nn.relu(g_bn2(deconv2d(h1, [batch_size, s_h2, s_w2, gf_dim * 2], name='g_h2')))
         h2 = conv_cond_concat(h2, yb)
 
-        return tf.nn.sigmoid(
-            deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
+        h3 = tf.nn.sigmoid(deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
+
+        return tf.identity(h3, 'generator')
 
 
 def sample_Z(m, n):
@@ -169,7 +170,7 @@ def sample_Z(m, n):
 
 def merge(images, size):
     h, w = images.shape[1], images.shape[2]
-    if (images.shape[3] in (3, 4)):
+    if images.shape[3] in (3, 4):
         c = images.shape[3]
         img = np.zeros((h * size[0], w * size[1], c))
         for idx, image in enumerate(images):
@@ -272,7 +273,7 @@ def main():
     image_size = dataset.get_image_size()
     y_dim = dataset.get_labels_dim()
 
-    epochs = 500
+    epochs = 3
     h_dim = 128
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
@@ -284,10 +285,9 @@ def main():
     sample_dir = 'samples'  # Directory name to save the image samples
     checkpoint_dir = "checkpoint"  # Directory name to save the checkpoints
 
-    # """ Discriminator Net model """
-    X = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim])
-    y = tf.placeholder(tf.float32, shape=[batch_size, y_dim])
-    Z = tf.placeholder(tf.float32, shape=[batch_size, Z_dim])
+    X = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='X')
+    y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
+    Z = tf.placeholder(tf.float32, shape=[batch_size, Z_dim], name='Z')
     G = generator(Z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
     D_real, D_logits_real = discriminator(X, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False)
     sampler = G
@@ -317,10 +317,8 @@ def main():
     d_vars = [var for var in t_vars if 'd_' in var.name]
     g_vars = [var for var in t_vars if 'g_' in var.name]
 
-    d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1) \
-        .minimize(d_loss, var_list=d_vars)
-    g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1) \
-        .minimize(g_loss, var_list=g_vars)
+    d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
+    g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
 
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
@@ -329,10 +327,8 @@ def main():
                               G_sum, d_loss_fake_sum, g_loss_sum])
     d_sum = tf.summary.merge(
         [z_sum, d_sum, d_loss_real_sum, d_loss_sum])
-    writer = tf.summary.FileWriter("./logs", sess.graph)
-
-    if not os.path.exists('out/'):
-        os.makedirs('out/')
+    writer = tf.summary.FileWriter("./logs", tf.get_default_graph())
+    writer.flush()
 
     # graph = tf.Graph()
     # with graph.as_default():
@@ -371,8 +367,12 @@ def main():
 
             if np.mod(counter, 100) == 1:
                 try:
-                    samples, d_loss_val, g_loss_val = sess.run(
-                        [sampler, d_loss, g_loss],
+                    samples = sess.run(sampler, feed_dict={
+                        Z: Z_sample,
+                        y: y_batch
+                    })
+                    d_loss_val, g_loss_val = sess.run(
+                        [d_loss, g_loss],
                         feed_dict={
                             Z: Z_sample,
                             X: X_batch,
@@ -381,7 +381,7 @@ def main():
                     )
                     save_images(samples, image_manifold_size(samples.shape[0]),
                                 './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
-                    print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss_val, g_loss_val))
+                    print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss_val, g_loss_val))
                 except Exception as e:
                     print("pic saving error:")
                     print(e)
@@ -389,6 +389,12 @@ def main():
 
             if np.mod(counter, 500) == 2:
                 save(checkpoint_dir, counter, batch_size, image_size, saver, sess)
+                print("saved after {}. iteration".format(counter))
+
+    writer.flush()
+    writer.close()
+    save(checkpoint_dir, counter, batch_size, image_size, saver, sess)
+    print("learning has ended")
 
 
 if __name__ == '__main__':
