@@ -12,7 +12,7 @@ from devkit.python.utils import load_image, Timeit
 from math import pi
 import pickle
 import os
-from utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, pointcloud_to_image
+from python.data_utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, pointcloud_to_image
 from devkit.python.utils import timeit
 
 
@@ -81,7 +81,7 @@ def velodyne_data_exist(base_dir, frame):
 
 
 @Timeit
-def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=False, grayscale=False):
+def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=False, with_velo=True, grayscale=False):
     image_resolution = np.array([1242, 375])
 
     corners, t, rz, box, corners_3D, pose_idx, orientation_3D = tracklet_to_bounding_box(tracklet=tracklet,
@@ -99,14 +99,23 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
         min(area[3], original_area[3]),
     )
 
-    velo, velo_img = get_pointcloud(current_dir, frame, calib_dir, cam, area=area)
+    if with_velo:
+        velo, velo_img = get_pointcloud(current_dir, frame, calib_dir, cam, area=area)
+    else:
+        velo = []
+        velo_img = []
 
     if with_image:
         img = load_image('{:s}/image_{:02d}/data/{:010d}.png'.format(current_dir, cam, frame))
     else:
         img = None
 
-    buf, im = pointcloud_to_image(velo, velo_img, img, grayscale)
+    if with_velo:
+        buf, im = pointcloud_to_image(velo, velo_img, img, grayscale)
+    else:
+        fig = plt.figure()
+        buf, im = figure_to_image(fig)
+
     if grayscale:
         im = im.convert('L')
     cropped_im = im.crop(area)
@@ -194,6 +203,7 @@ def main():
                                           calib_dir=calib_dir,
                                           current_dir=current_dir,
                                           with_image=False,
+                                          with_velo=True,
                                           grayscale=True)
 
                 # visualization of sample

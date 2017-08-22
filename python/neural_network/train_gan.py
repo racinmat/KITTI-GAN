@@ -108,6 +108,7 @@ def main():
     counter = 0
     start_time = time.time()
 
+    print("Starting to learn for {} epochs.".format(epochs))
     for epoch in range(epochs):
         num_batches = int(data_set.num_batches(batch_size))
         for i in range(num_batches):
@@ -122,13 +123,13 @@ def main():
             _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: z_batch, y: y_batch})
             writer.add_summary(summary_str, counter)
 
+            # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
+            _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: z_batch, y: y_batch})
+            writer.add_summary(summary_str, counter)
+
             # run summary of all
             summary_str = sess.run(summ, feed_dict={x: x_batch, z: z_batch, y: y_batch})
             writer.add_summary(summary_str, counter)
-
-            # # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
-            # _, summary_str = sess.run([g_optim, g_sum], feed_dict={Z: Z_sample, y: y_batch})
-            # writer.add_summary(summary_str, counter)
 
             with sess.as_default():
                 errD_fake = d_loss_fake.eval({z: z_batch, y: y_batch})

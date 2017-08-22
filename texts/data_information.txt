@@ -34,3 +34,10 @@ u trén. dat lze zjistit, jestli je to foreground nebo background - protože ví
 -> 3 druhy: foreground - velo data z auta, background, velo data za bb, nan -> kdy velo selhalo
 
 pak se podívat na data před učením, a kdyžtak obrázky uploadnout
+
+
+
+trained: na serveru:
+    1503417949 - naučeno, 1000 epoch
+    1503424646 - naučeno, 1000 epoch, generátor se učí 2x na jedno učení diskriminátoru
+
