@@ -64,7 +64,7 @@ def main():
     D_fake, D_logits_fake = discriminator(G, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=True)
 
     z_sum = tf.summary.histogram("z", z)
-    d_real_sum = tf.summary.histogram("d_read", D_real)
+    d_real_sum = tf.summary.histogram("d_real", D_real)
     d_fake_sum = tf.summary.histogram("d_fake", D_fake)
     g_sum = tf.summary.image("g", G)
 
@@ -80,8 +80,8 @@ def main():
 
     d_loss = d_loss_real + d_loss_fake
 
-    g_loss_sum = tf.summary.scalar("g_loss", g_loss)
     d_loss_sum = tf.summary.scalar("d_loss", d_loss)
+    g_loss_sum = tf.summary.scalar("g_loss", g_loss)
 
     t_vars = tf.trainable_variables()
     d_vars = [var for var in t_vars if 'd_' in var.name]

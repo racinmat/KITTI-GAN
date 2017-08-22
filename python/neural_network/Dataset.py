@@ -15,7 +15,7 @@ class DataSet(object):
         self.num_examples = len(data)
 
         images = np.array([t['y'] for t in data])
-        labels = np.array([t['x'][1:6] for t in data])  # removed angle for this first iteration
+        labels = np.array([t['x'] for t in data])  # removed angle for this first iteration
 
         # Convert from [0, 255] -> [0.0, 1.0].
         images = images.astype(np.float32)

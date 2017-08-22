@@ -20,7 +20,7 @@ def main():
         z_dim = int(z.shape[1])
         samples_in_batch = batch_size
         z_sample = sample_z(samples_in_batch, z_dim)
-        feature_vector = [1, 1, 30, 32, 32]
+        feature_vector = [1, 1, 30/100, 1, 1]
         features = np.tile(feature_vector, [batch_size, 1])
 
         image_frame_dim = int(math.ceil(batch_size ** .5))
