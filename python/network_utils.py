@@ -200,7 +200,11 @@ def imsave(images, size, path):
     return scipy.misc.imsave(path, image)
 
 
-def inverse_transform(images: np.ndarray) -> np.ndarray:
+def inverse_transform(images):
+    """
+    :type images: np.ndarray
+    :rtype np.ndarray
+    """
     return (images + 1.) / 2.
 
 

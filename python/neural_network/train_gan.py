@@ -42,7 +42,7 @@ def main():
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
 
-    epochs = 500
+    epochs = 1000
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
@@ -136,10 +136,9 @@ def main():
                 errG = g_loss.eval({z: z_batch, y: y_batch})
 
             counter += 1
-            print("Epoch: {:2d} {:3d}/{:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}".format(epoch, i, num_batches,
-                                                                                                  time.time() - start_time,
-                                                                                                  errD_fake + errD_real,
-                                                                                                  errG))
+            summary_string = "Epoch: {:2d} {:2d}/{:2d} counter: {:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}"
+            print(summary_string.format(epoch, i, num_batches, counter, time.time() - start_time, errD_fake + errD_real,
+                                        errG))
 
             if np.mod(counter, 100) == 1:
                 try:
