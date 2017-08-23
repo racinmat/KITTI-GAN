@@ -65,8 +65,9 @@ def main():
                                           calib_dir=calib_dir,
                                           current_dir=current_dir,
                                           with_image=True,
+                                          with_velo=False,
                                           grayscale=False,
-                                          with_velo=False)
+                                          )
 
                 # visualization of sample
                 # buf, im = sample_to_image(sample, cam, calib_dir, current_dir)

@@ -39,7 +39,7 @@ if __name__ == '__main__':
             # new_img.save('temp_resized.png')
 
             # fill missing places with white
-            white = {'L': 255, 'RGB': (255, 255, 255)}
+            white = {'L': 255, 'RGB': (255, 255, 255), 'RGBA': (255, 255, 255, 0)}
             bg = Image.new(mode=img.mode, size=new_size, color=white[img.mode])
             bg.paste(new_img, (0, 0, new_img.size[0], new_img.size[1]))  # Not centered, top-left corner
             # bg.save('temp_resized_padded.png')
@@ -49,7 +49,6 @@ if __name__ == '__main__':
             pair['x'].append(new_img.size[0] / new_size[0])     # because of regularization, I want to keep size as ratio, in values from 0 to 1
             pair['x'].append(new_img.size[1] / new_size[1])
 
-            pair['y'] = 255 - pair['y']     # inverting black and white
 
         filename = data_dir + '/' + output_prefix + drive + '_' + str(new_size[0]) + '_' + str(new_size[1]) + output_suffix + '.data'
         file = open(filename, 'wb')

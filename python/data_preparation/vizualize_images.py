@@ -3,8 +3,8 @@ import matplotlib
 matplotlib.use('Agg')
 
 from devkit.python.utils import load_image
-from utils import tracklet_to_bounding_box, bounding_box_to_image, \
-    pointcloud_to_figure, figure_to_image, sample_to_image
+from python.data_utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, pointcloud_to_image, \
+    figure_to_image, sample_to_image
 import numpy as np
 import os
 import pickle
@@ -13,7 +13,7 @@ from PIL import Image
 
 if __name__ == '__main__':
     show_data_image = True
-    show_metadata_image = True
+    show_metadata_image = False
 
     data_dir = 'data/extracted'
     drives = [
@@ -23,14 +23,16 @@ if __name__ == '__main__':
         'drive_0032_sync',
     ]
 
-    input_prefix = 'tracklets_points_normalized_'
+    # input_prefix = 'tracklets_points_normalized_'
+    input_prefix = 'tracklets_photos_normalized_'
     input_suffix = ''
     # input_suffix = '_0_20'
     resolution = '32_32'
     # resolution = '64_64'
 
     directory = 'images/' + resolution
-    directory = directory + '/normalized/'
+    # directory = directory + '/normalized/'
+    directory = directory + '/normalized_photos/'
 
     cam = 2
     drive_dir = './data/2011_09_26/2011_09_26_'

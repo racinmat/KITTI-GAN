@@ -41,3 +41,5 @@ trained: na serveru:
     1503417949 - naučeno, 1000 epoch
     1503424646 - naučeno, 1000 epoch, generátor se učí 2x na jedno učení diskriminátoru
 
+todo: udělat report, dodělat skripty, automatizovat pouštění učení, pustit učení
+todo: sepsat si linuxové věci, co a jak na serveru

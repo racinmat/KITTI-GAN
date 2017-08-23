@@ -12,8 +12,10 @@ from devkit.python.utils import load_image, Timeit
 from math import pi
 import pickle
 import os
-from python.data_utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, pointcloud_to_image
+from python.data_utils import tracklet_to_bounding_box, is_tracklet_seen, Cache, get_pointcloud, pointcloud_to_image, \
+    figure_to_image
 from devkit.python.utils import timeit
+import matplotlib.pyplot as plt
 
 
 # cache_bb = Cache('./cache/bb')
@@ -113,11 +115,22 @@ def get_x_y_data_for(tracklet, frame, cam, calib_dir, current_dir, with_image=Fa
     if with_velo:
         buf, im = pointcloud_to_image(velo, velo_img, img, grayscale)
     else:
+        image_resolution = np.array([1242, 375])
         fig = plt.figure()
+        plt.axes([0, 0, 1, 1])
+        dpi = fig.dpi
+        fig.set_size_inches(image_resolution / dpi)
+        ax = plt.gca()
+        ax.set_xlim((-0.5, image_resolution[0] - 0.5))
+        ax.set_ylim((image_resolution[1] - 0.5, -0.5))
+        if img is not None:
+            plt.imshow(img)
         buf, im = figure_to_image(fig)
 
     if grayscale:
         im = im.convert('L')
+    else:
+        im = im.convert('RGB')
     cropped_im = im.crop(area)
     # cropped_im.save('images/{:d}.{:s}.png'.format(frame, str(area)), format='png')
     pix = np.array(cropped_im)
