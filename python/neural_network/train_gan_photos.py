@@ -1,4 +1,5 @@
 from python.neural_network.Dataset import DataSet
+import tensorflow.contrib.slim as slim
 from python.network_utils import *
 import time
 import tensorflow as tf
@@ -6,7 +7,7 @@ import numpy as np
 import os
 import pickle
 from python.neural_network.train_gan import load_data
-
+from tensorflow.python.framework.ops import GraphKeys
 
 def main():
     data_dir = 'data/extracted'
@@ -28,6 +29,7 @@ def main():
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
 
+    l1_ratio = 100
     epochs = 10000
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
@@ -36,9 +38,10 @@ def main():
     c_dim = 3  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
     learning_rate = 0.0002  # Learning rate of for adam
     beta1 = 0.5  # Momentum term of adam
-    sample_dir = os.path.join('samples', str(int(time.time())))  # Directory name to save the image samples
-    checkpoint_dir = os.path.join('checkpoint', str(int(time.time())))  # Directory name to save the checkpoints
-    logs_dir = os.path.join('logs', str(int(time.time())))
+    current_time = str(int(time.time()))
+    sample_dir = os.path.join('samples', current_time)  # Directory name to save the image samples
+    checkpoint_dir = os.path.join('checkpoint', current_time)  # Directory name to save the checkpoints
+    logs_dir = os.path.join('logs', current_time)
     model_name = 'CGAN.model'
 
     x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
@@ -58,8 +61,13 @@ def main():
         tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
     d_loss_fake = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.zeros_like(D_fake)))
+    # g_loss = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake)))
+
+    # For generator we use traditional GAN objective as well as L1 loss
     g_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake)))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake))) + \
+               l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
 
     d_loss_real_sum = tf.summary.scalar("d_loss_real", d_loss_real)
     d_loss_fake_sum = tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -69,9 +77,8 @@ def main():
     d_loss_sum = tf.summary.scalar("d_loss", d_loss)
     g_loss_sum = tf.summary.scalar("g_loss", g_loss)
 
-    t_vars = tf.trainable_variables()
-    d_vars = [var for var in t_vars if 'd_' in var.name]
-    g_vars = [var for var in t_vars if 'g_' in var.name]
+    d_vars = slim.get_variables(scope='discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
+    g_vars = slim.get_variables(scope='generator', collection=GraphKeys.TRAINABLE_VARIABLES)
 
     d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
     g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
@@ -94,7 +101,7 @@ def main():
     counter = 0
     start_time = time.time()
 
-    print("Starting to learn for {} epochs.".format(epochs))
+    print("Starting to learn for {} epochs with name {}.".format(epochs, current_time))
     for epoch in range(epochs):
         num_batches = int(data_set.num_batches(batch_size))
         for i in range(num_batches):
@@ -102,25 +109,29 @@ def main():
             z_batch = sample_z(batch_size, z_dim)
 
             # Update D network
-            _, summary_str = sess.run([d_optim, d_real_sum], feed_dict={x: x_batch, z: z_batch, y: y_batch})
-            writer.add_summary(summary_str, counter)
+            _, errD_fake, errD_real = sess.run([d_optim, d_loss_fake, d_loss_real], feed_dict={
+                x: x_batch,
+                y: y_batch,
+                z: z_batch,
+            })
 
             # Update G network
-            _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: z_batch, y: y_batch})
-            writer.add_summary(summary_str, counter)
+            _ = sess.run([g_optim], feed_dict={
+                x: x_batch,
+                y: y_batch,
+                z: z_batch,
+            })
 
             # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
-            _, summary_str = sess.run([g_optim, g_sum], feed_dict={z: z_batch, y: y_batch})
-            writer.add_summary(summary_str, counter)
+            _, errG = sess.run([g_optim, g_loss], feed_dict={
+                x: x_batch,
+                y: y_batch,
+                z: z_batch,
+            })
 
             # run summary of all
             summary_str = sess.run(summ, feed_dict={x: x_batch, z: z_batch, y: y_batch})
             writer.add_summary(summary_str, counter)
-
-            with sess.as_default():
-                errD_fake = d_loss_fake.eval({z: z_batch, y: y_batch})
-                errD_real = d_loss_real.eval({x: x_batch, y: y_batch})
-                errG = g_loss.eval({z: z_batch, y: y_batch})
 
             counter += 1
             summary_string = "Epoch: {:2d} {:2d}/{:2d} counter: {:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}"

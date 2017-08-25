@@ -1,21 +1,21 @@
-KITTY dataset - stahnout
-udelat statistiku viewpointu z nej
-vybrat nejcastej�� viewpoint
-udelat GAN na generov�n� lidar obr�zku z dan�ho viewpointu - jen GAN s niosem na vstupu
-potom udelat GAN, kter� bude m�t na vstpu noise a viewpoit, a pou��t jako tr�novac� data v�echny viewpointy
+done - KITTY dataset - stahnout
+done - udelat statistiku viewpointu z nej
+done - vybrat nejcastejsi viewpoint
+done - udelat GAN na generovani lidar obrazku z daneho viewpointu - jen GAN s niosem na vstupu
+done - potom udelat GAN, ktery bude mit na vstpu noise a viewpoit, a pouzit jako trrnovaci data vsechny viewpointy
 
 
-ukládat k datům i vizuály, z čeho je daný výřez
-zkusit data normallizovat na vzdálenost v rámci bounding boxu
+done - ukládat k datům i vizuály, z čeho je daný výřez
+done - zkusit data normallizovat na vzdálenost v rámci bounding boxu
 
-1. experiment-podle bounding boxu generovat obrázky z kamery
+in progress - 1. experiment-podle bounding boxu generovat obrázky z kamery
 
-udělat na googlu složku, v ní mít google doc a složku s daty
+done - udělat na googlu složku, v ní mít google doc a složku s daty
 
-kouknout na objective loss
+done - kouknout na objective loss
 
 zkusit u viewpointu bb diskretizovat úhel na např. 5stupňové segmety a one hot encodovat je jako feature vector
 a i u dalších věcí zkusit onehot encodovat
 
-zkusit opravdu funkčnost lru cache.
-zkusit extrahovat jenom metadata a na nich rychle najít problém - ale asi to bude v té lru cache
+
+nějak zrychlit tensorflow a nemít zbytečně moc image summary, jen jeden

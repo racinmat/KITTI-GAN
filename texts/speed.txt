@@ -1,0 +1,65 @@
+s evaly, původně:
+Starting to learn for 10000 epochs.
+Epoch:  0  0/16 counter:   1 time: 3.4472, d_loss: 2.586095, g_loss: 30.952063
+[Sample] d_loss: 2.58609533, g_loss: 30.95206642
+Epoch:  0  1/16 counter:   2 time: 5.1494, d_loss: 2.105674, g_loss: 29.352432
+saved after 2. iteration
+Epoch:  0  2/16 counter:   3 time: 14.7882, d_loss: 2.223946, g_loss: 26.712437
+Epoch:  0  3/16 counter:   4 time: 16.1484, d_loss: 2.184253, g_loss: 24.366060
+Epoch:  0  4/16 counter:   5 time: 17.4838, d_loss: 2.023171, g_loss: 21.901045
+Epoch:  0  5/16 counter:   6 time: 18.8512, d_loss: 1.969065, g_loss: 19.996796
+Epoch:  0  6/16 counter:   7 time: 20.2499, d_loss: 2.059372, g_loss: 18.333853
+Epoch:  0  7/16 counter:   8 time: 21.6271, d_loss: 2.005075, g_loss: 17.498875
+Epoch:  0  8/16 counter:   9 time: 22.9964, d_loss: 4.307128, g_loss: 23.671278
+Epoch:  0  9/16 counter:  10 time: 24.3554, d_loss: 4.645773, g_loss: 32.374939
+Epoch:  0 10/16 counter:  11 time: 25.7299, d_loss: 2.578252, g_loss: 31.053181
+Epoch:  0 11/16 counter:  12 time: 27.0831, d_loss: 1.989161, g_loss: 27.229345
+Epoch:  0 12/16 counter:  13 time: 28.4334, d_loss: 2.209196, g_loss: 26.943945
+Epoch:  0 13/16 counter:  14 time: 29.7607, d_loss: 1.726550, g_loss: 26.578945
+Epoch:  0 14/16 counter:  15 time: 31.0888, d_loss: 1.749109, g_loss: 28.362532
+Epoch:  0 15/16 counter:  16 time: 32.4199, d_loss: 1.683373, g_loss: 27.182335
+Epoch:  1  0/16 counter:  17 time: 33.8043, d_loss: 2.073624, g_loss: 21.792736
+
+po vyházení evalů mimo:
+Starting to learn for 10000 epochs with name 1503664796.
+Epoch:  0  0/16 counter:   1 time: 3.5753, d_loss: 1.492065, g_loss: 34.298355
+[Sample] d_loss: 1.85900855, g_loss: 32.14167786
+Epoch:  0  1/16 counter:   2 time: 5.2035, d_loss: 1.607577, g_loss: 32.347000
+saved after 2. iteration
+Epoch:  0  2/16 counter:   3 time: 14.4345, d_loss: 1.661868, g_loss: 29.616787
+Epoch:  0  3/16 counter:   4 time: 15.6760, d_loss: 1.625870, g_loss: 26.910206
+Epoch:  0  4/16 counter:   5 time: 16.9033, d_loss: 1.491996, g_loss: 24.404629
+Epoch:  0  5/16 counter:   6 time: 18.1566, d_loss: 1.537591, g_loss: 22.259712
+Epoch:  0  6/16 counter:   7 time: 19.4078, d_loss: 1.579399, g_loss: 20.294355
+Epoch:  0  7/16 counter:   8 time: 20.6439, d_loss: 1.534573, g_loss: 19.074888
+Epoch:  0  8/16 counter:   9 time: 21.8906, d_loss: 1.572855, g_loss: 25.916502
+Epoch:  0  9/16 counter:  10 time: 23.1378, d_loss: 1.966297, g_loss: 32.796261
+Epoch:  0 10/16 counter:  11 time: 24.4277, d_loss: 1.708321, g_loss: 31.838610
+Epoch:  0 11/16 counter:  12 time: 25.6671, d_loss: 1.763519, g_loss: 28.129072
+Epoch:  0 12/16 counter:  13 time: 26.9454, d_loss: 1.841653, g_loss: 27.875223
+Epoch:  0 13/16 counter:  14 time: 28.2291, d_loss: 2.179510, g_loss: 27.403015
+Epoch:  0 14/16 counter:  15 time: 29.4818, d_loss: 2.044805, g_loss: 29.158306
+Epoch:  0 15/16 counter:  16 time: 30.7156, d_loss: 1.600316, g_loss: 28.023907
+Epoch:  1  0/16 counter:  17 time: 31.9529, d_loss: 3.048638, g_loss: 23.980042
+
+po vyházení duplicitních summaries:
+Starting to learn for 10000 epochs with name 1503665701.
+Epoch:  0  0/16 counter:   1 time: 3.3909, d_loss: 1.553646, g_loss: 31.028406
+[Sample] d_loss: 3.02987742, g_loss: 29.14613533
+Epoch:  0  1/16 counter:   2 time: 4.8586, d_loss: 1.855179, g_loss: 29.708372
+saved after 2. iteration
+Epoch:  0  2/16 counter:   3 time: 14.2204, d_loss: 1.620236, g_loss: 26.845867
+Epoch:  0  3/16 counter:   4 time: 15.4563, d_loss: 1.663807, g_loss: 24.749271
+Epoch:  0  4/16 counter:   5 time: 16.6915, d_loss: 1.686925, g_loss: 22.349491
+Epoch:  0  5/16 counter:   6 time: 17.9307, d_loss: 1.703730, g_loss: 20.438175
+Epoch:  0  6/16 counter:   7 time: 19.1560, d_loss: 1.603468, g_loss: 18.629677
+Epoch:  0  7/16 counter:   8 time: 20.3882, d_loss: 1.596416, g_loss: 17.896629
+Epoch:  0  8/16 counter:   9 time: 21.6316, d_loss: 1.714449, g_loss: 25.260710
+Epoch:  0  9/16 counter:  10 time: 22.9058, d_loss: 1.977367, g_loss: 31.590315
+Epoch:  0 10/16 counter:  11 time: 24.2180, d_loss: 1.754954, g_loss: 31.870609
+Epoch:  0 11/16 counter:  12 time: 25.4672, d_loss: 1.878311, g_loss: 27.772873
+Epoch:  0 12/16 counter:  13 time: 26.7203, d_loss: 1.746992, g_loss: 27.678198
+Epoch:  0 13/16 counter:  14 time: 28.0180, d_loss: 1.864351, g_loss: 27.347181
+Epoch:  0 14/16 counter:  15 time: 29.2422, d_loss: 1.884193, g_loss: 29.156082
+Epoch:  0 15/16 counter:  16 time: 30.4964, d_loss: 1.597731, g_loss: 28.041245
+Epoch:  1  0/16 counter:  17 time: 31.7357, d_loss: 3.425363, g_loss: 24.179537
