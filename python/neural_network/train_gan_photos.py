@@ -30,7 +30,7 @@ def main():
     y_dim = data_set.get_labels_dim()
 
     l1_ratio = 100
-    epochs = 10000
+    epochs = 5000
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
@@ -157,7 +157,7 @@ def main():
                     print(e)
                     raise e
 
-            if np.mod(counter, 400) == 2:
+            if np.mod(counter, 800) == 2:
                 save(checkpoint_dir, counter, batch_size, image_size, saver, sess, model_name)
                 print("saved after {}. iteration".format(counter))
 
