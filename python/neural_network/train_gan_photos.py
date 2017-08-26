@@ -9,6 +9,7 @@ import pickle
 from python.neural_network.train_gan import load_data
 from tensorflow.python.framework.ops import GraphKeys
 
+
 def main():
     data_dir = 'data/extracted'
     drives = [
