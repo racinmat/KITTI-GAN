@@ -2,6 +2,9 @@ import os
 import numpy as np
 import scipy.misc
 import tensorflow as tf
+import time
+from tensorflow.python.framework.ops import GraphKeys
+import tensorflow.contrib.slim as slim
 
 
 def xavier_init(size):
@@ -239,3 +242,132 @@ def load(session, checkpoint_dir):
     else:
         print(" [*] Failed to find a checkpoint")
         return False, 0
+
+
+def build_gan(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim):
+    image_size = data_set.get_image_size()
+    y_dim = data_set.get_labels_dim()
+
+    x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
+    y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
+    z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
+    G = generator(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
+    D_real, D_logits_real = discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False)
+    sampler = G
+    D_fake, D_logits_fake = discriminator(G, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=True)
+
+    tf.summary.histogram("z", z)
+    tf.summary.histogram("d_real", D_real)
+    tf.summary.histogram("d_fake", D_fake)
+    tf.summary.image("g", G)
+
+    d_loss_real = tf.reduce_mean(
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
+    d_loss_fake = tf.reduce_mean(
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.zeros_like(D_fake)))
+    # g_loss = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake)))
+
+    # For generator we use traditional GAN objective as well as L1 loss
+    g_loss = tf.reduce_mean(
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake))) + \
+               l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
+
+    tf.summary.scalar("d_loss_real", d_loss_real)
+    tf.summary.scalar("d_loss_fake", d_loss_fake)
+
+    d_loss = d_loss_real + d_loss_fake
+
+    tf.summary.scalar("d_loss", d_loss)
+    tf.summary.scalar("g_loss", g_loss)
+
+    d_vars = slim.get_variables(scope='discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
+    g_vars = slim.get_variables(scope='generator', collection=GraphKeys.TRAINABLE_VARIABLES)
+
+    d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
+    g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
+
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
+
+    summ = tf.summary.merge_all()
+    return d_optim, g_optim, summ, sampler, sess, d_loss_fake, d_loss_real, x, y, z, d_loss, g_loss, image_size
+
+
+def train_network(logs_dir, epochs, batch_size, z_dim, sess, d_optim, g_optim, d_loss_fake,
+                  d_loss_real, x, y, z, data_set, d_loss, g_loss, summ, sampler, sample_dir, checkpoint_dir,
+                  image_size, model_name):
+
+    if not os.path.exists(os.path.dirname(logs_dir)):
+        os.makedirs(os.path.dirname(logs_dir))
+
+    writer = tf.summary.FileWriter(logs_dir, tf.get_default_graph())
+
+    saver = tf.train.Saver()
+
+    counter = 0
+    start_time = time.time()
+
+    print("Starting to learn for {} epochs.".format(epochs))
+    for epoch in range(epochs):
+        num_batches = int(data_set.num_batches(batch_size))
+        for i in range(num_batches):
+            x_batch, y_batch = data_set.next_batch(batch_size)
+            z_batch = sample_z(batch_size, z_dim)
+
+            # Update D network
+            _, errD_fake, errD_real = sess.run([d_optim, d_loss_fake, d_loss_real], feed_dict={
+                x: x_batch,
+                y: y_batch,
+                z: z_batch,
+            })
+
+            # Update G network
+            _ = sess.run([g_optim], feed_dict={
+                x: x_batch,
+                y: y_batch,
+                z: z_batch,
+            })
+
+            # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
+            _, errG = sess.run([g_optim, g_loss], feed_dict={
+                x: x_batch,
+                y: y_batch,
+                z: z_batch,
+            })
+
+            # run summary of all
+            summary_str = sess.run(summ, feed_dict={x: x_batch, z: z_batch, y: y_batch})
+            writer.add_summary(summary_str, counter)
+
+            counter += 1
+            summary_string = "Epoch: {:2d} {:2d}/{:2d} counter: {:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}"
+            print(summary_string.format(epoch, i, num_batches, counter, time.time() - start_time, errD_fake + errD_real,
+                                        errG))
+
+            if np.mod(counter, 100) == 1:
+                try:
+                    samples = sess.run(sampler, feed_dict={
+                        z: z_batch,
+                        y: y_batch
+                    })
+                    d_loss_val, g_loss_val = sess.run([d_loss, g_loss], feed_dict={
+                        z: z_batch,
+                        x: x_batch,
+                        y: y_batch
+                    })
+                    save_images(samples, image_manifold_size(samples.shape[0]),
+                                './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
+                    print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss_val, g_loss_val))
+                except Exception as e:
+                    print("pic saving error:")
+                    print(e)
+                    raise e
+
+            if np.mod(counter, 800) == 2:
+                save(checkpoint_dir, counter, batch_size, image_size, saver, sess, model_name)
+                print("saved after {}. iteration".format(counter))
+
+    writer.flush()
+    writer.close()
+    save(checkpoint_dir, counter, batch_size, image_size, saver, sess, model_name)
