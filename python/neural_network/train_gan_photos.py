@@ -24,16 +24,17 @@ def main():
 
     data_set = load_data(resolution, drives, input_prefix, data_dir)
 
-    batch_size = 64
+    # batch_size = 64
+    batch_size = 36
     z_dim = 100
 
     l1_ratio = 100
-    epochs = 1000
+    epochs = 5000
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
     dfc_dim = 1024  # (optional) Dimension of discrim units for fully connected layer.
-    c_dim = 1  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
+    c_dim = 3  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
     learning_rate = 0.0002  # Learning rate of for adam
     beta1 = 0.5  # Momentum term of adam
 
