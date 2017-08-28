@@ -68,3 +68,8 @@ Výpis všech screenů:
 ````bash
 screen -ls
 ````
+
+Velikost složek a souborů do hloubky 3:
+````bash
+du -h --max-depth=3
+````

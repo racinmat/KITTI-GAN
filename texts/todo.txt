@@ -18,4 +18,21 @@ zkusit u viewpointu bb diskretizovat úhel na např. 5stupňové segmety a one h
 a i u dalších věcí zkusit onehot encodovat
 
 
-nějak zrychlit tensorflow a nemít zbytečně moc image summary, jen jeden
+nějak zrychlit tensorflow a nemít zbytečně moc image summary, jen jeden - zjistit jak?
+
+zeptat se na logy:
+    co logovat a co ne?
+    jak dlouho si držet logy?
+    co checkpointy, má smysl je dělat pravidelně, nebo stačí až na konci?
+    proč tam mám 3 obrázky?
+    co všechno z logů můžu vyčíst, na co koukat?
+    co jsou ty logy v tensorboard z mailu? ty z tensorflow a filewriterů a nebo ještě nějaké jiné?
+jak psát v tensorflow, je dobrá knihovna slim?
+jaké další věci jsou dobré, nějaké best practises?
+jak velké věci můžu mít na goedel serveru?
+co více učení najednou, mám pouštět nebo je lepší postupně?
+
+vyzkoušet one sided label smoothing
+
+
+
