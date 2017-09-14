@@ -3,48 +3,27 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
+from python.data_utils import load_features
 
 if __name__ == '__main__':
     show_data_image = True
     show_metadata_image = True
 
     data_dir = 'data/extracted'
-    drives = [
-        'drive_0009_sync',
-        'drive_0015_sync',
-        'drive_0023_sync',
-        'drive_0032_sync',
-    ]
 
-    input_prefix = 'tracklets_points_normalized_'
+    # input_prefix = 'tracklets_points_normalized_'
+    input_prefix = 'tracklets_photos_normalized_'
     input_suffix = ''
     # input_suffix = '_0_20'
-    resolution = '32_32'
-    # resolution = '64_64'
+    # resolution = '32_32'
+    resolution = '64_64'
 
-    directory = 'images/' + resolution
-    directory = directory + '/normalized/'
+    # directory = os.path.join('images', resolution, 'normalized')
+    #
+    # if not os.path.exists(directory):
+    #     os.makedirs(directory)
 
-    cam = 2
-    drive_dir = './data/2011_09_26/2011_09_26_'
-    calib_dir = './data/2011_09_26'
-
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    features = np.empty(shape=0)
-
-    for i, drive in enumerate(drives):
-        filename = data_dir + '/' + input_prefix + drive + '_' + resolution + input_suffix + '.data'
-        file = open(filename, 'rb')
-        data = pickle.load(file)
-        file.close()
-        current_dir = drive_dir + drive
-        samples = len(data)
-        print("processing: {:s} with {:d} samples".format(filename, samples))
-        for j, sample in enumerate(data):
-            feature_vector = np.array(sample['x'])
-            features = np.vstack((features, feature_vector)) if features.size else feature_vector
+    features = load_features(input_prefix, resolution, input_suffix)
 
     nbins = 500
     fig = plt.figure()

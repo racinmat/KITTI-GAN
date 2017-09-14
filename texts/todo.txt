@@ -24,7 +24,7 @@ zeptat se na logy:
     co logovat a co ne?
     jak dlouho si držet logy?
     co checkpointy, má smysl je dělat pravidelně, nebo stačí až na konci?
-    proč tam mám 3 obrázky?
+    proč tam mám 3 obrázky? neví - možná kvůli rgb? kouknout, jestli jsou i na mnistu
     co všechno z logů můžu vyčíst, na co koukat?
     co jsou ty logy v tensorboard z mailu? ty z tensorflow a filewriterů a nebo ještě nějaké jiné?
 jak psát v tensorflow, je dobrá knihovna slim?
@@ -35,4 +35,28 @@ co více učení najednou, mám pouštět nebo je lepší postupně?
 vyzkoušet one sided label smoothing
 
 
+napsat test sítě na pár obrázků, že síť nespadne
+napsat test sítě na mnist
+assert na loss pod nějakou hodnotou - u sítě udělat, aby si někam po trénování uložila loss
+síť pouštět přes cmd, a z testů z cmd s parametry
+python -m unittest discover
+nose plugins attrib as attr
+@attr('fast') - umožní rozdělit testy na fast a slow, fast testy můžu pouštět automatizovaně, slow testy pomaleji - třeba ty s učením
 
+vyladit l1_ratio, zkusit třeba 10 různých parametrů, a pustit najednou, na 500 až 1000 epoch
+
+udělat: test, vyladit parametr
+udělat: zkusit dropout
+
+zkusit tanh jako poslední vrstvu
+use spherical z, instead of uniform distribution
+leaky relu všude, místo běžného relu!
+
+learning rate: 0.002 pro ADAM
+vyzkoušet: ADAM pro generátor, SGD pro diskriminátor
+další tip: s jistou prpstí prohodit label u discriminatoru
+
+
+check norms of gradients - if they are over 100, sts is fucked up
+
+jde docker pouštět bez su?

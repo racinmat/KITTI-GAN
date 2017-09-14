@@ -14,6 +14,7 @@ from math import cos, sin
 import matplotlib.pyplot as plt
 from PIL import Image
 from devkit.python.utils import timeit
+import pickle
 
 
 class Cache(diskcache.Cache):
@@ -237,3 +238,32 @@ def sample_to_image(sample, cam, calib_dir, current_dir):
                           object_type=tracklet['objectType'])
     buf, im = figure_to_image(fig)
     return buf, im
+
+
+def load_features(input_prefix, resolution, input_suffix):
+    data_dir = 'data/extracted'
+    drives = [
+        'drive_0009_sync',
+        'drive_0015_sync',
+        'drive_0023_sync',
+        'drive_0032_sync',
+    ]
+    cam = 2
+    drive_dir = './data/2011_09_26/2011_09_26_'
+    calib_dir = './data/2011_09_26'
+
+    features = np.empty(shape=0)
+
+    for i, drive in enumerate(drives):
+        filename = data_dir + '/' + input_prefix + drive + '_' + resolution + input_suffix + '.data'
+        file = open(filename, 'rb')
+        data = pickle.load(file)
+        file.close()
+        current_dir = drive_dir + drive
+        samples = len(data)
+        print("processing: {:s} with {:d} samples".format(filename, samples))
+        for j, sample in enumerate(data):
+            feature_vector = np.array(sample['x'])
+            features = np.vstack((features, feature_vector)) if features.size else feature_vector
+
+    return features

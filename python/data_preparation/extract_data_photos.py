@@ -1,7 +1,8 @@
 import matplotlib
 
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
-from python.data_preparation.extract_data import is_for_dataset, get_x_y_data_for, load_tracklets
+from python.data_preparation.DatasetFilterer import DatasetFilterer
+from python.data_preparation.extract_data import get_x_y_data_for, load_tracklets
 
 matplotlib.use('Agg')
 
@@ -24,6 +25,11 @@ def main():
     calib_dir = './data/2011_09_26'
 
     cam = 2
+
+    min_distance = 15
+    max_distance = 45
+    treshold_degrees = None
+    filterer = DatasetFilterer(min_distance=min_distance, max_distance=max_distance, treshold_degrees=treshold_degrees)
 
     for i, drive in enumerate(drives):
         data = []
@@ -56,7 +62,7 @@ def main():
                 if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
                     continue
 
-                if not is_for_dataset(tracklet=tracklet, frame=frame, cam=cam, calib_dir=calib_dir):
+                if not filterer.is_for_dataset(tracklet=tracklet, frame=frame, cam=cam, calib_dir=calib_dir):
                     continue
 
                 sample = get_x_y_data_for(tracklet=tracklet,

@@ -1,6 +1,8 @@
 import matplotlib
 
 # http://matplotlib.org/faq/howto_faq.html#matplotlib-in-a-web-application-server
+from python.data_preparation.DatasetFilterer import DatasetFilterer
+
 matplotlib.use('Agg')
 
 import atexit
@@ -28,53 +30,6 @@ def load_tracklets(base_dir):
     # read tracklets for the selected sequence
     tracklets = read_tracklets(base_dir + '/tracklet_labels.xml')
     return tracklets
-
-
-def is_for_dataset(tracklet, frame, calib_dir, cam):
-    min_distance = 15
-    max_distance = 45
-    treshold_degrees = 5
-
-    # only cars in dataset
-    if tracklet['objectType'] != 'Car':
-        return False
-
-    pose_idx = frame - tracklet['first_frame']
-    pose = tracklet['poses_dict'][pose_idx]
-
-    # filter out occluded tracklets
-    if pose['occlusion'] != 0:
-        return False
-
-    treshold = treshold_degrees * pi / 180
-    # filter out cars with high rotation
-
-    corners, t, rz, box, corners_3D, pose_idx, orientation_3D = tracklet_to_bounding_box(tracklet=tracklet,
-                                                                                         cam=cam,
-                                                                                         frame=frame,
-                                                                                         calib_dir=calib_dir)
-
-    # Rotation is calculated in 3D coordinates.
-    # Orientation of bounding box is transferred to cylindrical coordinates (so we do not care about the Y axis). [x, z => r, theta, y => y]
-    # Angle in cylindrical coordinates is ange under which car is seen, so it is used for filtering.
-    # orientation_3D is represented by 2 points.
-    # car is in front of camera when angle of both points (in cylindrical coordinates) is same
-    orientation_vector = orientation_3D[:, 1] - orientation_3D[:, 0]
-    vector_theta = np.arctan2(orientation_vector[2], orientation_vector[0])
-    start_theta = np.arctan2(orientation_3D[2, 0], orientation_3D[0, 0])
-    r = np.linalg.norm((corners_3D[0, :], corners_3D[2, :]), axis=0)  # r is used for distance measurement
-    angle = vector_theta - start_theta
-    if angle > treshold or angle < - treshold:
-        return False
-
-    # instead of fixed distance in X axis, we use distance from cylindrical coordinates, because this is more accurate
-    distance = r[7]
-    # corner_ldf = corners_3D[:, 7]
-    # distance = corner_ldf.T[2]
-    if distance < min_distance or distance > max_distance:
-        return False
-
-    return True
 
 
 def velodyne_data_exist(base_dir, frame):
@@ -176,6 +131,11 @@ def main():
 
     cam = 2
 
+    min_distance = 15
+    max_distance = 45
+    treshold_degrees = 5
+    filterer = DatasetFilterer(min_distance=min_distance, max_distance=max_distance, treshold_degrees=treshold_degrees)
+
     for i, drive in enumerate(drives):
         data = []
         current_dir = drive_dir + drive
@@ -207,7 +167,7 @@ def main():
                 if not is_tracklet_seen(tracklet=tracklet, frame=frame, calib_dir=calib_dir, cam=cam):
                     continue
 
-                if not is_for_dataset(tracklet=tracklet, frame=frame, cam=cam, calib_dir=calib_dir):
+                if not filterer.is_for_dataset(tracklet=tracklet, frame=frame, cam=cam, calib_dir=calib_dir):
                     continue
 
                 sample = get_x_y_data_for(tracklet=tracklet,

@@ -27,8 +27,8 @@ if __name__ == '__main__':
     input_prefix = 'tracklets_photos_normalized_'
     input_suffix = ''
     # input_suffix = '_0_20'
-    resolution = '32_32'
-    # resolution = '64_64'
+    # resolution = '32_32'
+    resolution = '64_64'
 
     directory = 'images/' + resolution
     # directory = directory + '/normalized/'

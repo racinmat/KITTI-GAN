@@ -1,5 +1,4 @@
 from io import open
-from bs4 import BeautifulSoup
 import pickle
 from devkit.python.extractPoses import extractPoses
 import os
@@ -20,6 +19,7 @@ def read_tracklets(filename):
             pass
 
     # READTRACKLETS reads annotations from xml-files
+    from bs4 import BeautifulSoup
 
     ## read Document Object Model (DOM)
     with open(filename) as fp:

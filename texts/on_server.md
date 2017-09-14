@@ -73,3 +73,15 @@ Velikost složek a souborů do hloubky 3:
 ````bash
 du -h --max-depth=3
 ````
+
+
+Velikost složek a souborů do hloubky 3:
+````bash
+du -h --max-depth=3
+````
+
+Vypíše md5 chcecksum složky
+````bash
+find ./logs/1503829581 -type f -exec md5sum {} \; | sort -k 2 | md5sum
+
+````
