@@ -6,6 +6,7 @@ import time
 from tensorflow.python.framework.ops import GraphKeys
 import tensorflow.contrib.slim as slim
 
+from python.neural_network.DiscriminatorFactory import DiscriminatorFactory
 from python.neural_network.GeneratorFactory import GeneratorFactory
 
 
@@ -253,9 +254,7 @@ def build_gan(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, lea
     x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
     y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
     z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
-    G_factory = GeneratorFactory(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
-    G = G_factory.create(is_training=True, reuse=False)
-    # G = generator(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
+    G = generator(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
     D_real, D_logits_real = discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False)
     sampler = G
     D_fake, D_logits_fake = discriminator(G, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=True)
@@ -306,12 +305,13 @@ def build_gan_slim(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio
     x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
     y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
     z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
-    G_factory = GeneratorFactory(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
-    G_2 = G_factory.create()
-    G = generator(z, y, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
-    D_real, D_logits_real = discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False)
+    G_factory = GeneratorFactory(image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
+    D_factory = DiscriminatorFactory(image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim)
+    G = G_factory.create(z, y)
     sampler = G
-    D_fake, D_logits_fake = discriminator(G, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=True)
+
+    D_real, D_logits_real = D_factory.create(x, y, reuse=False)
+    D_fake, D_logits_fake = D_factory.create(G, y, reuse=True)
 
     tf.summary.histogram("z", z)
     tf.summary.histogram("d_real", D_real)
@@ -350,6 +350,7 @@ def build_gan_slim(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio
 
     summ = tf.summary.merge_all()
     return d_optim, g_optim, summ, sampler, sess, d_loss_fake, d_loss_real, x, y, z, d_loss, g_loss, image_size
+
 
 def train_network(logs_dir, epochs, batch_size, z_dim, sess, d_optim, g_optim, d_loss_fake,
                   d_loss_real, x, y, z, data_set, d_loss, g_loss, summ, sampler, sample_dir, checkpoint_dir,

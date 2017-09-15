@@ -1,0 +1,75 @@
+import numpy as np
+import tensorflow as tf
+import tensorflow.contrib.layers as layers
+import tensorflow.contrib.slim as slim
+from tensorflow.contrib.slim import arg_scope
+
+from python.network_utils import conv_cond_concat, lrelu
+
+
+class DiscriminatorFactory:
+    def __init__(self, image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim):
+        self.c_dim = c_dim
+        self.df_dim = df_dim
+        self.dfc_dim = dfc_dim
+        self.batch_size = batch_size
+        self.image_size = image_size
+        self.y_dim = y_dim
+
+    def create(self, x, y, is_training=True, reuse=False):
+        with tf.variable_scope('discriminator') as scope:
+            if reuse:
+                scope.reuse_variables()
+
+            batch_norm_params = {
+                # 'decay': 0.999,
+                'decay': 0.9,  # also known as momentum, they are the same
+                'updates_collections': None,
+                # 'epsilon': 0.001,
+                'epsilon': 1e-5,
+                'scale': True,
+                'is_training': is_training,
+                'scope': 'batch_norm',
+            }
+
+            with arg_scope(kernel_size=[5, 5],
+                           stride=[2, 2],
+                           normalizer_fn=layers.batch_norm,
+                           activation_fn=lrelu,
+                           normalizer_params=batch_norm_params,
+                           weights_initializer=layers.xavier_initializer(uniform=False),
+                           biases_initializer=tf.constant_initializer(0.0)
+                           ):
+                yb = tf.reshape(self.y, [self.batch_size, 1, 1, self.y_dim])
+                x = conv_cond_concat(self.x, yb)
+
+                h0 = slim.conv2d(x,
+                                 num_outputs=self.c_dim + self.y_dim,
+                                 scope='d_h0_conv',
+                                 normalizer_fn=None
+                                 )
+
+                h0 = conv_cond_concat(h0, yb)
+
+                h1 = slim.conv2d(h0,
+                                 num_outputs=self.df_dim + self.y_dim,
+                                 scope='d_h1_conv',
+                                 )
+
+                h1 = tf.reshape(h1, [self.batch_size, -1])
+                h1 = tf.concat([h1, y], 1)
+
+                h2 = slim.fully_connected(h1,
+                                          num_outputs=self.dfc_dim,
+                                          scope='g_h2_lin',
+                                          )
+                h2 = tf.concat([h2, y], 1)
+
+                h3 = slim.fully_connected(h2,
+                                          num_outputs=1,
+                                          scope='g_h3_lin',
+                                          normalizer_fn=None,
+                                          activation_fn=None
+                                          )
+
+                return tf.nn.sigmoid(h3), h3
