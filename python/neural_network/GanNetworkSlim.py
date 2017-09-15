@@ -12,7 +12,7 @@ from python.neural_network.GeneratorFactory import GeneratorFactory
 
 
 class GanNetworkSlim:
-    def __init__(self):
+    def __init__(self, scope_name='GAN_slim'):
         self.d_optim = None
         self.g_optim = None
         self.summ = None
@@ -29,78 +29,80 @@ class GanNetworkSlim:
         self.batch_size = None
         self.z_dim = None
         self.data_set = None
+        self.scope_name = scope_name
 
     def build_model(self, data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
                     dfc_dim):
         image_size = data_set.get_image_size()
         y_dim = data_set.get_labels_dim()
 
-        x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
-        y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
-        z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
+        with tf.variable_scope(self.scope_name):
+            x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
+            y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
+            z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
 
-        generator_scope_name = 'slim_generator'
-        discriminator_scope_name = 'slim_discriminator'
-        G_factory = GeneratorFactory(image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim, generator_scope_name)
-        D_factory = DiscriminatorFactory(image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim, discriminator_scope_name)
-        G = G_factory.create(z, y)
-        sampler = G
+            generator_scope_name = 'slim_generator'
+            discriminator_scope_name = 'slim_discriminator'
+            G_factory = GeneratorFactory(image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim, generator_scope_name)
+            D_factory = DiscriminatorFactory(image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim, discriminator_scope_name)
+            G = G_factory.create(z, y)
+            sampler = G
 
-        D_real, D_logits_real = D_factory.create(x, y, reuse=False)
-        D_fake, D_logits_fake = D_factory.create(G, y, reuse=True)
+            D_real, D_logits_real = D_factory.create(x, y, reuse=False)
+            D_fake, D_logits_fake = D_factory.create(G, y, reuse=True)
 
-        tf.summary.histogram("z", z)
-        tf.summary.histogram("d_real", D_real)
-        tf.summary.histogram("d_fake", D_fake)
-        tf.summary.image("g", G)
+            tf.summary.histogram("z", z)
+            tf.summary.histogram("d_real", D_real)
+            tf.summary.histogram("d_fake", D_fake)
+            tf.summary.image("g", G)
 
-        d_loss_real = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
-        d_loss_fake = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.zeros_like(D_fake)))
-        # g_loss = tf.reduce_mean(
-        #     tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake)))
+            d_loss_real = tf.reduce_mean(
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
+            d_loss_fake = tf.reduce_mean(
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.zeros_like(D_fake)))
+            # g_loss = tf.reduce_mean(
+            #     tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake)))
 
-        # For generator we use traditional GAN objective as well as L1 loss
-        # L1 added from https://github.com/awjuliani/Pix2Pix-Film/blob/master/Pix2Pix.ipynb
-        g_loss = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake))) + \
-                 l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
+            # For generator we use traditional GAN objective as well as L1 loss
+            # L1 added from https://github.com/awjuliani/Pix2Pix-Film/blob/master/Pix2Pix.ipynb
+            g_loss = tf.reduce_mean(
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake))) + \
+                     l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
 
-        tf.summary.scalar("d_loss_real", d_loss_real)
-        tf.summary.scalar("d_loss_fake", d_loss_fake)
+            tf.summary.scalar("d_loss_real", d_loss_real)
+            tf.summary.scalar("d_loss_fake", d_loss_fake)
 
-        d_loss = d_loss_real + d_loss_fake
+            d_loss = d_loss_real + d_loss_fake
 
-        tf.summary.scalar("d_loss", d_loss)
-        tf.summary.scalar("g_loss", g_loss)
+            tf.summary.scalar("d_loss", d_loss)
+            tf.summary.scalar("g_loss", g_loss)
 
-        d_vars = slim.get_variables(scope=generator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
-        g_vars = slim.get_variables(scope=discriminator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
+            d_vars = slim.get_variables(scope=generator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
+            g_vars = slim.get_variables(scope=discriminator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
 
-        d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
-        g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
+            d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
+            g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
 
-        sess = tf.Session()
-        sess.run(tf.global_variables_initializer())
+            sess = tf.Session()
+            sess.run(tf.global_variables_initializer())
 
-        summ = tf.summary.merge_all()
-        self.d_optim = d_optim
-        self.g_optim = g_optim
-        self.summ = summ
-        self.sampler = sampler
-        self.sess = sess
-        self.d_loss_fake = d_loss_fake
-        self.d_loss_real = d_loss_real
-        self.x = x
-        self.y = y
-        self.z = z
-        self.d_loss = d_loss
-        self.g_loss = g_loss
-        self.image_size = image_size
-        self.batch_size = batch_size
-        self.z_dim = z_dim
-        self.data_set = data_set
+            summ = tf.summary.merge_all()
+            self.d_optim = d_optim
+            self.g_optim = g_optim
+            self.summ = summ
+            self.sampler = sampler
+            self.sess = sess
+            self.d_loss_fake = d_loss_fake
+            self.d_loss_real = d_loss_real
+            self.x = x
+            self.y = y
+            self.z = z
+            self.d_loss = d_loss
+            self.g_loss = g_loss
+            self.image_size = image_size
+            self.batch_size = batch_size
+            self.z_dim = z_dim
+            self.data_set = data_set
 
     def train(self, logs_dir, epochs, sample_dir, checkpoint_dir,
               model_name):

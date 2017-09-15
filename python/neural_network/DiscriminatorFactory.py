@@ -8,7 +8,7 @@ from python.network_utils import conv_cond_concat, lrelu
 
 
 class DiscriminatorFactory:
-    def __init__(self, image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim, scope_name):
+    def __init__(self, image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim, scope_name='discriminator'):
         self.c_dim = c_dim
         self.df_dim = df_dim
         self.dfc_dim = dfc_dim

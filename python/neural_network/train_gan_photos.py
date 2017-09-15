@@ -56,7 +56,6 @@ def main():
     network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
     network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
-
     print("learning has ended")
 
 

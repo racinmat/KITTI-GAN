@@ -3,12 +3,11 @@ import tensorflow as tf
 import tensorflow.contrib.layers as layers
 import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim import arg_scope
-
 from python.network_utils import conv_cond_concat
 
 
 class GeneratorFactory:
-    def __init__(self, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim, scope_name):
+    def __init__(self, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim, scope_name='generator'):
         self.c_dim = c_dim
         self.gf_dim = gf_dim
         self.gfc_dim = gfc_dim
