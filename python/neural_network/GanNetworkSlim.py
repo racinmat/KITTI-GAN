@@ -39,8 +39,10 @@ class GanNetworkSlim:
         y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
         z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
 
-        G_factory = GeneratorFactory(image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
-        D_factory = DiscriminatorFactory(image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim)
+        generator_scope_name = 'slim_generator'
+        discriminator_scope_name = 'slim_discriminator'
+        G_factory = GeneratorFactory(image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim, generator_scope_name)
+        D_factory = DiscriminatorFactory(image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim, discriminator_scope_name)
         G = G_factory.create(z, y)
         sampler = G
 
@@ -73,8 +75,8 @@ class GanNetworkSlim:
         tf.summary.scalar("d_loss", d_loss)
         tf.summary.scalar("g_loss", g_loss)
 
-        d_vars = slim.get_variables(scope='discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
-        g_vars = slim.get_variables(scope='generator', collection=GraphKeys.TRAINABLE_VARIABLES)
+        d_vars = slim.get_variables(scope=generator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
+        g_vars = slim.get_variables(scope=discriminator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
 
         d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
         g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)

@@ -8,16 +8,17 @@ from python.network_utils import conv_cond_concat
 
 
 class GeneratorFactory:
-    def __init__(self, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim):
+    def __init__(self, image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim, scope_name):
         self.c_dim = c_dim
         self.gf_dim = gf_dim
         self.gfc_dim = gfc_dim
         self.batch_size = batch_size
         self.image_size = image_size
         self.y_dim = y_dim
+        self.scope_name = scope_name
 
-    def create(self, is_training=True, reuse=False):
-        with tf.variable_scope('generator') as scope:
+    def create(self, z, y, is_training=True, reuse=False):
+        with tf.variable_scope(self.scope_name) as scope:
             if reuse:
                 scope.reuse_variables()
 
@@ -32,8 +33,8 @@ class GeneratorFactory:
                 'scope': 'batch_norm',
             }
 
-            with arg_scope(kernel_size=[5, 5],
-                           stride=[2, 2],
+            # first argument is where to apply these
+            with arg_scope([layers.conv2d, layers.conv2d_transpose, layers.fully_connected],
                            normalizer_fn=layers.batch_norm,
                            activation_fn=slim.nn.relu,
                            normalizer_params=batch_norm_params,
@@ -65,15 +66,19 @@ class GeneratorFactory:
                 h1 = conv_cond_concat(h1, yb)
 
                 h2 = slim.conv2d_transpose(h1,
-                                           num_outputs=[s_h2, s_w2, self.gf_dim * 2],
+                                           num_outputs=self.gf_dim * 2,
                                            scope='g_h2',
+                                           kernel_size=[5, 5],
+                                           stride=2,
                                            )
 
                 h2 = conv_cond_concat(h2, yb)
 
                 h3 = slim.conv2d_transpose(h2,
-                                           num_outputs=[s_h2, s_w2, self.c_dim],
+                                           num_outputs=self.c_dim,
                                            scope='g_h3',
+                                           kernel_size=[5, 5],
+                                           stride=2,
                                            normalizer_fn=None
                                            )
 

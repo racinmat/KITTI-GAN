@@ -8,16 +8,17 @@ from python.network_utils import conv_cond_concat, lrelu
 
 
 class DiscriminatorFactory:
-    def __init__(self, image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim):
+    def __init__(self, image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim, scope_name):
         self.c_dim = c_dim
         self.df_dim = df_dim
         self.dfc_dim = dfc_dim
         self.batch_size = batch_size
         self.image_size = image_size
         self.y_dim = y_dim
+        self.scope_name = scope_name
 
     def create(self, x, y, is_training=True, reuse=False):
-        with tf.variable_scope('discriminator') as scope:
+        with tf.variable_scope(self.scope_name) as scope:
             if reuse:
                 scope.reuse_variables()
 
@@ -32,8 +33,7 @@ class DiscriminatorFactory:
                 'scope': 'batch_norm',
             }
 
-            with arg_scope(kernel_size=[5, 5],
-                           stride=[2, 2],
+            with arg_scope([layers.conv2d, layers.conv2d_transpose, layers.fully_connected],
                            normalizer_fn=layers.batch_norm,
                            activation_fn=lrelu,
                            normalizer_params=batch_norm_params,
@@ -46,6 +46,8 @@ class DiscriminatorFactory:
                 h0 = slim.conv2d(x,
                                  num_outputs=self.c_dim + self.y_dim,
                                  scope='d_h0_conv',
+                                 kernel_size=[5, 5],
+                                 stride=[2, 2],
                                  normalizer_fn=None
                                  )
 
@@ -54,6 +56,8 @@ class DiscriminatorFactory:
                 h1 = slim.conv2d(h0,
                                  num_outputs=self.df_dim + self.y_dim,
                                  scope='d_h1_conv',
+                                 kernel_size=[5, 5],
+                                 stride=[2, 2],
                                  )
 
                 h1 = tf.reshape(h1, [self.batch_size, -1])

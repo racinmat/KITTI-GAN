@@ -48,13 +48,14 @@ def main():
     logs_dir = os.path.join('logs', current_time)
     model_name = 'CGAN.model'
 
+    network_slim = GanNetworkSlim()
+    network_slim.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
+    network_slim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
+
     network = GanNetwork()
     network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
     network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
-    networkSlim = GanNetworkSlim()
-    networkSlim.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    networkSlim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
     print("learning has ended")
 
