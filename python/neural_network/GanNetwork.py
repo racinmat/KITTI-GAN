@@ -2,7 +2,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import time
-from tensorflow.python.framework.ops import GraphKeys
+from tensorflow.python.framework import ops
 import tensorflow.contrib.slim as slim
 from python.network_utils import generator, discriminator, sample_z, save_images, image_manifold_size, save
 
@@ -67,8 +67,8 @@ class GanNetwork:
             tf.summary.scalar("d_loss", d_loss)
             tf.summary.scalar("g_loss", g_loss)
 
-            d_vars = slim.get_variables(scope='discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
-            g_vars = slim.get_variables(scope='generator', collection=GraphKeys.TRAINABLE_VARIABLES)
+            d_vars = slim.get_variables(scope=self.scope_name + '/discriminator', collection=ops.GraphKeys.TRAINABLE_VARIABLES)
+            g_vars = slim.get_variables(scope=self.scope_name + '/generator', collection=ops.GraphKeys.TRAINABLE_VARIABLES)
 
             d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
             g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
@@ -76,6 +76,7 @@ class GanNetwork:
             sess = tf.Session()
             sess.run(tf.global_variables_initializer())
 
+            # merge_all zmerguje všechno z obou sítí, je třeba to oddělit., nějak přes ops.get_collection.
             summ = tf.summary.merge_all()
             self.d_optim = d_optim
             self.g_optim = g_optim
