@@ -40,8 +40,8 @@ class DiscriminatorFactory:
                            weights_initializer=layers.xavier_initializer(uniform=False),
                            biases_initializer=tf.constant_initializer(0.0)
                            ):
-                yb = tf.reshape(self.y, [self.batch_size, 1, 1, self.y_dim])
-                x = conv_cond_concat(self.x, yb)
+                yb = tf.reshape(y, [self.batch_size, 1, 1, self.y_dim])
+                x = conv_cond_concat(x, yb)
 
                 h0 = slim.conv2d(x,
                                  num_outputs=self.c_dim + self.y_dim,

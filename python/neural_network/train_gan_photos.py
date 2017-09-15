@@ -6,6 +6,9 @@ import tensorflow as tf
 import numpy as np
 import os
 import pickle
+
+from python.neural_network.GanNetwork import GanNetwork
+from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
 from tensorflow.python.framework.ops import GraphKeys
 
@@ -29,7 +32,8 @@ def main():
     z_dim = 100
 
     l1_ratio = 100
-    epochs = 5000
+    epochs = 2
+    # epochs = 5000
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
@@ -44,13 +48,13 @@ def main():
     logs_dir = os.path.join('logs', current_time)
     model_name = 'CGAN.model'
 
-    d_optim, g_optim, summ, sampler, sess, d_loss_fake, d_loss_real, x, y, z, d_loss, g_loss, image_size \
-        = build_gan(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
-                    dfc_dim)
+    network = GanNetwork()
+    network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
+    network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
-    train_network(logs_dir, epochs, batch_size, z_dim, sess, d_optim, g_optim, d_loss_fake,
-                  d_loss_real, x, y, z, data_set, d_loss, g_loss, summ, sampler, sample_dir, checkpoint_dir,
-                  image_size, model_name)
+    networkSlim = GanNetworkSlim()
+    networkSlim.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
+    networkSlim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
     print("learning has ended")
 

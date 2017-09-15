@@ -6,9 +6,6 @@ import time
 from tensorflow.python.framework.ops import GraphKeys
 import tensorflow.contrib.slim as slim
 
-from python.neural_network.DiscriminatorFactory import DiscriminatorFactory
-from python.neural_network.GeneratorFactory import GeneratorFactory
-
 
 def xavier_init(size):
     in_dim = size[0]
@@ -258,60 +255,6 @@ def build_gan(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, lea
     D_real, D_logits_real = discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False)
     sampler = G
     D_fake, D_logits_fake = discriminator(G, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=True)
-
-    tf.summary.histogram("z", z)
-    tf.summary.histogram("d_real", D_real)
-    tf.summary.histogram("d_fake", D_fake)
-    tf.summary.image("g", G)
-
-    d_loss_real = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
-    d_loss_fake = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.zeros_like(D_fake)))
-    # g_loss = tf.reduce_mean(
-    #     tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake)))
-
-    # For generator we use traditional GAN objective as well as L1 loss
-    # L1 added from https://github.com/awjuliani/Pix2Pix-Film/blob/master/Pix2Pix.ipynb
-    g_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake))) + \
-               l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
-
-    tf.summary.scalar("d_loss_real", d_loss_real)
-    tf.summary.scalar("d_loss_fake", d_loss_fake)
-
-    d_loss = d_loss_real + d_loss_fake
-
-    tf.summary.scalar("d_loss", d_loss)
-    tf.summary.scalar("g_loss", g_loss)
-
-    d_vars = slim.get_variables(scope='discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
-    g_vars = slim.get_variables(scope='generator', collection=GraphKeys.TRAINABLE_VARIABLES)
-
-    d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
-    g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
-
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
-
-    summ = tf.summary.merge_all()
-    return d_optim, g_optim, summ, sampler, sess, d_loss_fake, d_loss_real, x, y, z, d_loss, g_loss, image_size
-
-
-def build_gan_slim(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim):
-    image_size = data_set.get_image_size()
-    y_dim = data_set.get_labels_dim()
-
-    x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
-    y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
-    z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
-    G_factory = GeneratorFactory(image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim)
-    D_factory = DiscriminatorFactory(image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim)
-    G = G_factory.create(z, y)
-    sampler = G
-
-    D_real, D_logits_real = D_factory.create(x, y, reuse=False)
-    D_fake, D_logits_fake = D_factory.create(G, y, reuse=True)
 
     tf.summary.histogram("z", z)
     tf.summary.histogram("d_real", D_real)
