@@ -7,7 +7,7 @@ import numpy as np
 import os
 import pickle
 
-from python.neural_network.GanNetwork import GanNetwork
+from python.neural_network.GanNetworkVanilla import GanNetworkVanilla
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
 from tensorflow.python.framework import ops
@@ -52,7 +52,7 @@ def main():
     network_slim.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
     network_slim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
-    network = GanNetwork()
+    network = GanNetworkVanilla()
     network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
     network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 

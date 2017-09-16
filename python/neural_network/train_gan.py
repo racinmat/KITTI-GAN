@@ -8,6 +8,8 @@ import pickle
 from tensorflow.python.framework.ops import GraphKeys
 import tensorflow.contrib.slim as slim
 
+from python.neural_network.GanNetworkVanilla import GanNetworkVanilla
+
 
 def load_data(resolution, drives, input_prefix, data_dir):
     resolution_string = '{:d}_{:d}'.format(resolution[0], resolution[1])
@@ -59,12 +61,9 @@ def main():
     logs_dir = os.path.join('logs', current_time)
     model_name = 'CGAN.model'
 
-    d_optim, g_optim, summ, sampler, sess, d_loss_fake, d_loss_real, x, y, z, d_loss, g_loss, image_size \
-        = build_gan(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-
-    train_network(logs_dir, epochs, batch_size, z_dim, sess, d_optim, g_optim, d_loss_fake,
-                  d_loss_real, x, y, z, data_set, d_loss, g_loss, summ, sampler, sample_dir, checkpoint_dir,
-                  image_size, model_name)
+    network = GanNetworkVanilla()
+    network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
+    network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
     print("learning has ended")
 
