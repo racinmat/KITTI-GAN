@@ -66,14 +66,14 @@ class DiscriminatorFactory:
 
                 h2 = slim.fully_connected(h1,
                                           num_outputs=self.dfc_dim,
-                                          scope='g_h2_lin',
+                                          scope='d_h2_lin',
                                           activation_fn=lrelu,
                                           )
                 h2 = tf.concat([h2, y], 1)
 
                 h3 = slim.fully_connected(h2,
                                           num_outputs=1,
-                                          scope='g_h3_lin',
+                                          scope='d_h3_lin',
                                           normalizer_fn=None,
                                           activation_fn=None
                                           )
