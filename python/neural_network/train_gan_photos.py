@@ -32,7 +32,7 @@ def main():
     z_dim = 100
 
     l1_ratio = 100
-    epochs = 2
+    epochs = 1
     # epochs = 5000
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.

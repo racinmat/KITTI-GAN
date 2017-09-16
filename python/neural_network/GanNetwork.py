@@ -8,7 +8,7 @@ from python.network_utils import generator, discriminator, sample_z, save_images
 
 
 class GanNetwork:
-    def __init__(self, scope_name='GAN'):
+    def __init__(self):
         self.d_optim = None
         self.g_optim = None
         self.summ = None
@@ -25,14 +25,15 @@ class GanNetwork:
         self.batch_size = None
         self.z_dim = None
         self.data_set = None
-        self.scope_name = scope_name
 
     def build_model(self, data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
                     dfc_dim):
         image_size = data_set.get_image_size()
         y_dim = data_set.get_labels_dim()
 
-        with tf.variable_scope(self.scope_name):
+        # with this, I can use multiple graphs in single process
+        g = tf.Graph()
+        with g.as_default():
             x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
             y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
             z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
@@ -67,13 +68,13 @@ class GanNetwork:
             tf.summary.scalar("d_loss", d_loss)
             tf.summary.scalar("g_loss", g_loss)
 
-            d_vars = slim.get_variables(scope=self.scope_name + '/discriminator', collection=ops.GraphKeys.TRAINABLE_VARIABLES)
-            g_vars = slim.get_variables(scope=self.scope_name + '/generator', collection=ops.GraphKeys.TRAINABLE_VARIABLES)
+            d_vars = slim.get_variables(scope='discriminator', collection=ops.GraphKeys.TRAINABLE_VARIABLES)
+            g_vars = slim.get_variables(scope='generator', collection=ops.GraphKeys.TRAINABLE_VARIABLES)
 
             d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
             g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
 
-            sess = tf.Session()
+            sess = tf.Session(graph=g)
             sess.run(tf.global_variables_initializer())
 
             # merge_all zmerguje všechno z obou sítí, je třeba to oddělit., nějak přes ops.get_collection.
