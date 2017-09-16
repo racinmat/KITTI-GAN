@@ -8,7 +8,7 @@ from python.network_utils import generator, discriminator, sample_z, save_images
 
 
 class GanNetwork:
-    def __init__(self):
+    def __init__(self, name='gan'):
         self.graph = None
         self.d_optim = None
         self.g_optim = None
@@ -26,6 +26,7 @@ class GanNetwork:
         self.batch_size = None
         self.z_dim = None
         self.data_set = None
+        self.name = name
 
     def build_model(self, data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
                     dfc_dim):
@@ -101,9 +102,10 @@ class GanNetwork:
     def train(self, logs_dir, epochs, sample_dir, checkpoint_dir, model_name):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
+            print("creating logs dir for training: " + logs_dir)
 
         with self.graph.as_default():
-            writer = tf.summary.FileWriter(logs_dir, tf.get_default_graph())
+            writer = tf.summary.FileWriter(os.path.join(logs_dir, self.name), tf.get_default_graph())
 
             saver = tf.train.Saver()
 

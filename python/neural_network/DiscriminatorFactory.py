@@ -35,7 +35,6 @@ class DiscriminatorFactory:
 
             with arg_scope([layers.conv2d, layers.conv2d_transpose, layers.fully_connected],
                            normalizer_fn=layers.batch_norm,
-                           activation_fn=lrelu,
                            normalizer_params=batch_norm_params,
                            weights_initializer=layers.xavier_initializer(uniform=False),
                            biases_initializer=tf.constant_initializer(0.0)
@@ -48,7 +47,8 @@ class DiscriminatorFactory:
                                  scope='d_h0_conv',
                                  kernel_size=[5, 5],
                                  stride=[2, 2],
-                                 normalizer_fn=None
+                                 normalizer_fn=None,
+                                 activation_fn=lrelu,
                                  )
 
                 h0 = conv_cond_concat(h0, yb)
@@ -58,6 +58,7 @@ class DiscriminatorFactory:
                                  scope='d_h1_conv',
                                  kernel_size=[5, 5],
                                  stride=[2, 2],
+                                 activation_fn=lrelu,
                                  )
 
                 h1 = tf.reshape(h1, [self.batch_size, -1])
@@ -66,6 +67,7 @@ class DiscriminatorFactory:
                 h2 = slim.fully_connected(h1,
                                           num_outputs=self.dfc_dim,
                                           scope='g_h2_lin',
+                                          activation_fn=lrelu,
                                           )
                 h2 = tf.concat([h2, y], 1)
 

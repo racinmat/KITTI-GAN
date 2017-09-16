@@ -35,7 +35,6 @@ class GeneratorFactory:
             # first argument is where to apply these
             with arg_scope([layers.conv2d, layers.conv2d_transpose, layers.fully_connected],
                            normalizer_fn=layers.batch_norm,
-                           activation_fn=slim.nn.relu,
                            normalizer_params=batch_norm_params,
                            weights_initializer=layers.xavier_initializer(uniform=False),
                            biases_initializer=tf.constant_initializer(0.0)
@@ -51,6 +50,7 @@ class GeneratorFactory:
                 h0 = slim.fully_connected(z,
                                           num_outputs=self.gfc_dim,
                                           scope='g_h0_lin',
+                                          activation_fn=slim.nn.relu,
                                           )
 
                 h0 = tf.concat([h0, y], 1)
@@ -58,6 +58,7 @@ class GeneratorFactory:
                 h1 = slim.fully_connected(h0,
                                           num_outputs=self.gf_dim * 2 * s_h4 * s_w4,
                                           scope='g_h1_lin',
+                                          activation_fn=slim.nn.relu,
                                           )
 
                 h1 = tf.reshape(h1, [self.batch_size, s_h4, s_w4, self.gf_dim * 2])
@@ -69,6 +70,7 @@ class GeneratorFactory:
                                            scope='g_h2',
                                            kernel_size=[5, 5],
                                            stride=2,
+                                           activation_fn=slim.nn.relu,
                                            )
 
                 h2 = conv_cond_concat(h2, yb)
@@ -78,7 +80,8 @@ class GeneratorFactory:
                                            scope='g_h3',
                                            kernel_size=[5, 5],
                                            stride=2,
-                                           normalizer_fn=None
+                                           normalizer_fn=None,
+                                           activation_fn=slim.nn.sigmoid
                                            )
 
                 return tf.identity(h3, 'generator')
