@@ -32,8 +32,8 @@ def main():
     z_dim = 100
 
     l1_ratio = 100
-    epochs = 1
-    # epochs = 5000
+    # epochs = 1
+    epochs = 5000
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
@@ -50,20 +50,12 @@ def main():
 
     network_slim = GanNetworkSlim()
     network_slim.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    # network_slim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
+    network_slim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
     network = GanNetwork()
     network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    # network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
+    network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
-    # vars:
-    with network_slim.graph.as_default():
-        d_vars_slim = slim.get_variables(scope='slim_discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
-        g_vars_slim = slim.get_variables(scope='slim_generator', collection=GraphKeys.TRAINABLE_VARIABLES)
-
-    with network.graph.as_default():
-        d_vars_orig = slim.get_variables(scope='discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
-        g_vars_orig = slim.get_variables(scope='generator', collection=GraphKeys.TRAINABLE_VARIABLES)
     print("learning has ended")
 
 
