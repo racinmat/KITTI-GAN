@@ -30,6 +30,8 @@ class GanNetworkSlim:
         self.batch_size = None
         self.z_dim = None
         self.name = name
+        self.generator_scope_name = 'generator'
+        self.discriminator_scope_name = 'discriminator'
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
                     dfc_dim):
@@ -39,11 +41,10 @@ class GanNetworkSlim:
             y = tf.placeholder(tf.float32, shape=[batch_size, y_dim], name='y')
             z = tf.placeholder(tf.float32, shape=[batch_size, z_dim], name='z')
 
-            generator_scope_name = 'slim_generator'
-            discriminator_scope_name = 'slim_discriminator'
-            G_factory = GeneratorFactory(image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim, generator_scope_name)
+            G_factory = GeneratorFactory(image_size, batch_size, y_dim, gfc_dim, gf_dim, c_dim,
+                                         self.generator_scope_name)
             D_factory = DiscriminatorFactory(image_size, batch_size, y_dim, dfc_dim, df_dim, c_dim,
-                                             discriminator_scope_name)
+                                             self.discriminator_scope_name)
             G = G_factory.create(z, y)
             sampler = G
 
@@ -76,8 +77,8 @@ class GanNetworkSlim:
             tf.summary.scalar("d_loss", d_loss)
             tf.summary.scalar("g_loss", g_loss)
 
-            d_vars = slim.get_variables(scope=discriminator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
-            g_vars = slim.get_variables(scope=generator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
+            d_vars = slim.get_variables(scope=self.discriminator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
+            g_vars = slim.get_variables(scope=self.generator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
 
             d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
             g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
@@ -220,8 +221,7 @@ class GanNetworkSlim:
             image_frame_dim = int(math.ceil(self.batch_size ** .5))
             z_sample = sample_z(self.batch_size, self.z_dim)
 
-            sampler = self.graph.get_tensor_by_name('generator/generator:0')  # this is last layer of generator layer
-            samples = self.sess.run(sampler, feed_dict={z: z_sample, y: features})
+            samples = self.sess.run(self.sampler, feed_dict={z: z_sample, y: features})
 
             if not os.path.exists(os.path.dirname(samples_dir)):
                 os.makedirs(os.path.dirname(samples_dir))

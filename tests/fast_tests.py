@@ -36,12 +36,12 @@ def network_train_test():
     learning_rate = 0.0002  # Learning rate of for adam
     beta1 = 0.5  # Momentum term of adam
 
-    sample_dir = 'tests/samples'
-    checkpoint_dir = 'tests/checkpoint'
-    logs_dir = 'tests/logs'
+    checkpoint_dir = os.path.join('tests', 'checkpoint')
+    sample_dir = os.path.join('tests', 'samples')
+    logs_dir = os.path.join('tests', 'logs')
     model_name = 'CGAN.model'
 
-    network_slim = GanNetworkSlim()
+    network_slim = GanNetworkSlim(checkpoint_dir)
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
     network_slim.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
@@ -58,7 +58,6 @@ def network_generate_test():
     z_dim = 100
 
     l1_ratio = 100
-    epochs = 1
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
@@ -67,7 +66,7 @@ def network_generate_test():
     learning_rate = 0.0002  # Learning rate of for adam
     beta1 = 0.5  # Momentum term of adam
 
-    checkpoint_dir = 'tests/checkpoint'
+    checkpoint_dir = os.path.join('tests', 'checkpoint')
 
     network = GanNetworkSlim(checkpoint_dir)
     image_size = data_set.get_image_size()
@@ -75,21 +74,10 @@ def network_generate_test():
     network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
     network.load()
 
-    # feature_vector = [0, 1, 30/100, 1, 1]
     feature_vector = [0, 1, 2.8, 30 / 100, 1, 1]
-    # feature_vector = [-0.11912173, 1.00015249, 2.87348039, 0.43911632, 1., 1.]
-    # feature_vector = [0.5, 0.1, 30/100, 0.5, 1]
-    # feature_vector = [1, 0.5, 0.1, 30/100, 0.5, 1]
     features = np.tile(feature_vector, [batch_size, 1])
-    # features = []
-    # for i in range(batch_size):
-    #     if idx is 1:
-    #         feature_vector = [1, transform_to_range(0, 36, 0, 1, i), 1, 30 / 100, 1, 1]
-    #     else:
-    #         feature_vector = [1, 1, transform_to_range(0, 36, 0, 1, i), 30 / 100, 1, 1]
-    #     features.append(feature_vector)
 
-    samples_dir = 'tests/samples_trained'
+    samples_dir = os.path.join('tests', 'samples_trained')
     suffix = 'testing'
 
     network.generate(features, samples_dir, suffix)

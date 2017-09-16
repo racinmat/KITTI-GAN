@@ -84,4 +84,4 @@ class GeneratorFactory:
                                            activation_fn=slim.nn.sigmoid
                                            )
 
-                return tf.identity(h3, 'generator')
+                return h3

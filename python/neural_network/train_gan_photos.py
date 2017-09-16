@@ -40,11 +40,11 @@ def main():
     logs_dir = os.path.join('logs', current_time)
     model_name = 'CGAN.model'
 
-    network_slim = GanNetworkSlim()
+    network_slim = GanNetworkSlim(checkpoint_dir)
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
     network_slim.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    network_slim.train(data_set, logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
+    network_slim.train(data_set, logs_dir, epochs, sample_dir, model_name)
 
     network = GanNetworkVanilla()
     network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)

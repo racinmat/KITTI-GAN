@@ -5,8 +5,6 @@ from PIL import Image
 
 def main():
     data_dir = 'data/extracted'
-    sizes_x = np.empty((1, 0))
-    sizes_y = np.empty((1, 0))
     drives = [
         'drive_0009_sync',
         'drive_0015_sync',
