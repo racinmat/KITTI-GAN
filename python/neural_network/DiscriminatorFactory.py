@@ -53,12 +53,13 @@ class DiscriminatorFactory:
 
                 h0 = conv_cond_concat(h0, yb)
 
+                # not having bias variables here because of bias adding in batch normalization, see: https://stackoverflow.com/questions/46256747/can-not-use-both-bias-and-batch-normalization-in-convolution-layers
                 h1 = slim.conv2d(h0,
                                  num_outputs=self.df_dim + self.y_dim,
                                  scope='d_h1_conv',
                                  kernel_size=[5, 5],
                                  stride=[2, 2],
-                                 activation_fn=lrelu,
+                                 activation_fn=lrelu
                                  )
 
                 h1 = tf.reshape(h1, [self.batch_size, -1])

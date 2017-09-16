@@ -86,6 +86,12 @@ class GanNetworkSlim:
             d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
             g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
 
+            # now I add all trainable variables to summary
+            trainable_vars = slim.get_variables(collection=GraphKeys.TRAINABLE_VARIABLES)
+            for variable in trainable_vars:
+                name = variable.name.split(':', 1)[0]
+                tf.summary.histogram(name, variable)
+
             sess = tf.Session(graph=g)
             sess.run(tf.global_variables_initializer())
 

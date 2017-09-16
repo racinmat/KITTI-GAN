@@ -10,7 +10,7 @@ import pickle
 from python.neural_network.GanNetwork import GanNetwork
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
-from tensorflow.python.framework.ops import GraphKeys
+from tensorflow.python.framework import ops
 
 
 def main():
@@ -50,12 +50,20 @@ def main():
 
     network_slim = GanNetworkSlim()
     network_slim.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    network_slim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
+    # network_slim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
     network = GanNetwork()
     network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
+    # network.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
+    # vars:
+    with network_slim.graph.as_default():
+        d_vars_slim = slim.get_variables(scope='slim_discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
+        g_vars_slim = slim.get_variables(scope='slim_generator', collection=GraphKeys.TRAINABLE_VARIABLES)
+
+    with network.graph.as_default():
+        d_vars_orig = slim.get_variables(scope='discriminator', collection=GraphKeys.TRAINABLE_VARIABLES)
+        g_vars_orig = slim.get_variables(scope='generator', collection=GraphKeys.TRAINABLE_VARIABLES)
     print("learning has ended")
 
 
