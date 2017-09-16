@@ -6,5 +6,5 @@ ipython==6.1.0
 ipython-genutils==0.2.0
 matplotlib==2.0.0
 Pillow==4.2.1
-numpy==1.13.1+mkl
+numpy==1.13.1
 diskcache==2.4.1
