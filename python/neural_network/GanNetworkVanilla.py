@@ -4,8 +4,7 @@ import tensorflow as tf
 import time
 from tensorflow.python.framework import ops
 import tensorflow.contrib.slim as slim
-from python.network_utils import sample_z, save_images, image_manifold_size, save, \
-    conv_cond_concat, lrelu
+from python.network_utils import sample_z, save_images, image_manifold_size, save, conv_cond_concat, lrelu
 
 
 class BatchNorm(object):
@@ -256,6 +255,24 @@ class GanNetworkVanilla:
             h3 = tf.nn.sigmoid(deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
 
             return tf.identity(h3, 'generator')
+
+    def load(self, session, checkpoint_dir):
+        import re
+        print(" [*] Loading last checkpoint")
+
+        checkpoint = tf.train.get_checkpoint_state(checkpoint_dir)
+        if checkpoint and checkpoint.model_checkpoint_path:
+            checkpoint_name = os.path.basename(checkpoint.model_checkpoint_path)
+            data_file = os.path.join(checkpoint_dir, checkpoint_name)
+            meta_file = data_file + '.meta'
+            saver = tf.train.import_meta_graph(meta_file)
+            saver.restore(session, data_file)
+            counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
+            print(" [*] Success to read {}".format(checkpoint_name))
+            return True, counter
+        else:
+            print(" [*] Failed to find a checkpoint")
+            return False, 0
 
 
 def conv2d(input_, output_dim, k_h=5, k_w=5, d_h=2, d_w=2, name="conv2d"):

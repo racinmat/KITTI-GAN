@@ -1,5 +1,4 @@
 import numpy as np
-
 from python.data_utils import tracklet_to_bounding_box
 from math import pi
 

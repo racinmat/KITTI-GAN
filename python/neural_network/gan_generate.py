@@ -50,5 +50,6 @@ def main():
         save_images(samples, [image_frame_dim, image_frame_dim], '{}/test_{}_{:d}.png'.format(samples_dir, suffix, idx))
         print("images saved to dir {}".format(samples_dir))
 
+
 if __name__ == '__main__':
     main()

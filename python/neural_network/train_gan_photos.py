@@ -1,16 +1,8 @@
-from python.neural_network.Dataset import DataSet
-import tensorflow.contrib.slim as slim
-from python.network_utils import *
 import time
-import tensorflow as tf
-import numpy as np
 import os
-import pickle
-
 from python.neural_network.GanNetworkVanilla import GanNetworkVanilla
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
-from tensorflow.python.framework import ops
 
 
 def main():
@@ -49,8 +41,10 @@ def main():
     model_name = 'CGAN.model'
 
     network_slim = GanNetworkSlim()
-    network_slim.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    network_slim.train(logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
+    image_size = data_set.get_image_size()
+    y_dim = data_set.get_labels_dim()
+    network_slim.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
+    network_slim.train(data_set, logs_dir, epochs, sample_dir, checkpoint_dir, model_name)
 
     network = GanNetworkVanilla()
     network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)

@@ -3,7 +3,7 @@ import pickle
 from PIL import Image
 
 
-if __name__ == '__main__':
+def main():
     data_dir = 'data/extracted'
     sizes_x = np.empty((1, 0))
     sizes_y = np.empty((1, 0))
@@ -55,3 +55,7 @@ if __name__ == '__main__':
         pickle.dump(data, file)
         print("data written to file: " + filename)
         file.close()
+
+
+if __name__ == '__main__':
+    main()

@@ -11,7 +11,7 @@ This file gives more information about the KITTI raw data recordings.
 General information about streams and timestamps
 ================================================
 
-Each sensor stream is stored in a single folder. The main folder contains
+Each sensor stream is stored in a single folder. The extract_data folder contains
 meta information and a timestamp file, listing the timestamp of each frame
 of the sequence to nanosecond precision. Numbers in the data stream correspond
 to each numbers in each other data stream and to line numbers in the

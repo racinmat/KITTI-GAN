@@ -1,18 +1,18 @@
 import os
 import numpy as np
-import scipy.misc
 import tensorflow as tf
 import time
 from tensorflow.python.framework.ops import GraphKeys
 import tensorflow.contrib.slim as slim
-
 from python.network_utils import sample_z, save_images, image_manifold_size, save
 from python.neural_network.DiscriminatorFactory import DiscriminatorFactory
 from python.neural_network.GeneratorFactory import GeneratorFactory
+import math
 
 
 class GanNetworkSlim:
-    def __init__(self, name='gan_slim'):
+    def __init__(self, checkpoint_dir, name='gan_slim'):
+        self.checkpoint_dir = checkpoint_dir
         self.graph = None
         self.d_optim = None
         self.g_optim = None
@@ -29,14 +29,10 @@ class GanNetworkSlim:
         self.image_size = None
         self.batch_size = None
         self.z_dim = None
-        self.data_set = None
         self.name = name
 
-    def build_model(self, data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
+    def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
                     dfc_dim):
-        image_size = data_set.get_image_size()
-        y_dim = data_set.get_labels_dim()
-
         g = tf.Graph()
         with g.as_default():
             x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
@@ -112,9 +108,8 @@ class GanNetworkSlim:
             self.image_size = image_size
             self.batch_size = batch_size
             self.z_dim = z_dim
-            self.data_set = data_set
 
-    def train(self, logs_dir, epochs, sample_dir, checkpoint_dir, model_name):
+    def train(self, data_set, logs_dir, epochs, sample_dir, model_name):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
             print("creating logs dir for training: " + logs_dir)
@@ -129,9 +124,9 @@ class GanNetworkSlim:
 
             print("Starting to learn for {} epochs.".format(epochs))
             for epoch in range(epochs):
-                num_batches = int(self.data_set.num_batches(self.batch_size))
+                num_batches = int(data_set.num_batches(self.batch_size))
                 for i in range(num_batches):
-                    x_batch, y_batch = self.data_set.next_batch(self.batch_size)
+                    x_batch, y_batch = data_set.next_batch(self.batch_size)
                     z_batch = sample_z(self.batch_size, self.z_dim)
 
                     # Update D network
@@ -190,9 +185,47 @@ class GanNetworkSlim:
                             raise e
 
                     if np.mod(counter, 800) == 2:
-                        save(checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
+                        save(self.checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
                         print("saved after {}. iteration".format(counter))
 
             writer.flush()
             writer.close()
-            save(checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
+            save(self.checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
+
+    def load(self):
+        import re
+        print(" [*] Loading last checkpoint")
+
+        checkpoint = tf.train.get_checkpoint_state(self.checkpoint_dir)
+        if checkpoint and checkpoint.model_checkpoint_path:
+            checkpoint_name = os.path.basename(checkpoint.model_checkpoint_path)
+            data_file = os.path.join(self.checkpoint_dir, checkpoint_name)
+            meta_file = data_file + '.meta'
+            saver = tf.train.import_meta_graph(meta_file)
+            saver.restore(self.sess, data_file)
+            counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
+            print(" [*] Success to read {}".format(checkpoint_name))
+            return True, counter
+        else:
+            print(" [*] Failed to find a checkpoint")
+            return False, 0
+
+    def generate(self, features, samples_dir, suffix):
+        z = self.graph.get_tensor_by_name('z:0')
+        y = self.graph.get_tensor_by_name('y:0')
+
+        # samples
+        samples_num = 1
+        for idx in range(samples_num):
+            image_frame_dim = int(math.ceil(self.batch_size ** .5))
+            z_sample = sample_z(self.batch_size, self.z_dim)
+
+            sampler = self.graph.get_tensor_by_name('generator/generator:0')  # this is last layer of generator layer
+            samples = self.sess.run(sampler, feed_dict={z: z_sample, y: features})
+
+            if not os.path.exists(os.path.dirname(samples_dir)):
+                os.makedirs(os.path.dirname(samples_dir))
+
+            save_images(samples, [image_frame_dim, image_frame_dim],
+                        '{}/test_{}_{:d}.png'.format(samples_dir, suffix, idx))
+            print("images saved to dir {}".format(samples_dir))
