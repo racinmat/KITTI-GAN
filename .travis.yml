@@ -5,13 +5,16 @@ python:
   - "3.5"
 # command to install dependencies
 install:
-  - pip install -r requirements.txt
+  - sudo apt-get install python3-pip python3-dev
+  - pip3 install tensorflow
+  - pip3 install -r requirements.txt
   # install TensorFlow from https://storage.googleapis.com/tensorflow/
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then
-      pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.3.0-cp34-cp34m-linux_x86_64.whl;
-    elif [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
-      pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.3.0-cp35-cp35m-linux_x86_64.whl;
-    fi
+#  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then
+#      pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.3.0-cp34-cp34m-linux_x86_64.whl;
+#    elif [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+#      pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.3.0-cp35-cp35m-linux_x86_64.whl;
+#    fi
+
 
 before_script:
   export PYTHONPATH=$PYTHONPATH:$(pwd)
