@@ -9,6 +9,7 @@ from python.network_utils import generator, discriminator, sample_z, save_images
 
 class GanNetwork:
     def __init__(self):
+        self.graph = None
         self.d_optim = None
         self.g_optim = None
         self.summ = None
@@ -79,6 +80,7 @@ class GanNetwork:
 
             # merge_all zmerguje všechno z obou sítí, je třeba to oddělit., nějak přes ops.get_collection.
             summ = tf.summary.merge_all()
+            self.graph = g
             self.d_optim = d_optim
             self.g_optim = g_optim
             self.summ = summ
@@ -96,84 +98,83 @@ class GanNetwork:
             self.z_dim = z_dim
             self.data_set = data_set
 
-    def train(self, logs_dir, epochs, sample_dir, checkpoint_dir,
-              model_name):
-
+    def train(self, logs_dir, epochs, sample_dir, checkpoint_dir, model_name):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
 
-        writer = tf.summary.FileWriter(logs_dir, tf.get_default_graph())
+        with self.graph.as_default():
+            writer = tf.summary.FileWriter(logs_dir, tf.get_default_graph())
 
-        saver = tf.train.Saver()
+            saver = tf.train.Saver()
 
-        counter = 0
-        start_time = time.time()
+            counter = 0
+            start_time = time.time()
 
-        print("Starting to learn for {} epochs.".format(epochs))
-        for epoch in range(epochs):
-            num_batches = int(self.data_set.num_batches(self.batch_size))
-            for i in range(num_batches):
-                x_batch, y_batch = self.data_set.next_batch(self.batch_size)
-                z_batch = sample_z(self.batch_size, self.z_dim)
+            print("Starting to learn for {} epochs.".format(epochs))
+            for epoch in range(epochs):
+                num_batches = int(self.data_set.num_batches(self.batch_size))
+                for i in range(num_batches):
+                    x_batch, y_batch = self.data_set.next_batch(self.batch_size)
+                    z_batch = sample_z(self.batch_size, self.z_dim)
 
-                # Update D network
-                _, errD_fake, errD_real = self.sess.run([self.d_optim, self.d_loss_fake, self.d_loss_real], feed_dict={
-                    self.x: x_batch,
-                    self.y: y_batch,
-                    self.z: z_batch,
-                })
+                    # Update D network
+                    _, errD_fake, errD_real = self.sess.run([self.d_optim, self.d_loss_fake, self.d_loss_real], feed_dict={
+                        self.x: x_batch,
+                        self.y: y_batch,
+                        self.z: z_batch,
+                    })
 
-                # Update G network
-                _ = self.sess.run([self.g_optim], feed_dict={
-                    self.x: x_batch,
-                    self.y: y_batch,
-                    self.z: z_batch,
-                })
+                    # Update G network
+                    _ = self.sess.run([self.g_optim], feed_dict={
+                        self.x: x_batch,
+                        self.y: y_batch,
+                        self.z: z_batch,
+                    })
 
-                # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
-                _, errG = self.sess.run([self.g_optim, self.g_loss], feed_dict={
-                    self.x: x_batch,
-                    self.y: y_batch,
-                    self.z: z_batch,
-                })
+                    # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
+                    _, errG = self.sess.run([self.g_optim, self.g_loss], feed_dict={
+                        self.x: x_batch,
+                        self.y: y_batch,
+                        self.z: z_batch,
+                    })
 
-                # run summary of all
-                summary_str = self.sess.run(self.summ, feed_dict={
-                    self.x: x_batch,
-                    self.y: y_batch,
-                    self.z: z_batch,
-                })
-                writer.add_summary(summary_str, counter)
+                    # run summary of all
+                    summary_str = self.sess.run(self.summ, feed_dict={
+                        self.x: x_batch,
+                        self.y: y_batch,
+                        self.z: z_batch,
+                    })
+                    writer.add_summary(summary_str, counter)
 
-                counter += 1
-                summary_string = "Epoch: {:2d} {:2d}/{:2d} counter: {:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}"
-                print(summary_string.format(epoch, i, num_batches, counter, time.time() - start_time,
-                                            errD_fake + errD_real,
-                                            errG))
+                    counter += 1
+                    summary_string = "Epoch: {:2d} {:2d}/{:2d} counter: {:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}"
+                    print(summary_string.format(epoch, i, num_batches, counter, time.time() - start_time,
+                                                errD_fake + errD_real,
+                                                errG))
 
-                if np.mod(counter, 100) == 1:
-                    try:
-                        samples = self.sess.run(self.sampler, feed_dict={
-                            self.y: y_batch,
-                            self.z: z_batch,
-                        })
-                        d_loss_val, g_loss_val = self.sess.run([self.d_loss, self.g_loss], feed_dict={
-                            self.x: x_batch,
-                            self.y: y_batch,
-                            self.z: z_batch,
-                        })
-                        save_images(samples, image_manifold_size(samples.shape[0]),
-                                    './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
-                        print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss_val, g_loss_val))
-                    except Exception as e:
-                        print("pic saving error:")
-                        print(e)
-                        raise e
+                    if np.mod(counter, 100) == 1:
+                        try:
+                            samples = self.sess.run(self.sampler, feed_dict={
+                                self.y: y_batch,
+                                self.z: z_batch,
+                            })
+                            d_loss_val, g_loss_val = self.sess.run([self.d_loss, self.g_loss], feed_dict={
+                                self.x: x_batch,
+                                self.y: y_batch,
+                                self.z: z_batch,
+                            })
+                            save_images(samples, image_manifold_size(samples.shape[0]),
+                                        './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
+                            print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss_val, g_loss_val))
+                        except Exception as e:
+                            print("pic saving error:")
+                            print(e)
+                            raise e
 
-                if np.mod(counter, 800) == 2:
-                    save(checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
-                    print("saved after {}. iteration".format(counter))
+                    if np.mod(counter, 800) == 2:
+                        save(checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
+                        print("saved after {}. iteration".format(counter))
 
-        writer.flush()
-        writer.close()
-        save(checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
+            writer.flush()
+            writer.close()
+            save(checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)

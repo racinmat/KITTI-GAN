@@ -15,7 +15,8 @@ def xavier_init(size):
 
 def conv_cond_concat(x, y):
     """Concatenate conditioning vector on feature map axis."""
-    # this propagates labels to other layers of neural network, probably according to https://arxiv.org/pdf/1611.01455.pdf
+    # this propagates labels to other layers of neural network,
+    # probably according to https://arxiv.org/pdf/1611.01455.pdf
     x_shapes = x.get_shape()
     y_shapes = y.get_shape()
     return tf.concat([
@@ -272,7 +273,7 @@ def build_gan(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, lea
     # L1 added from https://github.com/awjuliani/Pix2Pix-Film/blob/master/Pix2Pix.ipynb
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake))) + \
-               l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
+             l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
 
     tf.summary.scalar("d_loss_real", d_loss_real)
     tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -298,7 +299,6 @@ def build_gan(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, lea
 def train_network(logs_dir, epochs, batch_size, z_dim, sess, d_optim, g_optim, d_loss_fake,
                   d_loss_real, x, y, z, data_set, d_loss, g_loss, summ, sampler, sample_dir, checkpoint_dir,
                   image_size, model_name):
-
     if not os.path.exists(os.path.dirname(logs_dir)):
         os.makedirs(os.path.dirname(logs_dir))
 

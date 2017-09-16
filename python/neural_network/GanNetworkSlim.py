@@ -79,10 +79,8 @@ class GanNetworkSlim:
             tf.summary.scalar("d_loss", d_loss)
             tf.summary.scalar("g_loss", g_loss)
 
-            d_vars = slim.get_variables(scope=self.scope_name + '/' + discriminator_scope_name,
-                                        collection=GraphKeys.TRAINABLE_VARIABLES)
-            g_vars = slim.get_variables(scope=self.scope_name + '/' + generator_scope_name,
-                                        collection=GraphKeys.TRAINABLE_VARIABLES)
+            d_vars = slim.get_variables(scope=discriminator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
+            g_vars = slim.get_variables(scope=generator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
 
             d_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
             g_optim = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
