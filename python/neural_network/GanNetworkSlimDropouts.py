@@ -16,9 +16,10 @@ from python.network_utils import conv_cond_concat, lrelu
 class GanNetworkSlimDropouts(AbstractNetwork):
     def __init__(self, checkpoint_dir, name='gan_slim_'):
         super().__init__(checkpoint_dir, name)
+        self.dropout_rate = None
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
-                    dfc_dim, smooth = 0):
+                    dfc_dim, dropout_rate=0.5):
         g = tf.Graph()
 
         self.y_dim = y_dim
@@ -27,6 +28,7 @@ class GanNetworkSlimDropouts(AbstractNetwork):
         self.dfc_dim = dfc_dim
         self.gfc_dim = gfc_dim
         self.c_dim = c_dim
+        self.dropout_rate = dropout_rate
 
         with g.as_default():
             x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
@@ -264,7 +266,6 @@ class GanNetworkSlimDropouts(AbstractNetwork):
 
                 return tf.nn.sigmoid(h3), h3
 
-
     def create_generator(self, z, y, scope_name, is_training=True, reuse=False):
         with tf.variable_scope(scope_name) as scope:
             if reuse:
@@ -309,6 +310,8 @@ class GanNetworkSlimDropouts(AbstractNetwork):
                                           scope='g_h1_lin',
                                           activation_fn=slim.nn.relu,
                                           )
+
+                h1 = slim.dropout(h1, 1 - self.dropout_rate)
 
                 h1 = tf.reshape(h1, [self.batch_size, s_h4, s_w4, self.gf_dim * 2])
 
