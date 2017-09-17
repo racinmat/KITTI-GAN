@@ -29,6 +29,9 @@ class GanNetworkSlimDropouts(AbstractNetwork):
         self.gfc_dim = gfc_dim
         self.c_dim = c_dim
         self.dropout_rate = dropout_rate
+        self.image_size = image_size
+        self.batch_size = batch_size
+        self.z_dim = z_dim
 
         with g.as_default():
             x = tf.placeholder(tf.float32, shape=[batch_size, image_size[0], image_size[1], c_dim], name='x')
@@ -98,9 +101,6 @@ class GanNetworkSlimDropouts(AbstractNetwork):
             self.z = z
             self.d_loss = d_loss
             self.g_loss = g_loss
-            self.image_size = image_size
-            self.batch_size = batch_size
-            self.z_dim = z_dim
 
     def train(self, data_set, logs_dir, epochs, sample_dir):
         if not os.path.exists(os.path.dirname(logs_dir)):
