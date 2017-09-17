@@ -1,7 +1,5 @@
-import time
 import os
 from python.neural_network.Dataset import DataSet
-from python.neural_network.GanNetworkVanilla import GanNetworkVanilla
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 import numpy as np
 import pickle
