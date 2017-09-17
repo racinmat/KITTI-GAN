@@ -35,8 +35,8 @@ co více učení najednou, mám pouštět nebo je lepší postupně?
 vyzkoušet one sided label smoothing
 
 
-napsat test sítě na pár obrázků, že síť nespadne
-napsat test sítě na mnist
+done - napsat test sítě na pár obrázků, že síť nespadne
+done - napsat test sítě na mnist
 assert na loss pod nějakou hodnotou - u sítě udělat, aby si někam po trénování uložila loss
 síť pouštět přes cmd, a z testů z cmd s parametry
 python -m unittest discover
@@ -52,7 +52,7 @@ zkusit tanh jako poslední vrstvu
 use spherical z, instead of uniform distribution
 leaky relu všude, místo běžného relu!
 
-learning rate: 0.002 pro ADAM
+learning rate: 0.0002 pro ADAM
 vyzkoušet: ADAM pro generátor, SGD pro diskriminátor
 další tip: s jistou prpstí prohodit label u discriminatoru
 

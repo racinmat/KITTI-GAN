@@ -46,3 +46,4 @@ trained: na serveru:
     1503492560 - naučeno, 10000 epoch, barevné fotky
     1503666003 - naučeno, 5000 epoch, GAN + L1 loss, barevné fotky, batch size 36
     1503735680 - naučeno, 1000 epoch, GAN + L1 loss, lidar data, batch size 64
+    1505674290 - učí se, 5000 epoch, barevné fotky, GAN + L1 loss, ratio 100
