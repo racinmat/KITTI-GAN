@@ -5,33 +5,15 @@ import time
 from tensorflow.python.framework.ops import GraphKeys
 import tensorflow.contrib.slim as slim
 from python.network_utils import sample_z, save_images, image_manifold_size, save
+from python.neural_network.AbstractNetwork import AbstractNetwork
 from python.neural_network.DiscriminatorFactory import DiscriminatorFactory
 from python.neural_network.GeneratorFactory import GeneratorFactory
 import math
 
 
-class GanNetworkSlim:
+class GanNetworkSlim(AbstractNetwork):
     def __init__(self, checkpoint_dir, name='gan_slim'):
-        self.checkpoint_dir = checkpoint_dir
-        self.graph = None
-        self.d_optim = None
-        self.g_optim = None
-        self.summ = None
-        self.sampler = None
-        self.sess = None
-        self.d_loss_fake = None
-        self.d_loss_real = None
-        self.x = None
-        self.y = None
-        self.z = None
-        self.d_loss = None
-        self.g_loss = None
-        self.image_size = None
-        self.batch_size = None
-        self.z_dim = None
-        self.name = name
-        self.generator_scope_name = 'generator'
-        self.discriminator_scope_name = 'discriminator'
+        super().__init__(checkpoint_dir, name)
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
                     dfc_dim):
@@ -110,15 +92,13 @@ class GanNetworkSlim:
             self.batch_size = batch_size
             self.z_dim = z_dim
 
-    def train(self, data_set, logs_dir, epochs, sample_dir, model_name):
+    def train(self, data_set, logs_dir, epochs, sample_dir):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
             print("creating logs dir for training: " + logs_dir)
 
         with self.graph.as_default():
             writer = tf.summary.FileWriter(os.path.join(logs_dir, self.name), tf.get_default_graph())
-
-            saver = tf.train.Saver()
 
             counter = 0
             start_time = time.time()
@@ -186,30 +166,12 @@ class GanNetworkSlim:
                             raise e
 
                     if np.mod(counter, 800) == 2:
-                        save(self.checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
+                        self.save(counter)
                         print("saved after {}. iteration".format(counter))
 
             writer.flush()
             writer.close()
-            save(self.checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
-
-    def load(self):
-        import re
-        print(" [*] Loading last checkpoint")
-
-        checkpoint = tf.train.get_checkpoint_state(self.checkpoint_dir)
-        if checkpoint and checkpoint.model_checkpoint_path:
-            checkpoint_name = os.path.basename(checkpoint.model_checkpoint_path)
-            data_file = os.path.join(self.checkpoint_dir, checkpoint_name)
-            meta_file = data_file + '.meta'
-            saver = tf.train.import_meta_graph(meta_file)
-            saver.restore(self.sess, data_file)
-            counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
-            print(" [*] Success to read {}".format(checkpoint_name))
-            return True, counter
-        else:
-            print(" [*] Failed to find a checkpoint")
-            return False, 0
+            self.save(counter)
 
     def generate(self, features, samples_dir, suffix):
         z = self.graph.get_tensor_by_name('z:0')

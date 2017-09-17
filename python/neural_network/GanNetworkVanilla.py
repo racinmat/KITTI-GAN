@@ -5,6 +5,7 @@ import time
 from tensorflow.python.framework import ops
 import tensorflow.contrib.slim as slim
 from python.network_utils import sample_z, save_images, image_manifold_size, save, conv_cond_concat, lrelu
+from python.neural_network.AbstractNetwork import AbstractNetwork
 
 
 class BatchNorm(object):
@@ -24,31 +25,12 @@ class BatchNorm(object):
                                             scope=self.name)
 
 
-class GanNetworkVanilla:
-    def __init__(self, name='gan_vanilla'):
-        self.graph = None
-        self.d_optim = None
-        self.g_optim = None
-        self.summ = None
-        self.sampler = None
-        self.sess = None
-        self.d_loss_fake = None
-        self.d_loss_real = None
-        self.x = None
-        self.y = None
-        self.z = None
-        self.d_loss = None
-        self.g_loss = None
-        self.image_size = None
-        self.batch_size = None
-        self.z_dim = None
-        self.data_set = None
-        self.name = name
+class GanNetworkVanilla(AbstractNetwork):
+    def __init__(self, checkpoint_dir, name='gan_vanilla'):
+        super().__init__(checkpoint_dir, name)
 
-    def build_model(self, data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
+    def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
                     dfc_dim):
-        image_size = data_set.get_image_size()
-        y_dim = data_set.get_labels_dim()
 
         # with this, I can use multiple graphs in single process
         g = tf.Graph()
@@ -114,9 +96,8 @@ class GanNetworkVanilla:
             self.image_size = image_size
             self.batch_size = batch_size
             self.z_dim = z_dim
-            self.data_set = data_set
 
-    def train(self, logs_dir, epochs, sample_dir, checkpoint_dir, model_name):
+    def train(self, data_set, logs_dir, epochs, sample_dir):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
             print("creating logs dir for training: " + logs_dir)
@@ -131,9 +112,9 @@ class GanNetworkVanilla:
 
             print("Starting to learn for {} epochs.".format(epochs))
             for epoch in range(epochs):
-                num_batches = int(self.data_set.num_batches(self.batch_size))
+                num_batches = int(data_set.num_batches(self.batch_size))
                 for i in range(num_batches):
-                    x_batch, y_batch = self.data_set.next_batch(self.batch_size)
+                    x_batch, y_batch = data_set.next_batch(self.batch_size)
                     z_batch = sample_z(self.batch_size, self.z_dim)
 
                     # Update D network
@@ -191,12 +172,12 @@ class GanNetworkVanilla:
                             raise e
 
                     if np.mod(counter, 800) == 2:
-                        save(checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
+                        self.save(counter)
                         print("saved after {}. iteration".format(counter))
 
             writer.flush()
             writer.close()
-            save(checkpoint_dir, counter, self.batch_size, self.image_size, saver, self.sess, model_name)
+            self.save(counter)
 
     @staticmethod
     def discriminator(x, y, batch_size, y_dim, c_dim, df_dim, dfc_dim, reuse=False):
@@ -255,24 +236,6 @@ class GanNetworkVanilla:
             h3 = tf.nn.sigmoid(deconv2d(h2, [batch_size, s_h, s_w, c_dim], name='g_h3'))
 
             return tf.identity(h3, 'generator')
-
-    def load(self, session, checkpoint_dir):
-        import re
-        print(" [*] Loading last checkpoint")
-
-        checkpoint = tf.train.get_checkpoint_state(checkpoint_dir)
-        if checkpoint and checkpoint.model_checkpoint_path:
-            checkpoint_name = os.path.basename(checkpoint.model_checkpoint_path)
-            data_file = os.path.join(checkpoint_dir, checkpoint_name)
-            meta_file = data_file + '.meta'
-            saver = tf.train.import_meta_graph(meta_file)
-            saver.restore(session, data_file)
-            counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
-            print(" [*] Success to read {}".format(checkpoint_name))
-            return True, counter
-        else:
-            print(" [*] Failed to find a checkpoint")
-            return False, 0
 
 
 def conv2d(input_, output_dim, k_h=5, k_w=5, d_h=2, d_w=2, name="conv2d"):
