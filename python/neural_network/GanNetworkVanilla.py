@@ -4,7 +4,7 @@ import tensorflow as tf
 import time
 from tensorflow.python.framework import ops
 import tensorflow.contrib.slim as slim
-from python.network_utils import sample_z, save_images, image_manifold_size, save, conv_cond_concat, lrelu
+from python.network_utils import sample_z, save_images, image_manifold_size, conv_cond_concat, lrelu
 from python.neural_network.AbstractNetwork import AbstractNetwork
 
 

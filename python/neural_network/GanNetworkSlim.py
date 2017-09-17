@@ -4,7 +4,7 @@ import tensorflow as tf
 import time
 from tensorflow.python.framework.ops import GraphKeys
 import tensorflow.contrib.slim as slim
-from python.network_utils import sample_z, save_images, image_manifold_size, save
+from python.network_utils import sample_z, save_images, image_manifold_size
 from python.neural_network.AbstractNetwork import AbstractNetwork
 from python.neural_network.DiscriminatorFactory import DiscriminatorFactory
 from python.neural_network.GeneratorFactory import GeneratorFactory

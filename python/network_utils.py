@@ -44,23 +44,6 @@ def merge(images, size):
                          'must have dimensions: HxW or HxWx3 or HxWx4')
 
 
-def model_dir(batch_size, image_size):
-    return "{}_{}_{}_{}".format(
-        'KITTI', batch_size,
-        image_size[1], image_size[0])
-
-
-def save(checkpoint_dir, step, batch_size, image_size, saver, sess, model_name):
-    checkpoint_dir = os.path.join(checkpoint_dir, model_dir(batch_size, image_size))
-
-    if not os.path.exists(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
-
-    saver.save(sess,
-               os.path.join(checkpoint_dir, model_name),
-               global_step=step)
-
-
 def imsave(images, size, path):
     image = np.squeeze(merge(images, size))
     return scipy.misc.imsave(path, image)
@@ -86,23 +69,4 @@ def image_manifold_size(num_images):
     manifold_w = int(np.ceil(np.sqrt(num_images)))
     assert manifold_h * manifold_w == num_images
     return manifold_h, manifold_w
-
-
-def load(session, checkpoint_dir):
-    import re
-    print(" [*] Loading last checkpoint")
-
-    checkpoint = tf.train.get_checkpoint_state(checkpoint_dir)
-    if checkpoint and checkpoint.model_checkpoint_path:
-        checkpoint_name = os.path.basename(checkpoint.model_checkpoint_path)
-        data_file = os.path.join(checkpoint_dir, checkpoint_name)
-        meta_file = data_file + '.meta'
-        saver = tf.train.import_meta_graph(meta_file)
-        saver.restore(session, data_file)
-        counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
-        print(" [*] Success to read {}".format(checkpoint_name))
-        return True, counter
-    else:
-        print(" [*] Failed to find a checkpoint")
-        return False, 0
 

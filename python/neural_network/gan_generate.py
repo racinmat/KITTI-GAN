@@ -6,14 +6,6 @@ from python.neural_network.GanNetworkSlim import GanNetworkSlim
 
 
 def main():
-    network_name = '1503666003/KITTI_36_32_32'
-    checkpoint_dir = os.path.join('./checkpoint', network_name)
-    samples_dir = os.path.join('./samples_trained', network_name)
-    suffix = 'fixed_features_fabricated'
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
-    load(sess, checkpoint_dir)
-
     batch_size = 36
     z_dim = 100
 
@@ -31,11 +23,15 @@ def main():
     network = GanNetworkSlim(checkpoint_dir)
     image_size = (32, 32)
     y_dim = 6
-    network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
+    network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
+                        beta1, df_dim, dfc_dim)
     network.load()
 
     feature_vector = [0, 1, 2.8, 30 / 100, 1, 1]
     features = np.tile(feature_vector, [batch_size, 1])
+
+    samples_dir = os.path.join('tests', 'samples_trained')
+    suffix = 'testing'
 
     network.generate(features, samples_dir, suffix)
 
