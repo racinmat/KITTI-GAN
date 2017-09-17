@@ -54,7 +54,7 @@ class GanTest(unittest.TestCase):
         image_size = data_set.get_image_size()
         y_dim = data_set.get_labels_dim()
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
-                            beta1, df_dim, dfc_dim)
+                            beta1, df_dim, dfc_dim, smooth=0.1)
         network.train(data_set, logs_dir, epochs, sample_dir)
         self.assert_files_created('gan_slim_label_smoothing')
 
@@ -62,7 +62,7 @@ class GanTest(unittest.TestCase):
         image_size = data_set.get_image_size()
         y_dim = data_set.get_labels_dim()
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
-                            beta1, df_dim, dfc_dim)
+                            beta1, df_dim, dfc_dim, dropout_rate=0.5)
         network.train(data_set, logs_dir, epochs, sample_dir)
         self.assert_files_created('gan_slim_dropouts')
 

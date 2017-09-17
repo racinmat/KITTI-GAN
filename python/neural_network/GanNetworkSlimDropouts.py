@@ -51,7 +51,7 @@ class GanNetworkSlimDropouts(AbstractNetwork):
 
             # smoothing is applied only on discriminator: https://medium.com/towards-data-science/gan-introduction-and-implementation-part1-implement-a-simple-gan-in-tf-for-mnist-handwritten-de00a759ae5c
             d_loss_real = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real) * (1 - smooth)))
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
             d_loss_fake = tf.reduce_mean(
                 tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.zeros_like(D_fake)))
             # g_loss = tf.reduce_mean(

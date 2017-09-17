@@ -262,7 +262,6 @@ class GanNetworkSlim(AbstractNetwork):
 
                 return tf.nn.sigmoid(h3), h3
 
-
     def create_generator(self, z, y, scope_name, is_training=True, reuse=False):
         with tf.variable_scope(scope_name) as scope:
             if reuse:
