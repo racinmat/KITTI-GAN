@@ -4,7 +4,7 @@ import tensorflow as tf
 import time
 from tensorflow.python.framework.ops import GraphKeys
 import tensorflow.contrib.slim as slim
-from python.network_utils import sample_z, save_images, image_manifold_size
+from python.network_utils import sample_z_uniform, save_images, image_manifold_size
 from python.neural_network.AbstractNetwork import AbstractNetwork
 from python.neural_network.DiscriminatorFactory import DiscriminatorFactory
 from python.neural_network.GeneratorFactory import GeneratorFactory
@@ -109,7 +109,7 @@ class GanNetworkSlim(AbstractNetwork):
                 num_batches = int(data_set.num_batches(self.batch_size))
                 for i in range(num_batches):
                     x_batch, y_batch = data_set.next_batch(self.batch_size)
-                    z_batch = sample_z(self.batch_size, self.z_dim)
+                    z_batch = sample_z_uniform(self.batch_size, self.z_dim)
 
                     # Update D network
                     _, errD_fake, errD_real = self.sess.run([self.d_optim, self.d_loss_fake, self.d_loss_real],
@@ -182,7 +182,7 @@ class GanNetworkSlim(AbstractNetwork):
         samples_num = 1
         for idx in range(samples_num):
             image_frame_dim = int(math.ceil(self.batch_size ** .5))
-            z_sample = sample_z(self.batch_size, self.z_dim)
+            z_sample = sample_z_uniform(self.batch_size, self.z_dim)
 
             samples = self.sess.run(self.sampler, feed_dict={z: z_sample, y: features})
 

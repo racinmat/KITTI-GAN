@@ -15,7 +15,8 @@ def main():
     ]
 
     input_prefix = 'tracklets_photos_normalized_'
-    resolution = (32, 32)
+    # resolution = (32, 32)
+    resolution = (64, 64)
 
     data_set = load_data(resolution, drives, input_prefix, data_dir)
 
@@ -24,7 +25,6 @@ def main():
     z_dim = 100
 
     l1_ratio = 100
-    # epochs = 1
     epochs = 5000
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
@@ -44,10 +44,6 @@ def main():
     y_dim = data_set.get_labels_dim()
     network_slim.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
     network_slim.train(data_set, logs_dir, epochs, sample_dir)
-
-    network = GanNetworkVanilla(checkpoint_dir)
-    network.build_model(data_set, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    network.train(logs_dir, epochs, sample_dir, sample_dir)
 
     print("learning has ended")
 

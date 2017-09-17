@@ -1,6 +1,6 @@
 import os
 import tensorflow as tf
-from python.network_utils import sample_z, save_images
+from python.network_utils import sample_z_uniform, save_images
 import math
 
 
@@ -74,7 +74,7 @@ class AbstractNetwork:
         samples_num = 1
         for idx in range(samples_num):
             image_frame_dim = int(math.ceil(self.batch_size ** .5))
-            z_sample = sample_z(self.batch_size, self.z_dim)
+            z_sample = sample_z_uniform(self.batch_size, self.z_dim)
 
             samples = self.sess.run(self.sampler, feed_dict={z: z_sample, y: features})
 

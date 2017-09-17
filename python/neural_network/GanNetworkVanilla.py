@@ -4,7 +4,7 @@ import tensorflow as tf
 import time
 from tensorflow.python.framework import ops
 import tensorflow.contrib.slim as slim
-from python.network_utils import sample_z, save_images, image_manifold_size, conv_cond_concat, lrelu
+from python.network_utils import sample_z_uniform, save_images, image_manifold_size, conv_cond_concat, lrelu
 from python.neural_network.AbstractNetwork import AbstractNetwork
 
 
@@ -116,7 +116,7 @@ class GanNetworkVanilla(AbstractNetwork):
                 num_batches = int(data_set.num_batches(self.batch_size))
                 for i in range(num_batches):
                     x_batch, y_batch = data_set.next_batch(self.batch_size)
-                    z_batch = sample_z(self.batch_size, self.z_dim)
+                    z_batch = sample_z_uniform(self.batch_size, self.z_dim)
 
                     # Update D network
                     _, errD_fake, errD_real = self.sess.run([self.d_optim, self.d_loss_fake, self.d_loss_real], feed_dict={

@@ -18,8 +18,13 @@ def lrelu(x, leak=0.2, name="lrelu"):
     return tf.maximum(x, leak * x, name=name)
 
 
-def sample_z(m, n):
+def sample_z_uniform(m, n):
     return np.random.uniform(-1., 1., size=[m, n])
+
+
+def sample_z_normal(m, n):
+    # used normal distribution parameters from https://github.com/hanzhanggit/StackGAN/blob/master/examples/framework.png
+    return np.random.normal(0., 1., size=[m, n])
 
 
 def merge(images, size):

@@ -1,8 +1,4 @@
-import os
-import pickle
-import numpy as np
 import matplotlib.pyplot as plt
-
 from python.data_utils import load_features
 
 if __name__ == '__main__':
@@ -25,6 +21,7 @@ if __name__ == '__main__':
 
     features = load_features(input_prefix, resolution, input_suffix)
 
+    print('total samples: ' + str(len(features)))
     nbins = 500
     fig = plt.figure()
     for i in range(features.shape[1]):
