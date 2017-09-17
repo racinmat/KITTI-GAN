@@ -1,7 +1,7 @@
 import time
 import os
 
-from python.neural_network.GanNetworkSlimOneSidedLabel import GanNetworkSlimOneSidedLabel
+from python.neural_network.GanNetworkSlimLabelSmoothing import GanNetworkSlimLabelSmoothing
 from python.neural_network.GanNetworkVanilla import GanNetworkVanilla
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
@@ -42,7 +42,7 @@ def main():
     checkpoint_dir = os.path.join('checkpoint', current_time)  # Directory name to save the checkpoints
     logs_dir = os.path.join('logs', current_time)
 
-    network_slim = GanNetworkSlimOneSidedLabel(checkpoint_dir)
+    network_slim = GanNetworkSlimLabelSmoothing(checkpoint_dir)
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
     network_slim.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim, smooth)

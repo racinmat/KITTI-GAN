@@ -12,12 +12,13 @@ from tensorflow.contrib.slim import arg_scope
 from python.network_utils import conv_cond_concat, lrelu
 
 
-class GanNetworkSlim(AbstractNetwork):
-    def __init__(self, checkpoint_dir, name='gan_slim'):
+# with one sided label smoothing
+class GanNetworkSlimLabelSmoothing(AbstractNetwork):
+    def __init__(self, checkpoint_dir, name='gan_slim_label_smoothing'):
         super().__init__(checkpoint_dir, name)
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
-                    dfc_dim):
+                    dfc_dim, smooth=0):
         g = tf.Graph()
 
         self.y_dim = y_dim
@@ -43,8 +44,9 @@ class GanNetworkSlim(AbstractNetwork):
             tf.summary.histogram("d_fake", D_fake)
             tf.summary.image("g", G)
 
+            # smoothing is applied only on discriminator: https://medium.com/towards-data-science/gan-introduction-and-implementation-part1-implement-a-simple-gan-in-tf-for-mnist-handwritten-de00a759ae5c
             d_loss_real = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real) * (1 - smooth)))
             d_loss_fake = tf.reduce_mean(
                 tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.zeros_like(D_fake)))
             # g_loss = tf.reduce_mean(
@@ -261,7 +263,6 @@ class GanNetworkSlim(AbstractNetwork):
                                           )
 
                 return tf.nn.sigmoid(h3), h3
-
 
     def create_generator(self, z, y, scope_name, is_training=True, reuse=False):
         with tf.variable_scope(scope_name) as scope:

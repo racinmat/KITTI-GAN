@@ -27,6 +27,12 @@ class AbstractNetwork:
         self.generator_scope_name = 'generator'
         self.discriminator_scope_name = 'discriminator'
         self.saver = None
+        self.y_dim = None
+        self.df_dim = None
+        self.gf_dim = None
+        self.dfc_dim = None
+        self.gfc_dim = None
+        self.c_dim = None
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1,
                     df_dim, dfc_dim):
