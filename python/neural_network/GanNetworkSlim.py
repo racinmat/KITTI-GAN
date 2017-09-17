@@ -75,6 +75,7 @@ class GanNetworkSlim(AbstractNetwork):
             sess.run(tf.global_variables_initializer())
 
             summ = tf.summary.merge_all()
+            self.saver = tf.train.Saver()
             self.graph = g
             self.d_optim = d_optim
             self.g_optim = g_optim

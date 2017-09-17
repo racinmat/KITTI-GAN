@@ -39,14 +39,14 @@ class GanTest(unittest.TestCase):
         sample_dir = os.path.join('tests', 'samples')
         logs_dir = os.path.join('tests', 'logs')
 
-        network = GanNetworkSlim(checkpoint_dir)
+        network = GanNetworkSlim(checkpoint_dir=checkpoint_dir, name='gan_slim')
         image_size = data_set.get_image_size()
         y_dim = data_set.get_labels_dim()
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
                             beta1, df_dim, dfc_dim)
         network.train(data_set, logs_dir, epochs, sample_dir)
-        self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', 'CGAN.model-1.index')))
-        self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', 'CGAN.model-1.meta')))
+        self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', 'gan_slim-1.index')))
+        self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', 'gan_slim-1.meta')))
         self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', 'checkpoint')))
         self.assertTrue(os.path.exists(os.path.join('tests', 'logs', 'gan_slim')))
         self.assertTrue(os.path.exists(os.path.join('tests', 'samples', 'train_00_0000.png')))

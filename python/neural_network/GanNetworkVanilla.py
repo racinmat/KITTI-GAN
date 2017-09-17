@@ -80,6 +80,7 @@ class GanNetworkVanilla(AbstractNetwork):
 
             # merge_all zmerguje všechno z obou sítí, je třeba to oddělit., nějak přes ops.get_collection.
             summ = tf.summary.merge_all()
+            self.saver = tf.train.Saver()
             self.graph = g
             self.d_optim = d_optim
             self.g_optim = g_optim

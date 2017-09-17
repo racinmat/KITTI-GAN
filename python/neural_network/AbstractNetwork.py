@@ -26,7 +26,7 @@ class AbstractNetwork:
         self.name = name
         self.generator_scope_name = 'generator'
         self.discriminator_scope_name = 'discriminator'
-        self.saver = tf.train.Saver()
+        self.saver = None
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1,
                     df_dim, dfc_dim):
