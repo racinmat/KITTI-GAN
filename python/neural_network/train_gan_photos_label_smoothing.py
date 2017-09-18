@@ -5,6 +5,7 @@ from python.neural_network.GanNetworkSlimLabelSmoothing import GanNetworkSlimLab
 from python.neural_network.GanNetworkVanilla import GanNetworkVanilla
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
+import tensorflow as tf
 
 
 def main():
@@ -37,12 +38,19 @@ def main():
     beta1 = 0.5  # Momentum term of adam
     smooth = 0.1  # used for one sided label smoothing
 
+    # GPU settings
+    gpu = 1  # use the second GPU
+    available_devices = os.environ['CUDA_VISIBLE_DEVICES'].split(',')
+    os.environ['CUDA_VISIBLE_DEVICES'] = available_devices[gpu]
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+
     current_time = str(int(time.time()))
     sample_dir = os.path.join('samples', current_time)  # Directory name to save the image samples
     checkpoint_dir = os.path.join('checkpoint', current_time)  # Directory name to save the checkpoints
     logs_dir = os.path.join('logs', current_time)
 
-    network_slim = GanNetworkSlimLabelSmoothing(checkpoint_dir)
+    network_slim = GanNetworkSlimLabelSmoothing(checkpoint_dir, config=config)
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
     network_slim.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim, smooth)

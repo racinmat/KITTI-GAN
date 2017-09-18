@@ -91,3 +91,8 @@ Vypíše md5 chcecksum složky
 find ./logs/1503829581 -type f -exec md5sum {} \; | sort -k 2 | md5sum
 
 ````
+
+Sledování výkonu GPU:
+````bash
+watch -n 2 nvidia-smi
+````

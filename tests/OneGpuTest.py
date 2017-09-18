@@ -43,7 +43,12 @@ class GanTest(unittest.TestCase):
         sample_dir = os.path.join('tests', 'samples')
         logs_dir = os.path.join('tests', 'logs')
 
-        config = tf.ConfigProto(log_device_placement=True)
+        gpu = 1 # use the second GPU
+        available_devices = os.environ['CUDA_VISIBLE_DEVICES'].split(',')
+        os.environ['CUDA_VISIBLE_DEVICES'] = available_devices[gpu]
+
+        # config = tf.ConfigProto(log_device_placement=True)
+        config = None
 
         network = GanNetworkSlim(checkpoint_dir=checkpoint_dir, name='gan_slim', config=config)
         image_size = data_set.get_image_size()
