@@ -13,8 +13,8 @@ from python.network_utils import conv_cond_concat, lrelu
 
 
 class GanNetworkSlim(AbstractNetwork):
-    def __init__(self, checkpoint_dir, name='gan_slim'):
-        super().__init__(checkpoint_dir, name)
+    def __init__(self, checkpoint_dir, name='gan_slim', config=None):
+        super().__init__(checkpoint_dir, name, config)
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
                     dfc_dim):
@@ -79,7 +79,7 @@ class GanNetworkSlim(AbstractNetwork):
                 name = variable.name.split(':', 1)[0]
                 tf.summary.histogram(name, variable)
 
-            sess = tf.Session(graph=g)
+            sess = tf.Session(graph=g, config=self.config)
             sess.run(tf.global_variables_initializer())
 
             summ = tf.summary.merge_all()

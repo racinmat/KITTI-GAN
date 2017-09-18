@@ -64,6 +64,12 @@ screen -r [název screenu]
 ````
 a pak mohu CTRL+C zabít daný task a opustit screen, tím zmizí.
 
+Odpojení se od obrazovky po připojení přes -r
+````bash
+ctrl+a d
+````
+
+
 Výpis všech screenů:
 ````bash
 screen -ls

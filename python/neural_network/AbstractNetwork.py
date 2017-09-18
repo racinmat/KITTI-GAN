@@ -5,7 +5,8 @@ import math
 
 
 class AbstractNetwork:
-    def __init__(self, checkpoint_dir, name):
+    def __init__(self, checkpoint_dir, name, config=None):
+        self.config = config
         self.checkpoint_dir = checkpoint_dir
         self.graph = None
         self.d_optim = None

@@ -14,11 +14,11 @@ from python.network_utils import conv_cond_concat, lrelu
 
 # with one sided label smoothing
 class GanNetworkSlimLabelSmoothing(AbstractNetwork):
-    def __init__(self, checkpoint_dir, name='gan_slim_label_smoothing'):
+    def __init__(self, checkpoint_dir, name='gan_slim_label_smoothing', config=None):
         super().__init__(checkpoint_dir, name)
 
-    def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
-                    dfc_dim, smooth=0):
+    def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1,
+                    df_dim, dfc_dim, smooth=0):
         g = tf.Graph()
 
         self.y_dim = y_dim
@@ -81,7 +81,7 @@ class GanNetworkSlimLabelSmoothing(AbstractNetwork):
                 name = variable.name.split(':', 1)[0]
                 tf.summary.histogram(name, variable)
 
-            sess = tf.Session(graph=g)
+            sess = tf.Session(graph=g, config=self.config)
             sess.run(tf.global_variables_initializer())
 
             summ = tf.summary.merge_all()

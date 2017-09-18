@@ -14,7 +14,7 @@ from python.network_utils import conv_cond_concat, lrelu
 
 # with one sided label smoothing
 class GanNetworkSlimDropouts(AbstractNetwork):
-    def __init__(self, checkpoint_dir, name='gan_slim_'):
+    def __init__(self, checkpoint_dir, name='gan_slim_', config=None):
         super().__init__(checkpoint_dir, name)
         self.dropout_rate = None
 
@@ -83,7 +83,7 @@ class GanNetworkSlimDropouts(AbstractNetwork):
                 name = variable.name.split(':', 1)[0]
                 tf.summary.histogram(name, variable)
 
-            sess = tf.Session(graph=g)
+            sess = tf.Session(graph=g, config=self.config)
             sess.run(tf.global_variables_initializer())
 
             summ = tf.summary.merge_all()
