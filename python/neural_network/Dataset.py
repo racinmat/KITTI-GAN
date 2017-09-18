@@ -34,10 +34,10 @@ class DataSet(object):
         self.index_in_epoch = 0
 
     def split(self, ratios):
-        if sum(ratios) is not 1:
+        if sum(ratios) != 1:
             raise Exception("Wrong ratios sum")
 
-        del ratios[-1]  # remove lasst ratio
+        del ratios[-1]  # remove last ratio
         splitters = []
         for ratio in ratios:
             splitters.append(int(ratio * self.num_examples))

@@ -54,7 +54,7 @@ def main():
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
     network_slim.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim, smooth)
-    network_slim.train(data_set, logs_dir, epochs, sample_dir)
+    network_slim.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.8, 0.2])
 
     print("learning has ended")
 

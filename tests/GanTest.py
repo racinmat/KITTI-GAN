@@ -47,7 +47,7 @@ class GanTest(unittest.TestCase):
         y_dim = data_set.get_labels_dim()
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
                             beta1, df_dim, dfc_dim)
-        network.train(data_set, logs_dir, epochs, sample_dir)
+        network.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.5, 0.5])
         self.assert_files_created('gan_slim')
 
         network = GanNetworkSlimLabelSmoothing(checkpoint_dir=checkpoint_dir, name='gan_slim_label_smoothing')
@@ -55,7 +55,7 @@ class GanTest(unittest.TestCase):
         y_dim = data_set.get_labels_dim()
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
                             beta1, df_dim, dfc_dim, smooth=0.1)
-        network.train(data_set, logs_dir, epochs, sample_dir)
+        network.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.5, 0.5])
         self.assert_files_created('gan_slim_label_smoothing')
 
         network = GanNetworkSlimDropouts(checkpoint_dir=checkpoint_dir, name='gan_slim_dropouts')
@@ -63,12 +63,12 @@ class GanTest(unittest.TestCase):
         y_dim = data_set.get_labels_dim()
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
                             beta1, df_dim, dfc_dim, dropout_rate=0.5)
-        network.train(data_set, logs_dir, epochs, sample_dir)
+        network.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.5, 0.5])
         self.assert_files_created('gan_slim_dropouts')
 
     def assert_files_created(self, network_name):
-        self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', network_name + '-1.index')))
-        self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', network_name + '-1.meta')))
+        self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', network_name + '-0.index')))
+        self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', network_name + '-0.meta')))
         self.assertTrue(os.path.exists(os.path.join('tests', 'checkpoint', 'KITTI_36_32_32', 'checkpoint')))
         self.assertTrue(os.path.exists(os.path.join('tests', 'logs', network_name)))
         self.assertTrue(os.path.exists(os.path.join('tests', 'samples', 'train_00_0000.png')))

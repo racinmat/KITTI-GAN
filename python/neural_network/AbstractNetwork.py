@@ -42,12 +42,12 @@ class AbstractNetwork:
                     df_dim, dfc_dim):
         raise Exception("This is abstract")
 
-    def train(self, data_set, logs_dir, epochs, sample_dir):
+    def train(self, data_set, logs_dir, epochs, sample_dir, train_test_ratios):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
             print("creating logs dir for training: " + logs_dir)
 
-        train, test = data_set.split([0.8, 0.2])
+        train, test = data_set.split(train_test_ratios)
 
         with self.graph.as_default():
             writer = tf.summary.FileWriter(os.path.join(logs_dir, self.name), tf.get_default_graph())
@@ -106,7 +106,7 @@ class AbstractNetwork:
                                 self.z: z_batch,
                             })
                             d_loss_val, g_loss_val = self.sess.run([self.d_loss, self.g_loss], feed_dict={
-                                self.x: y_test_batch,
+                                self.x: x_test_batch,
                                 self.y: y_test_batch,
                                 self.z: z_batch,
                             })

@@ -24,7 +24,7 @@ def extract_data(output_file):
     drive_dir = './data/2011_09_26/2011_09_26_'
     calib_dir = './data/2011_09_26'
 
-    limit = 36
+    limit = 72
 
     cam = 2
 
