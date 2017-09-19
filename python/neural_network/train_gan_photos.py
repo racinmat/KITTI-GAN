@@ -1,9 +1,23 @@
 import time
 import os
+
+from python.neural_network.GanNetworkSlimDropouts import GanNetworkSlimDropouts
+from python.neural_network.GanNetworkSlimLabelSmoothing import GanNetworkSlimLabelSmoothing
 from python.neural_network.GanNetworkVanilla import GanNetworkVanilla
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
 import tensorflow as tf
+
+flags = tf.app.flags
+flags.DEFINE_integer("epoch", 400, "Epoch to train [400]")
+flags.DEFINE_float("learning_rate", 0.0002, "Learning rate of for adam [0.0002]")
+flags.DEFINE_float("beta1", 0.5, "Momentum term of adam [0.5]")
+flags.DEFINE_integer("batch_size", 36, "The size of batch images [36]")
+flags.DEFINE_integer("l1_ratio", 100, "Ratio between GAN and L1 loss [100]")
+flags.DEFINE_integer("gpu", 0, "GPU number (indexed from 0 [0]")
+flags.DEFINE_string("type", 'basic', "Type of network [basic, label_smoothing, dropouts]")
+FLAGS = flags.FLAGS
+
 
 def main():
     data_dir = 'data/extracted'
@@ -33,6 +47,8 @@ def main():
     c_dim = 3  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
     learning_rate = 0.0002  # Learning rate of for adam
     beta1 = 0.5  # Momentum term of adam
+    dropout_rate = 0.5
+    smooth = 0.1
 
     # GPU settings
     gpu = 1  # use the second GPU
@@ -46,14 +62,27 @@ def main():
     checkpoint_dir = os.path.join('checkpoint', current_time)  # Directory name to save the checkpoints
     logs_dir = os.path.join('logs', current_time)
 
-    network_slim = GanNetworkSlim(checkpoint_dir, config=config)
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
-    network_slim.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
-    network_slim.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.8, 0.2])
+
+    if FLAGS.type == 'basic':
+        network = GanNetworkSlim(checkpoint_dir, config=config)
+        network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
+    elif FLAGS.type == 'dropouts':
+        network = GanNetworkSlimDropouts(checkpoint_dir, config=config)
+        network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
+                                 beta1, df_dim, dfc_dim, dropout_rate=dropout_rate)
+    elif FLAGS.type == 'label_smoothing':
+        network = GanNetworkSlimLabelSmoothing(checkpoint_dir, config=config)
+        network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
+                                 beta1, df_dim, dfc_dim, smooth)
+    else:
+        raise Exception("Wrong network type")
+
+    network.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.8, 0.2])
 
     print("learning has ended")
 
 
 if __name__ == '__main__':
-    main()
+    tf.app.run()
