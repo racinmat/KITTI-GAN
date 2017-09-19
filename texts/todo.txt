@@ -59,4 +59,8 @@ další tip: s jistou prpstí prohodit label u discriminatoru
 
 check norms of gradients - if they are over 100, sts is fucked up
 
-jde docker pouštět bez su?
+zjistit: jde docker pouštět bez su?
+
+
+osklive ctvereckovane vzory, ktere se nam objevuji na vystupu generatoru, pro “y” (podmine vstupy do generatoru), ktera nemas v trenovacich datech bych zkusil odstranit tak, ze:
+pri trenovani dikskriminatoru pridej i zasumene “y”-ny, ktere nejsou v trenovacich datech. Sice pro ne nemas odpovidajici vystupni obrazek, ale ten pro uceni diskriminatoru nepotrebujes a stale plati, ze i tyto vygenerovane obrazky nesmi diskriminator jednoduse odlisit od realnych.

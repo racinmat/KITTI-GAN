@@ -67,15 +67,16 @@ def main():
 
     if FLAGS.type == 'basic':
         network = GanNetworkSlim(checkpoint_dir, config=config)
-        network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim, dfc_dim)
+        network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
+                            beta1, df_dim, dfc_dim)
     elif FLAGS.type == 'dropouts':
         network = GanNetworkSlimDropouts(checkpoint_dir, config=config)
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
-                                 beta1, df_dim, dfc_dim, dropout_rate=dropout_rate)
+                            beta1, df_dim, dfc_dim, dropout_rate=dropout_rate)
     elif FLAGS.type == 'label_smoothing':
         network = GanNetworkSlimLabelSmoothing(checkpoint_dir, config=config)
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
-                                 beta1, df_dim, dfc_dim, smooth)
+                            beta1, df_dim, dfc_dim, smooth)
     else:
         raise Exception("Wrong network type")
 

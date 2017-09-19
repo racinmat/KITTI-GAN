@@ -91,3 +91,8 @@ Sledování výkonu GPU:
 ````bash
 watch -n 2 nvidia-smi
 ````
+
+volné místo na disku:
+````bash
+df -h
+````
