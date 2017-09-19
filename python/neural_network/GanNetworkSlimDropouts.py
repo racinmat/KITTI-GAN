@@ -18,8 +18,8 @@ class GanNetworkSlimDropouts(AbstractNetwork):
         super().__init__(checkpoint_dir, name, config)
         self.dropout_rate = None
 
-    def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
-                    dfc_dim, dropout_rate=0.5):
+    def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1,
+                    df_dim, dfc_dim, dropout_rate=0.5):
         g = tf.Graph()
 
         self.y_dim = y_dim
@@ -49,7 +49,6 @@ class GanNetworkSlimDropouts(AbstractNetwork):
             tf.summary.histogram("d_fake", D_fake)
             tf.summary.image("g", G)
 
-            # smoothing is applied only on discriminator: https://medium.com/towards-data-science/gan-introduction-and-implementation-part1-implement-a-simple-gan-in-tf-for-mnist-handwritten-de00a759ae5c
             d_loss_real = tf.reduce_mean(
                 tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_real, labels=tf.ones_like(D_real)))
             d_loss_fake = tf.reduce_mean(

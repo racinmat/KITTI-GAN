@@ -96,3 +96,13 @@ volné místo na disku:
 ````bash
 df -h
 ````
+
+spuštění učení s parametry:
+````bash
+./run-python-bg.sh train_gan_photos.py --output_dir=/datagrid/personal/racinmat type=dropouts
+````
+
+spuštění tensorboardu s absolutní cestou:
+````bash
+./run-tensorboard-bg.sh /datagrid/personal/racinmat/log
+````

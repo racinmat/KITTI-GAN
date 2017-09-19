@@ -1,6 +1,6 @@
 import time
 import os
-
+import pprint
 from python.neural_network.GanNetworkSlimDropouts import GanNetworkSlimDropouts
 from python.neural_network.GanNetworkSlimLabelSmoothing import GanNetworkSlimLabelSmoothing
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
@@ -20,6 +20,8 @@ FLAGS = flags.FLAGS
 
 
 def main(__):
+    pprint.PrettyPrinter().pprint(flags.FLAGS.__flags)
+
     data_dir = 'data/extracted'
     drives = [
         'drive_0009_sync',
@@ -51,11 +53,14 @@ def main(__):
     smooth = 0.1
 
     # GPU settings
-    gpu = 1  # use the second GPU
-    available_devices = os.environ['CUDA_VISIBLE_DEVICES'].split(',')
-    os.environ['CUDA_VISIBLE_DEVICES'] = available_devices[gpu]
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
+    devices_environ_var = 'CUDA_VISIBLE_DEVICES'
+    if devices_environ_var in os.environ:
+        available_devices = os.environ[devices_environ_var].split(',')
+        if len(available_devices):
+            gpu = 1  # use the second GPU
+            os.environ[devices_environ_var] = available_devices[gpu]
 
     output_dir = FLAGS.output_dir
     current_time = str(int(time.time()))
