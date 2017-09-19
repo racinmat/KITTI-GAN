@@ -3,7 +3,6 @@ import os
 
 from python.neural_network.GanNetworkSlimDropouts import GanNetworkSlimDropouts
 from python.neural_network.GanNetworkSlimLabelSmoothing import GanNetworkSlimLabelSmoothing
-from python.neural_network.GanNetworkVanilla import GanNetworkVanilla
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
 import tensorflow as tf
@@ -16,10 +15,11 @@ flags.DEFINE_integer("batch_size", 36, "The size of batch images [36]")
 flags.DEFINE_integer("l1_ratio", 100, "Ratio between GAN and L1 loss [100]")
 flags.DEFINE_integer("gpu", 0, "GPU number (indexed from 0 [0]")
 flags.DEFINE_string("type", 'basic', "Type of network [basic, label_smoothing, dropouts]")
+flags.DEFINE_string("output_dir", '.', "Location of output dir")
 FLAGS = flags.FLAGS
 
 
-def main():
+def main(__):
     data_dir = 'data/extracted'
     drives = [
         'drive_0009_sync',
@@ -57,10 +57,11 @@ def main():
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
+    output_dir = FLAGS.output_dir
     current_time = str(int(time.time()))
-    sample_dir = os.path.join('samples', current_time)  # Directory name to save the image samples
-    checkpoint_dir = os.path.join('checkpoint', current_time)  # Directory name to save the checkpoints
-    logs_dir = os.path.join('logs', current_time)
+    sample_dir = os.path.join(output_dir, 'samples', current_time)  # Directory name to save the image samples
+    checkpoint_dir = os.path.join(output_dir, 'checkpoint', current_time)  # Directory name to save the checkpoints
+    logs_dir = os.path.join(output_dir, 'logs', current_time)
 
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()

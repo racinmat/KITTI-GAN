@@ -14,8 +14,8 @@ from python.network_utils import conv_cond_concat, lrelu
 
 # with one sided label smoothing
 class GanNetworkSlimDropouts(AbstractNetwork):
-    def __init__(self, checkpoint_dir, name='gan_slim_', config=None):
-        super().__init__(checkpoint_dir, name)
+    def __init__(self, checkpoint_dir, name='gan_slim_dropouts', config=None):
+        super().__init__(checkpoint_dir, name, config)
         self.dropout_rate = None
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1, df_dim,
