@@ -115,7 +115,7 @@ class GanNetworkSlim(AbstractNetwork):
 
             save_images(samples, [image_frame_dim, image_frame_dim],
                         '{}/test_{}_{:d}.png'.format(samples_dir, suffix, idx))
-            print("images saved to dir {}".format(samples_dir))
+            tf.logging.info("images saved to dir {}".format(samples_dir))
 
     def create_discriminator(self, x, y, scope_name, is_training=True, reuse=False):
         with tf.variable_scope(scope_name) as scope:

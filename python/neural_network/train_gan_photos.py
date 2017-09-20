@@ -6,6 +6,9 @@ from python.neural_network.GanNetworkSlimLabelSmoothing import GanNetworkSlimLab
 from python.neural_network.GanNetworkSlim import GanNetworkSlim
 from python.neural_network.train_gan import load_data
 import tensorflow as tf
+import sys
+import logging
+import sys
 
 flags = tf.app.flags
 flags.DEFINE_integer("epoch", 400, "Epoch to train [400]")
@@ -20,7 +23,21 @@ FLAGS = flags.FLAGS
 
 
 def main(__):
-    pprint.PrettyPrinter().pprint(flags.FLAGS.__flags)
+    current_time = str(int(time.time()))
+
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    ch = logging.FileHandler(current_time)
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    root.addHandler(ch)
+
+    arguments = pprint.PrettyPrinter().pformat(flags.FLAGS.__flags)
+
+    logging.getLogger().info('arguments:')
+    logging.getLogger().info(arguments)
 
     data_dir = 'data/extracted'
     drives = [
@@ -63,7 +80,6 @@ def main(__):
             os.environ[devices_environ_var] = available_devices[gpu]
 
     output_dir = FLAGS.output_dir
-    current_time = str(int(time.time()))
     sample_dir = os.path.join(output_dir, 'samples', current_time)  # Directory name to save the image samples
     checkpoint_dir = os.path.join(output_dir, 'checkpoint', current_time)  # Directory name to save the checkpoints
     logs_dir = os.path.join(output_dir, 'logs', current_time)
@@ -88,7 +104,7 @@ def main(__):
 
     network.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.8, 0.2])
 
-    print("learning has ended")
+    logging.getLogger().info("learning has ended")
 
 
 if __name__ == '__main__':

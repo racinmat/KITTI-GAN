@@ -35,7 +35,7 @@ def main():
 
     network.generate(features, samples_dir, suffix)
 
-    print("images saved to dir {}".format(samples_dir))
+    tf.logging.info("images saved to dir {}".format(samples_dir))
 
 
 if __name__ == '__main__':

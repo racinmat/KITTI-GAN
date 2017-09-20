@@ -45,7 +45,7 @@ class AbstractNetwork:
     def train(self, data_set, logs_dir, epochs, sample_dir, train_test_ratios):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
-            print("creating logs dir for training: " + logs_dir)
+            tf.logging.info("creating logs dir for training: " + logs_dir)
 
         train, test = data_set.split(train_test_ratios)
 
@@ -55,7 +55,7 @@ class AbstractNetwork:
             counter = 0
             start_time = time.time()
 
-            print("Starting to learn for {} epochs.".format(epochs))
+            tf.logging.info("Starting to learn for {} epochs.".format(epochs))
             for epoch in range(epochs):
                 num_batches = int(train.num_batches(self.batch_size))
                 for i in range(num_batches):
@@ -95,7 +95,7 @@ class AbstractNetwork:
 
                     counter += 1
                     summary_string = "Epoch: {:2d} {:2d}/{:2d} counter: {:3d} time: {:4.4f}, d_loss: {:.6f}, g_loss: {:.6f}"
-                    print(summary_string.format(epoch, i, num_batches, counter, time.time() - start_time,
+                    tf.logging.info(summary_string.format(epoch, i, num_batches, counter, time.time() - start_time,
                                                 errD_fake + errD_real,
                                                 errG))
 
@@ -112,15 +112,15 @@ class AbstractNetwork:
                             })
                             save_images(samples, image_manifold_size(samples.shape[0]),
                                         './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
-                            print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss_val, g_loss_val))
+                            tf.logging.info("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss_val, g_loss_val))
                         except Exception as e:
-                            print("pic saving error:")
-                            print(e)
+                            tf.logging.info("pic saving error:")
+                            tf.logging.info(e)
                             raise e
 
                     if np.mod(counter, 800) == 2:
                         self.save(counter)
-                        print("saved after {}. iteration".format(counter))
+                        tf.logging.info("saved after {}. iteration".format(counter))
 
             writer.flush()
             writer.close()
@@ -141,7 +141,7 @@ class AbstractNetwork:
 
     def load(self):
         import re
-        print(" [*] Loading last checkpoint")
+        tf.logging.info(" [*] Loading last checkpoint")
 
         model_dir_name = 'KITTI_36_32_32'
         checkpoint_dir = os.path.join(self.checkpoint_dir, model_dir_name)
@@ -151,10 +151,10 @@ class AbstractNetwork:
             data_file = os.path.join(checkpoint_dir, checkpoint_name)
             self.saver.restore(self.sess, data_file)
             counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
-            print(" [*] Success to read {}".format(checkpoint_name))
+            tf.logging.info(" [*] Success to read {}".format(checkpoint_name))
             return True, counter
         else:
-            print(" [*] Failed to find a checkpoint")
+            tf.logging.info(" [*] Failed to find a checkpoint")
             return False, 0
 
     def generate(self, features, samples_dir, suffix):
@@ -174,4 +174,4 @@ class AbstractNetwork:
 
             save_images(samples, [image_frame_dim, image_frame_dim],
                         '{}/test_{}_{:d}.png'.format(samples_dir, suffix, idx))
-            print("images saved to dir {}".format(samples_dir))
+            tf.logging.info("images saved to dir {}".format(samples_dir))
