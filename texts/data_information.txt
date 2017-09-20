@@ -47,5 +47,8 @@ trained: na serveru:
     1503666003 - naučeno, 5000 epoch, GAN + L1 loss, barevné fotky, batch size 36
     1503735680 - naučeno, 1000 epoch, GAN + L1 loss, lidar data, batch size 64
     1505674290 - částečně naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 100
-    1505772010 - učí se, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina
-    1505772022 - učí se, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, label smoothing
+    1505772010 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina
+    1505772022 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, label smoothing
+    1505828231 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout
+    1505828317 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina
+    1505950038 - učí se, 400 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina
