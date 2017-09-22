@@ -28,7 +28,7 @@ def main(__):
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
 
-    ch = logging.FileHandler(current_time)
+    ch = logging.FileHandler(current_time+'.log')
     ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)

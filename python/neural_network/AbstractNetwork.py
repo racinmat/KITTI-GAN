@@ -111,7 +111,7 @@ class AbstractNetwork:
                                 self.z: z_batch,
                             })
                             save_images(samples, image_manifold_size(samples.shape[0]),
-                                        './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
+                                        '{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, i))
                             tf.logging.info("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss_val, g_loss_val))
                         except Exception as e:
                             tf.logging.info("pic saving error:")
