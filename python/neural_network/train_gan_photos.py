@@ -28,9 +28,16 @@ def main(__):
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
 
-    ch = logging.FileHandler(current_time+'.log')
+    output_dir = FLAGS.output_dir
+    sample_dir = os.path.join(output_dir, 'samples', current_time)  # Directory name to save the image samples
+    checkpoint_dir = os.path.join(output_dir, 'checkpoint', current_time)  # Directory name to save the checkpoints
+    logs_dir = os.path.join(output_dir, 'logs', current_time)
+    screen_output_dir = os.path.join(output_dir, 'output', current_time)
+
+    ch = logging.FileHandler(screen_output_dir+'/out.log')
     ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(message)s')
     ch.setFormatter(formatter)
     root.addHandler(ch)
 
@@ -78,11 +85,6 @@ def main(__):
         if len(available_devices):
             gpu = 1  # use the second GPU
             os.environ[devices_environ_var] = available_devices[gpu]
-
-    output_dir = FLAGS.output_dir
-    sample_dir = os.path.join(output_dir, 'samples', current_time)  # Directory name to save the image samples
-    checkpoint_dir = os.path.join(output_dir, 'checkpoint', current_time)  # Directory name to save the checkpoints
-    logs_dir = os.path.join(output_dir, 'logs', current_time)
 
     image_size = data_set.get_image_size()
     y_dim = data_set.get_labels_dim()
