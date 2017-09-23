@@ -34,7 +34,10 @@ def main(__):
     logs_dir = os.path.join(output_dir, 'logs', current_time)
     screen_output_dir = os.path.join(output_dir, 'output', current_time)
 
-    ch = logging.FileHandler(screen_output_dir+'/out.log')
+    if not os.path.exists(screen_output_dir):
+        os.makedirs(screen_output_dir)
+
+    ch = logging.FileHandler(screen_output_dir+'/out.log', mode='w')
     ch.setLevel(logging.DEBUG)
     # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     formatter = logging.Formatter('%(asctime)s - %(message)s')
