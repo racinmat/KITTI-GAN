@@ -185,7 +185,7 @@ class AbstractNetwork:
                 saver = tf.train.import_meta_graph(meta_file)
                 saver.restore(self.sess, data_file)
                 counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
-                self.sampler = self.graph.get_operation_by_name(sampler_name)
+                self.sampler = self.graph.get_tensor_by_name(sampler_name)
                 tf.logging.info(" [*] Success to read {}".format(checkpoint_name))
                 return True, counter
         else:
