@@ -116,7 +116,7 @@ class GanTest(unittest.TestCase):
         network = GanNetworkSlim(checkpoint_dir)
         image_size = (32, 32)
         network.build_empty_model(image_size, batch_size, z_dim)
-        sampler_name = 'g_h3_lin'
+        sampler_name = 'generator/g_h3/Sigmoid'
         loaded, counter = network.load_with_structure(sampler_name)
 
         feature_vector = [0, 1, 2.8, 30 / 100, 1, 1]
