@@ -42,6 +42,18 @@ class AbstractNetwork:
                     df_dim, dfc_dim):
         raise Exception("This is abstract")
 
+    def build_empty_model(self, image_size, batch_size):
+        # this is used for loading with structure
+        g = tf.Graph()
+
+        self.image_size = image_size
+        self.batch_size = batch_size
+        with g.as_default():
+            sess = tf.Session(graph=g, config=self.config)
+            self.sess = sess
+
+        raise Exception("This is abstract")
+
     def train(self, data_set, logs_dir, epochs, sample_dir, train_test_ratios):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
@@ -143,13 +155,34 @@ class AbstractNetwork:
         import re
         tf.logging.info(" [*] Loading last checkpoint")
 
-        model_dir_name = 'KITTI_36_32_32'
+        model_dir_name = self.model_dir()
         checkpoint_dir = os.path.join(self.checkpoint_dir, model_dir_name)
         checkpoint = tf.train.get_checkpoint_state(checkpoint_dir)
         if checkpoint and checkpoint.model_checkpoint_path:
             checkpoint_name = os.path.basename(checkpoint.model_checkpoint_path)
             data_file = os.path.join(checkpoint_dir, checkpoint_name)
             self.saver.restore(self.sess, data_file)
+            counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
+            tf.logging.info(" [*] Success to read {}".format(checkpoint_name))
+            return True, counter
+        else:
+            tf.logging.info(" [*] Failed to find a checkpoint")
+            return False, 0
+
+    def load_with_structure(self):
+        import re
+        tf.logging.info(" [*] Loading last checkpoint")
+
+        model_dir_name = self.model_dir()
+
+        checkpoint_dir = os.path.join(self.checkpoint_dir, model_dir_name)
+        checkpoint = tf.train.get_checkpoint_state(checkpoint_dir)
+        if checkpoint and checkpoint.model_checkpoint_path:
+            checkpoint_name = os.path.basename(checkpoint.model_checkpoint_path)
+            data_file = os.path.join(checkpoint_dir, checkpoint_name)
+            meta_file = data_file + '.meta'
+            saver = tf.train.import_meta_graph(meta_file)
+            saver.restore(self.sess, data_file)
             counter = int(next(re.finditer("(\d+)(?!.*\d)", checkpoint_name)).group(0))
             tf.logging.info(" [*] Success to read {}".format(checkpoint_name))
             return True, counter
