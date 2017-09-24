@@ -204,8 +204,8 @@ class AbstractNetwork:
 
             samples = self.sess.run(self.sampler, feed_dict={z: z_sample, y: features})
 
-            if not os.path.exists(os.path.dirname(samples_dir)):
-                os.makedirs(os.path.dirname(samples_dir))
+            if not os.path.exists(samples_dir):
+                os.makedirs(samples_dir)
 
             save_images(samples, [image_frame_dim, image_frame_dim],
                         '{}/test_{}_{:d}.png'.format(samples_dir, suffix, idx))
