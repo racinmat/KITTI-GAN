@@ -104,25 +104,6 @@ class GanNetworkSlimDropouts(AbstractNetwork):
             self.d_loss = d_loss
             self.g_loss = g_loss
 
-    def generate(self, features, samples_dir, suffix):
-        z = self.graph.get_tensor_by_name('z:0')
-        y = self.graph.get_tensor_by_name('y:0')
-
-        # samples
-        samples_num = 1
-        for idx in range(samples_num):
-            image_frame_dim = int(math.ceil(self.batch_size ** .5))
-            z_sample = sample_z_uniform(self.batch_size, self.z_dim)
-
-            samples = self.sess.run(self.sampler, feed_dict={z: z_sample, y: features})
-
-            if not os.path.exists(os.path.dirname(samples_dir)):
-                os.makedirs(os.path.dirname(samples_dir))
-
-            save_images(samples, [image_frame_dim, image_frame_dim],
-                        '{}/test_{}_{:d}.png'.format(samples_dir, suffix, idx))
-            tf.logging.info("images saved to dir {}".format(samples_dir))
-
     def create_discriminator(self, x, y, scope_name, is_training=True, reuse=False):
         with tf.variable_scope(scope_name) as scope:
             if reuse:

@@ -109,13 +109,15 @@ class GanTest(unittest.TestCase):
 
     def _test_network_load_with_structure_and_generate(self):
         batch_size = 36
+        z_dim = 100
 
         checkpoint_dir = os.path.join('tests', 'checkpoint')
 
         network = GanNetworkSlim(checkpoint_dir)
         image_size = (32, 32)
-        network.build_empty_model(image_size, batch_size)
-        loaded, counter = network.load_with_structure()
+        network.build_empty_model(image_size, batch_size, z_dim)
+        sampler_name = 'g_h3_lin'
+        loaded, counter = network.load_with_structure(sampler_name)
 
         feature_vector = [0, 1, 2.8, 30 / 100, 1, 1]
         features = np.tile(feature_vector, [batch_size, 1])
