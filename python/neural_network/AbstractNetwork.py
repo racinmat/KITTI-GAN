@@ -52,8 +52,6 @@ class AbstractNetwork:
             sess = tf.Session(graph=g, config=self.config)
             self.sess = sess
 
-        raise Exception("This is abstract")
-
     def train(self, data_set, logs_dir, epochs, sample_dir, train_test_ratios):
         if not os.path.exists(os.path.dirname(logs_dir)):
             os.makedirs(os.path.dirname(logs_dir))
