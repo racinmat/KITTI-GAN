@@ -55,9 +55,10 @@ class GanNetworkSlim(AbstractNetwork):
 
             # For generator we use traditional GAN objective as well as L1 loss
             # L1 added from https://github.com/awjuliani/Pix2Pix-Film/blob/master/Pix2Pix.ipynb
-            g_loss = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake))) + \
-                     l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
+            gan_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=D_logits_fake, labels=tf.ones_like(D_fake)))
+            l_loss = l1_ratio * tf.reduce_mean(tf.abs(G - x))  # This optimizes the generator.
+
+            g_loss = gan_loss + l_loss
 
             tf.summary.scalar("d_loss_real", d_loss_real)
             tf.summary.scalar("d_loss_fake", d_loss_fake)
@@ -66,6 +67,8 @@ class GanNetworkSlim(AbstractNetwork):
 
             tf.summary.scalar("d_loss", d_loss)
             tf.summary.scalar("g_loss", g_loss)
+            tf.summary.scalar("g_gan_loss", gan_loss)
+            tf.summary.scalar("g_l_loss", l_loss)
 
             d_vars = slim.get_variables(scope=self.discriminator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)
             g_vars = slim.get_variables(scope=self.generator_scope_name, collection=GraphKeys.TRAINABLE_VARIABLES)

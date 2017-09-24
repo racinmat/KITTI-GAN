@@ -52,3 +52,5 @@ trained: na serveru:
     1505828231 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout
     1505828317 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina
     1505950038 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina
+    1506127735 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina
+    1506127768 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 5, test. množina
