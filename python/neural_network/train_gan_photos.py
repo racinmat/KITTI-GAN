@@ -99,19 +99,19 @@ def main(__):
     if FLAGS.type == 'basic':
         network = GanNetworkSlim(checkpoint_dir, config=config)
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
-                            beta1, df_dim, dfc_dim)
+                            beta1, df_dim, dfc_dim, z_sampling)
     elif FLAGS.type == 'dropouts':
         network = GanNetworkSlimDropouts(checkpoint_dir, config=config)
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
-                            beta1, df_dim, dfc_dim, dropout_rate=dropout_rate)
+                            beta1, df_dim, dfc_dim, z_sampling, dropout_rate=dropout_rate)
     elif FLAGS.type == 'label_smoothing':
         network = GanNetworkSlimLabelSmoothing(checkpoint_dir, config=config)
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
-                            beta1, df_dim, dfc_dim, smooth)
+                            beta1, df_dim, dfc_dim, z_sampling, smooth)
     else:
         raise Exception("Wrong network type")
 
-    network.train(data_set, logs_dir, epochs, sample_dir, z_sampling, train_test_ratios=[0.8, 0.2])
+    network.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.8, 0.2])
 
     logging.getLogger().info("learning has ended")
 
