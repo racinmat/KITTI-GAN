@@ -36,6 +36,7 @@ u trén. dat lze zjistit, jestli je to foreground nebo background - protože ví
 pak se podívat na data před učením, a kdyžtak obrázky uploadnout
 
 
+tmavší fotky jsou asi kvůli změně distribuce Z vectoru?
 
 trained: na serveru:
     1503417949 - naučeno, 1000 epoch, lidar data
@@ -54,3 +55,6 @@ trained: na serveru:
     1505950038 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina
     1506127735 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina
     1506127768 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 5, test. množina
+    1506297307 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina, dropout
+    1506297477 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina, dropout
+    1506297748 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina, dropout

@@ -99,8 +99,10 @@ df -h
 
 spuštění učení s parametry:
 ````bash
-./run-python-bg.sh train_gan_photos.py --output_dir=/datagrid/personal/racinmat type=dropouts
+./run-python-bg.sh train_gan_photos.py --output_dir=/datagrid/personal/racinmat --type=dropouts
+./run-python-bg.sh train_gan_photos.py --output_dir=/datagrid/personal/racinmat --type=dropouts --l1_ratio=50 --epoch=600
 ````
+
 
 spuštění tensorboardu s absolutní cestou:
 ````bash

@@ -16,9 +16,11 @@ flags.DEFINE_float("learning_rate", 0.0002, "Learning rate of for adam [0.0002]"
 flags.DEFINE_float("beta1", 0.5, "Momentum term of adam [0.5]")
 flags.DEFINE_integer("batch_size", 36, "The size of batch images [36]")
 flags.DEFINE_integer("l1_ratio", 100, "Ratio between GAN and L1 loss [100]")
-flags.DEFINE_integer("gpu", 0, "GPU number (indexed from 0 [0]")
+flags.DEFINE_integer("gpu", 1, "GPU number (indexed from 0 [1], used when multiple GPUs are used.")
 flags.DEFINE_string("type", 'basic', "Type of network [basic, label_smoothing, dropouts]")
 flags.DEFINE_string("output_dir", '.', "Location of output dir")
+flags.DEFINE_string("dropout_rate", 0.5, "Dropout rate [0.5]")
+flags.DEFINE_string("smooth", 0.1, "Smoothing [0.1]")
 FLAGS = flags.FLAGS
 
 
@@ -64,20 +66,20 @@ def main(__):
     data_set = load_data(resolution, drives, input_prefix, data_dir)
 
     # batch_size = 64
-    batch_size = 36
+    batch_size = FLAGS.batch_size
     z_dim = 100
 
-    l1_ratio = 100
-    epochs = 400
+    l1_ratio = FLAGS.l1_ratio
+    epochs = FLAGS.epochs
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
     dfc_dim = 1024  # (optional) Dimension of discrim units for fully connected layer.
     c_dim = 3  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
-    learning_rate = 0.0002  # Learning rate of for adam
-    beta1 = 0.5  # Momentum term of adam
-    dropout_rate = 0.5
-    smooth = 0.1
+    learning_rate = FLAGS.learning_rate  # Learning rate of for adam
+    beta1 = FLAGS.beta1
+    dropout_rate = FLAGS.droupout_rate
+    smooth = FLAGS.smooth
 
     # GPU settings
     config = tf.ConfigProto()
@@ -86,7 +88,7 @@ def main(__):
     if devices_environ_var in os.environ:
         available_devices = os.environ[devices_environ_var].split(',')
         if len(available_devices):
-            gpu = 1  # use the second GPU
+            gpu = FLAGS.gpu  # use the second GPU
             os.environ[devices_environ_var] = available_devices[gpu]
 
     image_size = data_set.get_image_size()
