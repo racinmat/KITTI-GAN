@@ -15,12 +15,13 @@ from python.network_utils import conv_cond_concat, lrelu
 # with one sided label smoothing
 class GanNetworkSlimLabelSmoothing(AbstractNetwork):
     def __init__(self, checkpoint_dir, name='gan_slim_label_smoothing', config=None):
-        super().__init__(checkpoint_dir, name)
+        super().__init__(checkpoint_dir, name, config)
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1,
-                    df_dim, dfc_dim, smooth=0):
+                    df_dim, dfc_dim, z_sampling, smooth=0):
         g = tf.Graph()
 
+        self.z_sampling = z_sampling
         self.y_dim = y_dim
         self.df_dim = df_dim
         self.gf_dim = gf_dim

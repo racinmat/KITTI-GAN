@@ -86,6 +86,7 @@ class GanTest(unittest.TestCase):
         c_dim = 3  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
         learning_rate = 0.0002  # Learning rate of for adam
         beta1 = 0.5  # Momentum term of adam
+        z_sampling = 'normal'
 
         checkpoint_dir = os.path.join('tests', 'checkpoint')
 
@@ -93,7 +94,7 @@ class GanTest(unittest.TestCase):
         image_size = (32, 32)
         y_dim = 6
         network.build_model(image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate,
-                            beta1, df_dim, dfc_dim)
+                            beta1, df_dim, dfc_dim, z_sampling)
         loaded, counter = network.load()
 
         feature_vector = [0, 1, 2.8, 30 / 100, 1, 1]

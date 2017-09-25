@@ -19,9 +19,10 @@ class GanNetworkSlimDropouts(AbstractNetwork):
         self.dropout_rate = None
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1,
-                    df_dim, dfc_dim, dropout_rate=0.5):
+                    df_dim, dfc_dim, z_sampling, dropout_rate=0.5):
         g = tf.Graph()
 
+        self.z_sampling = z_sampling
         self.y_dim = y_dim
         self.df_dim = df_dim
         self.gf_dim = gf_dim

@@ -38,6 +38,8 @@ pak se podívat na data před učením, a kdyžtak obrázky uploadnout
 
 tmavší fotky jsou asi kvůli změně distribuce Z vectoru?
 
+na jednu síť je třeba asi 2.3 GB paměti na GPU
+
 trained: na serveru:
     1503417949 - naučeno, 1000 epoch, lidar data
     1503424646 - naučeno, 1000 epoch, generátor se učí 2x na jedno učení diskriminátoru, lidar data
@@ -48,6 +50,7 @@ trained: na serveru:
     1503666003 - naučeno, 5000 epoch, GAN + L1 loss, barevné fotky, batch size 36
     1503735680 - naučeno, 1000 epoch, GAN + L1 loss, lidar data, batch size 64
     1505674290 - částečně naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 100
+    odsud dál jsou špatně načítané číselné parametry, takže nejsou výsledky použitelné (kromě dropoutu a label smoothing)
     1505772010 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina
     1505772022 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, label smoothing
     1505828231 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout

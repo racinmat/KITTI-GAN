@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 import time
 
-from python.network_utils import sample_z_uniform, save_images, image_manifold_size
+from python.network_utils import sample_z_uniform, save_images, image_manifold_size, sample_z_normal
 import math
 import numpy as np
 
@@ -37,15 +37,17 @@ class AbstractNetwork:
         self.dfc_dim = None
         self.gfc_dim = None
         self.c_dim = None
+        self.z_sampling = None
 
     def build_model(self, image_size, y_dim, batch_size, c_dim, z_dim, gfc_dim, gf_dim, l1_ratio, learning_rate, beta1,
-                    df_dim, dfc_dim):
+                    df_dim, dfc_dim, z_sampling):
         raise Exception("This is abstract")
 
-    def build_empty_model(self, image_size, batch_size, z_dim):
+    def build_empty_model(self, image_size, batch_size, z_dim, z_sampling):
         # this is used for loading with structure
         g = tf.Graph()
 
+        self.z_sampling = z_sampling
         self.image_size = image_size
         self.batch_size = batch_size
         self.z_dim = z_dim
@@ -53,6 +55,15 @@ class AbstractNetwork:
         with g.as_default():
             sess = tf.Session(graph=g, config=self.config)
             self.sess = sess
+
+    def sample_z(self):
+        if self.z_sampling == 'uniform':
+            z_batch = sample_z_normal(self.batch_size, self.z_dim)
+        elif self.z_sampling == 'normal':
+            z_batch = sample_z_normal(self.batch_size, self.z_dim)
+        else:
+            raise Exception('unknown z sampling method')
+        return z_batch
 
     def train(self, data_set, logs_dir, epochs, sample_dir, train_test_ratios):
         if not os.path.exists(os.path.dirname(logs_dir)):
@@ -72,7 +83,7 @@ class AbstractNetwork:
                 num_batches = int(train.num_batches(self.batch_size))
                 for i in range(num_batches):
                     x_batch, y_batch = train.next_batch(self.batch_size)
-                    z_batch = sample_z_uniform(self.batch_size, self.z_dim)
+                    z_batch = self.sample_z()
                     x_test_batch, y_test_batch = test.next_batch(self.batch_size)
 
                     # Update D network
@@ -200,7 +211,7 @@ class AbstractNetwork:
         samples_num = 1
         for idx in range(samples_num):
             image_frame_dim = int(math.ceil(self.batch_size ** .5))
-            z_sample = sample_z_uniform(self.batch_size, self.z_dim)
+            z_sample = self.sample_z()
 
             samples = self.sess.run(self.sampler, feed_dict={z: z_sample, y: features})
 

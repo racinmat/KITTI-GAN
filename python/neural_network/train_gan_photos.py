@@ -19,8 +19,9 @@ flags.DEFINE_integer("l1_ratio", 100, "Ratio between GAN and L1 loss [100]")
 flags.DEFINE_integer("gpu", 1, "GPU number (indexed from 0 [1], used when multiple GPUs are used.")
 flags.DEFINE_string("type", 'basic', "Type of network [basic, label_smoothing, dropouts]")
 flags.DEFINE_string("output_dir", '.', "Location of output dir")
-flags.DEFINE_string("dropout_rate", 0.5, "Dropout rate [0.5]")
-flags.DEFINE_string("smooth", 0.1, "Smoothing [0.1]")
+flags.DEFINE_integer("dropout_rate", 0.5, "Dropout rate [0.5]")
+flags.DEFINE_integer("smooth", 0.1, "Smoothing [0.1]")
+flags.DEFINE_string("z_sampling", 'normal', "Sampling type (uniform|normal) [normal]")
 FLAGS = flags.FLAGS
 
 
@@ -80,6 +81,7 @@ def main(__):
     beta1 = FLAGS.beta1
     dropout_rate = FLAGS.droupout_rate
     smooth = FLAGS.smooth
+    z_sampling = FLAGS.z_sampling
 
     # GPU settings
     config = tf.ConfigProto()
@@ -109,7 +111,7 @@ def main(__):
     else:
         raise Exception("Wrong network type")
 
-    network.train(data_set, logs_dir, epochs, sample_dir, train_test_ratios=[0.8, 0.2])
+    network.train(data_set, logs_dir, epochs, sample_dir, z_sampling, train_test_ratios=[0.8, 0.2])
 
     logging.getLogger().info("learning has ended")
 
