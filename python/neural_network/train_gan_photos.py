@@ -71,7 +71,7 @@ def main(__):
     z_dim = 100
 
     l1_ratio = FLAGS.l1_ratio
-    epochs = FLAGS.epochs
+    epochs = FLAGS.epoch
     gf_dim = 64  # (optional) Dimension of gen filters in first conv layer.
     df_dim = 64  # (optional) Dimension of discrim filters in first conv layer.
     gfc_dim = 1024  # (optional) Dimension of gen units for for fully connected layer.
@@ -79,7 +79,7 @@ def main(__):
     c_dim = 3  # (optional) Dimension of image color. For grayscale input, set to 1, for colors, set to 3.
     learning_rate = FLAGS.learning_rate  # Learning rate of for adam
     beta1 = FLAGS.beta1
-    dropout_rate = FLAGS.droupout_rate
+    dropout_rate = FLAGS.dropout_rate
     smooth = FLAGS.smooth
     z_sampling = FLAGS.z_sampling
 

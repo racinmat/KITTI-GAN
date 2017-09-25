@@ -54,10 +54,21 @@ trained: na serveru:
     1505772010 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina
     1505772022 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, label smoothing
     1505828231 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout
-    1505828317 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina
-    1505950038 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina
-    1506127735 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina
-    1506127768 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 5, test. množina
-    1506297307 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina, dropout
-    1506297477 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina, dropout
-    1506297748 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina, dropout
+    myšleno:
+        1505828317 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina
+        1505950038 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina
+        1506127735 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina
+        1506127768 - naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 5, test. množina
+        1506297307 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina, dropout
+        1506297477 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina, dropout
+        1506297748 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina, dropout
+    v reálu:
+        naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, -||-
+
+    1506352309 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout
+    1506352353 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina, dropout
+    1506352475 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina, dropout
+    1506352552 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 5, test. množina, dropout
+    1506352644 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout, z sampling=uniform
+    1506353077 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina, dropout
+
