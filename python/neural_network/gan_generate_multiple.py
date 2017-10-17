@@ -16,11 +16,17 @@ def main():
     network_names = [
         # '1505772010',
         # '1505772022',
-        '1505828231',
-        '1505828317',
-        '1505950038',
-        '1506127735',
-        '1506127768',
+        # '1505828231',
+        # '1505828317',
+        # '1505950038',
+        # '1506127735',
+        # '1506127768',
+        '1506352309',
+        '1506352353',
+        '1506352475',
+        '1506352552',
+        '1506352644',
+        '1506353077',
     ]
 
     feature_vector = [0, 1, 2.8, 30 / 100, 1, 1]
@@ -34,10 +40,10 @@ def main():
         suffix = name
         network_checkpoint_dir = os.path.join(checkpoints_dir, name)
         network = GanNetworkSlim(network_checkpoint_dir)
-        network.build_empty_model(image_size, batch_size, z_dim)
+        network.build_empty_model(image_size, batch_size, z_dim, z_sampling='normal')
         network.load_with_structure(sampler_name)
 
-        network.generate(features, samples_dir, suffix)
+        network.generate(features, samples_dir, suffix, samples_num=4)
         tf.logging.info("generated samples for 1 network to: {}".format(samples_dir))
 
     tf.logging.info("images saved to dir {}".format(samples_dir))

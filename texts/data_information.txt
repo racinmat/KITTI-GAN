@@ -40,6 +40,8 @@ tmavší fotky jsou asi kvůli změně distribuce Z vectoru?
 
 na jednu síť je třeba asi 2.3 GB paměti na GPU
 
+zkusit zašumět Y, jako partenova okna: pro každý sample s jedním feature vectorem ten sample nakopírovat, ale zašumět feature vector, tím by měla být síť robustnější
+
 trained: na serveru:
     1503417949 - naučeno, 1000 epoch, lidar data
     1503424646 - naučeno, 1000 epoch, generátor se učí 2x na jedno učení diskriminátoru, lidar data
@@ -65,10 +67,10 @@ trained: na serveru:
     v reálu:
         naučeno, 400 epoch, barevné fotky, GAN + L1 loss, ratio 100, -||-
 
-    1506352309 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout
-    1506352353 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina, dropout
-    1506352475 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina, dropout
-    1506352552 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 5, test. množina, dropout
-    1506352644 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout, z sampling=uniform
-    1506353077 - učí se, 600 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina, dropout
+    1506352309 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout
+    1506352353 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 10, test. množina, dropout
+    1506352475 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 20, test. množina, dropout
+    1506352552 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 5, test. množina, dropout
+    1506352644 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 100, test. množina, dropout, z sampling=uniform
+    1506353077 - naučeno, 600 epoch, barevné fotky, GAN + L1 loss, ratio 50, test. množina, dropout
 

@@ -203,12 +203,11 @@ class AbstractNetwork:
             tf.logging.info(" [*] Failed to find a checkpoint")
             return False, 0
 
-    def generate(self, features, samples_dir, suffix):
+    def generate(self, features, samples_dir, suffix, samples_num=1):
         y = self.graph.get_tensor_by_name('y:0')
         z = self.graph.get_tensor_by_name('z:0')
 
         # samples
-        samples_num = 1
         for idx in range(samples_num):
             image_frame_dim = int(math.ceil(self.batch_size ** .5))
             z_sample = self.sample_z()
